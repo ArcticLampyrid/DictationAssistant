@@ -6,78 +6,82 @@ Begin VB.Form Form1
    BorderStyle     =   1  'Fixed Single
    Caption         =   "自动默写"
    ClientHeight    =   7335
-   ClientLeft      =   45
-   ClientTop       =   375
+   ClientLeft      =   150
+   ClientTop       =   480
    ClientWidth     =   12765
+   Icon            =   "Form1.frx":0000
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    ScaleHeight     =   7335
    ScaleWidth      =   12765
-   StartUpPosition =   3  '窗口缺省
+   StartUpPosition =   2  '屏幕中心
    Begin VB.Frame Frame3 
       Caption         =   "TTS语音引擎"
       Height          =   1695
       Left            =   7560
-      TabIndex        =   30
+      TabIndex        =   31
       Top             =   4440
       Width           =   5055
       Begin VB.ComboBox Combo1 
          Height          =   300
-         Left            =   1440
+         Left            =   720
          Style           =   2  'Dropdown List
-         TabIndex        =   33
+         TabIndex        =   37
          Top             =   1200
-         Width           =   3375
+         Width           =   4215
       End
       Begin MSComctlLib.Slider Slider2 
          Height          =   255
-         Left            =   1440
-         TabIndex        =   31
+         Left            =   720
+         TabIndex        =   33
          Top             =   240
-         Width           =   3375
-         _ExtentX        =   5953
+         Width           =   4215
+         _ExtentX        =   7435
          _ExtentY        =   450
          _Version        =   393216
          LargeChange     =   10
          SmallChange     =   5
          Max             =   100
-         TickFrequency   =   10
+         TickFrequency   =   5
       End
       Begin MSComctlLib.Slider Slider1 
          Height          =   255
-         Left            =   1440
-         TabIndex        =   32
+         Left            =   720
+         TabIndex        =   35
          Top             =   720
-         Width           =   3375
-         _ExtentX        =   5953
+         Width           =   4215
+         _ExtentX        =   7435
          _ExtentY        =   450
          _Version        =   393216
          LargeChange     =   3
          Min             =   -10
       End
       Begin VB.Label Label8 
+         AutoSize        =   -1  'True
          Caption         =   "引擎："
-         Height          =   255
-         Left            =   240
+         Height          =   180
+         Left            =   120
          TabIndex        =   36
          Top             =   1200
-         Width           =   975
+         Width           =   540
       End
       Begin VB.Label Label9 
+         AutoSize        =   -1  'True
          Caption         =   "语速："
-         Height          =   375
-         Left            =   240
-         TabIndex        =   35
+         Height          =   180
+         Left            =   120
+         TabIndex        =   34
          Top             =   720
-         Width           =   975
+         Width           =   540
       End
       Begin VB.Label Label11 
+         AutoSize        =   -1  'True
          Caption         =   "音量："
-         Height          =   375
-         Left            =   240
-         TabIndex        =   34
+         Height          =   180
+         Left            =   120
+         TabIndex        =   32
          Top             =   240
-         Width           =   975
+         Width           =   540
       End
    End
    Begin VB.Frame Frame2 
@@ -91,50 +95,50 @@ Begin VB.Form Form1
          Caption         =   "报下一个(&N)"
          Height          =   375
          Left            =   1800
-         TabIndex        =   22
-         Top             =   2160
+         TabIndex        =   24
+         Top             =   2640
          Width           =   1455
       End
       Begin VB.CommandButton Command3 
          Caption         =   "再报一遍(&A)"
          Height          =   375
          Left            =   3360
-         TabIndex        =   21
-         Top             =   2640
+         TabIndex        =   27
+         Top             =   3120
          Width           =   1455
       End
       Begin VB.CommandButton Command5 
          Caption         =   "从头开始(&H)"
          Height          =   375
          Left            =   1800
-         TabIndex        =   20
-         Top             =   2640
+         TabIndex        =   26
+         Top             =   3120
          Width           =   1455
       End
       Begin VB.TextBox Text1 
          Height          =   270
          Left            =   3120
          MaxLength       =   3
-         TabIndex        =   19
+         TabIndex        =   17
          Text            =   "3"
-         Top             =   960
+         Top             =   720
          Width           =   1695
       End
       Begin VB.CommandButton Command6 
          Caption         =   "开始自动播报(&S)"
          Height          =   375
          Left            =   360
-         TabIndex        =   18
-         Top             =   1680
-         Width           =   4455
+         TabIndex        =   20
+         Top             =   1440
+         Width           =   2175
       End
       Begin VB.TextBox Text2 
          Height          =   270
          Left            =   3120
          MaxLength       =   3
-         TabIndex        =   17
+         TabIndex        =   19
          Text            =   "2"
-         Top             =   1320
+         Top             =   1080
          Width           =   1695
       End
       Begin VB.CheckBox Check1 
@@ -148,27 +152,35 @@ Begin VB.Form Form1
             Italic          =   0   'False
             Strikethrough   =   0   'False
          EndProperty
-         Height          =   1335
+         Height          =   855
          Left            =   360
-         TabIndex        =   16
-         Top             =   2160
+         TabIndex        =   23
+         Top             =   2640
          Width           =   1335
       End
       Begin VB.CommandButton Command7 
-         Caption         =   "暂停自动(&P)"
+         Caption         =   "暂停自动播报(&P)"
          Height          =   375
-         Left            =   1800
-         TabIndex        =   15
-         Top             =   3120
-         Width           =   3015
+         Left            =   2640
+         TabIndex        =   21
+         Top             =   1440
+         Width           =   2175
       End
       Begin VB.CommandButton Command9 
          Caption         =   "报上一个(&L)"
          Height          =   375
          Left            =   3360
-         TabIndex        =   14
-         Top             =   2160
+         TabIndex        =   25
+         Top             =   2640
          Width           =   1455
+      End
+      Begin VB.Label Label12 
+         Caption         =   "暂停自动播报后不把“自动播报”这个勾去掉的话，按“报下一个”、“报上一个”或“再报一遍”后会自动开始下一轮自动播报。"
+         Height          =   615
+         Left            =   360
+         TabIndex        =   22
+         Top             =   1920
+         Width           =   4455
       End
       Begin VB.Label Label3 
          Caption         =   "将于"
@@ -183,7 +195,7 @@ Begin VB.Form Form1
          EndProperty
          Height          =   495
          Left            =   360
-         TabIndex        =   29
+         TabIndex        =   28
          Top             =   3600
          Width           =   975
       End
@@ -200,7 +212,7 @@ Begin VB.Form Form1
          EndProperty
          Height          =   495
          Left            =   2205
-         TabIndex        =   28
+         TabIndex        =   30
          Top             =   3600
          Width           =   2655
       End
@@ -218,7 +230,7 @@ Begin VB.Form Form1
          EndProperty
          Height          =   495
          Left            =   1335
-         TabIndex        =   27
+         TabIndex        =   29
          Top             =   3600
          Width           =   855
       End
@@ -233,11 +245,11 @@ Begin VB.Form Form1
             Italic          =   0   'False
             Strikethrough   =   0   'False
          EndProperty
-         Height          =   495
+         Height          =   435
          Left            =   240
-         TabIndex        =   26
+         TabIndex        =   14
          Top             =   240
-         Width           =   3135
+         Width           =   3045
       End
       Begin VB.Label Label2 
          Caption         =   "0"
@@ -252,25 +264,25 @@ Begin VB.Form Form1
          EndProperty
          Height          =   495
          Left            =   3480
-         TabIndex        =   25
+         TabIndex        =   15
          Top             =   240
          Width           =   1335
       End
       Begin VB.Label Label6 
          Caption         =   "自动播报间隔（秒）"
-         Height          =   255
+         Height          =   180
          Left            =   360
-         TabIndex        =   24
-         Top             =   960
-         Width           =   2655
+         TabIndex        =   16
+         Top             =   720
+         Width           =   1620
       End
       Begin VB.Label Label7 
          Caption         =   "自动播报次数（每个词语）"
-         Height          =   375
+         Height          =   180
          Left            =   360
-         TabIndex        =   23
-         Top             =   1320
-         Width           =   2655
+         TabIndex        =   18
+         Top             =   1080
+         Width           =   2160
       End
    End
    Begin VB.Timer Timer1 
@@ -283,7 +295,7 @@ Begin VB.Form Form1
       Caption         =   "显示/隐藏词语控制"
       Height          =   6975
       Left            =   7080
-      TabIndex        =   9
+      TabIndex        =   12
       Top             =   240
       Width           =   375
    End
@@ -294,12 +306,25 @@ Begin VB.Form Form1
       TabIndex        =   0
       Top             =   120
       Width           =   6855
-      Begin VB.CommandButton Command10 
+      Begin VB.CommandButton Command4 
+         Enabled         =   0   'False
+         Height          =   330
+         Left            =   6360
+         MaskColor       =   &H00FFFFFF&
+         Picture         =   "Form1.frx":324A
+         Style           =   1  'Graphical
+         TabIndex        =   7
+         ToolTipText     =   "修改选中列表项"
+         Top             =   2640
+         UseMaskColor    =   -1  'True
+         Width           =   330
+      End
+      Begin VB.CommandButton cmdShowCount 
          Caption         =   "计算词语数量"
          Height          =   1455
          Left            =   6360
-         TabIndex        =   11
-         Top             =   4320
+         TabIndex        =   10
+         Top             =   4200
          Width           =   375
       End
       Begin VB.CommandButton Command8 
@@ -307,7 +332,7 @@ Begin VB.Form Form1
          Enabled         =   0   'False
          Height          =   975
          Left            =   6360
-         TabIndex        =   10
+         TabIndex        =   11
          Top             =   5880
          Width           =   375
       End
@@ -322,34 +347,34 @@ Begin VB.Form Form1
             Strikethrough   =   0   'False
          EndProperty
          Height          =   6585
-         ItemData        =   "Form1.frx":0000
+         ItemData        =   "Form1.frx":337C
          Left            =   240
-         List            =   "Form1.frx":0002
-         TabIndex        =   8
+         List            =   "Form1.frx":337E
+         TabIndex        =   1
          Top             =   240
          Width           =   6135
       End
       Begin VB.CommandButton cmdOpen 
          Height          =   330
          Left            =   6360
-         Picture         =   "Form1.frx":0004
+         Picture         =   "Form1.frx":3380
          Style           =   1  'Graphical
-         TabIndex        =   7
+         TabIndex        =   2
          ToolTipText     =   "从一个TXT文件中添加列表项（每行作为一个词语）"
          Top             =   240
          UseMaskColor    =   -1  'True
          Width           =   330
       End
-      Begin VB.CommandButton Command4 
+      Begin VB.CommandButton cmdClear 
          Enabled         =   0   'False
          Height          =   330
          Left            =   6360
          MaskColor       =   &H00FFFFFF&
-         Picture         =   "Form1.frx":0106
+         Picture         =   "Form1.frx":3482
          Style           =   1  'Graphical
-         TabIndex        =   6
+         TabIndex        =   9
          ToolTipText     =   "清空列表"
-         Top             =   3840
+         Top             =   3600
          UseMaskColor    =   -1  'True
          Width           =   330
       End
@@ -357,11 +382,11 @@ Begin VB.Form Form1
          Enabled         =   0   'False
          Height          =   330
          Left            =   6360
-         Picture         =   "Form1.frx":02A8
+         Picture         =   "Form1.frx":3624
          Style           =   1  'Graphical
          TabIndex        =   5
          ToolTipText     =   "向下移动"
-         Top             =   2040
+         Top             =   1680
          UseMaskColor    =   -1  'True
          Width           =   330
       End
@@ -369,11 +394,11 @@ Begin VB.Form Form1
          Enabled         =   0   'False
          Height          =   330
          Left            =   6360
-         Picture         =   "Form1.frx":05EA
+         Picture         =   "Form1.frx":3966
          Style           =   1  'Graphical
          TabIndex        =   4
          ToolTipText     =   "向上移动"
-         Top             =   1440
+         Top             =   1200
          UseMaskColor    =   -1  'True
          Width           =   330
       End
@@ -381,33 +406,33 @@ Begin VB.Form Form1
          Enabled         =   0   'False
          Height          =   330
          Left            =   6360
-         Picture         =   "Form1.frx":06EC
+         Picture         =   "Form1.frx":3A68
          Style           =   1  'Graphical
-         TabIndex        =   3
+         TabIndex        =   8
          ToolTipText     =   "删除选定列表项"
-         Top             =   3240
+         Top             =   3120
          UseMaskColor    =   -1  'True
          Width           =   330
       End
       Begin VB.CommandButton cmdAdd 
          Height          =   330
          Left            =   6360
-         Picture         =   "Form1.frx":07EE
+         Picture         =   "Form1.frx":3B6A
          Style           =   1  'Graphical
-         TabIndex        =   2
+         TabIndex        =   6
          ToolTipText     =   "添加列表项"
-         Top             =   2640
+         Top             =   2160
          UseMaskColor    =   -1  'True
          Width           =   330
       End
       Begin VB.CommandButton cmdSave 
          Height          =   330
          Left            =   6360
-         Picture         =   "Form1.frx":08F0
+         Picture         =   "Form1.frx":3C6C
          Style           =   1  'Graphical
-         TabIndex        =   1
+         TabIndex        =   3
          ToolTipText     =   "将列表项保存到一个TXT文件中（每个词语作为一行）"
-         Top             =   840
+         Top             =   720
          UseMaskColor    =   -1  'True
          Width           =   330
       End
@@ -432,9 +457,39 @@ Begin VB.Form Form1
       EndProperty
       Height          =   945
       Left            =   7560
-      TabIndex        =   12
+      TabIndex        =   38
       Top             =   6240
       Width           =   5040
+   End
+   Begin VB.Menu mnuFile 
+      Caption         =   "文件(&F)"
+      Begin VB.Menu mnuOpen 
+         Caption         =   "从TXT文件中添加列表项(&O)..."
+         Shortcut        =   ^O
+      End
+      Begin VB.Menu mnuSave 
+         Caption         =   "将列表项保存到TXT文件中(&S)..."
+         Shortcut        =   ^S
+      End
+      Begin VB.Menu mnuFileSep 
+         Caption         =   "-"
+      End
+      Begin VB.Menu mnuExit 
+         Caption         =   "退出(&E)"
+      End
+   End
+   Begin VB.Menu mnuHelp 
+      Caption         =   "帮助(&H)"
+      Begin VB.Menu mnuAbout 
+         Caption         =   "关于(&A)..."
+      End
+   End
+   Begin VB.Menu mnuListPopup 
+      Caption         =   "列表弹出菜单"
+      Visible         =   0   'False
+      Begin VB.Menu mnuSpeakSelect 
+         Caption         =   "读选定的词语"
+      End
    End
 End
 Attribute VB_Name = "Form1"
@@ -444,7 +499,7 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Dim WithEvents A As SpVoice
 Attribute A.VB_VarHelpID = -1
-Dim I As Integer
+Dim i As Integer
 Dim intBBCS As Integer
 Dim intYGMS As Integer
 
@@ -457,7 +512,7 @@ intBBCS = intBBCS + 1
 Label2.Caption = CStr(intBBCS)
 If Check1.Value = 1 Then
     If intBBCS = Val(Text2.Text) Then
-        If I < List1.ListCount Then
+        If i < List1.ListCount Then
         intYGMS = 0
         Label5.Caption = Text1.Text
         Timer1.Enabled = True
@@ -465,7 +520,7 @@ If Check1.Value = 1 Then
         Timer1_Timer
         End If
         Else
-        I = 0
+        i = 0
         End If
     Else
         intYGMS = 0
@@ -497,6 +552,8 @@ Private Sub cmdAdd_Click()
   SetListButtons
 End Sub
 
+
+
 Private Sub cmdDelete_Click()
   If List1.ListIndex > -1 Then
     If MsgBox("删除 '" & List1.Text & "'?", vbQuestion + vbYesNo) = vbYes Then
@@ -514,26 +571,28 @@ CommonDialog1.ShowSave
 If CommonDialog1.FileName <> "" Then
     Dim Temp As String
     Open CommonDialog1.FileName For Output As #1
-        For I = 0 To List1.ListCount - 1
-        Print #1, List1.List(I)
+        For i = 0 To List1.ListCount - 1
+        Print #1, List1.List(i)
         Next
     Close #1
 End If
 End Sub
+
+
 
 Private Sub Combo1_Click()
 Set A.Voice = A.GetVoices.Item(Combo1.ListIndex)
 End Sub
 
 Private Sub Command1_Click()
-If I >= List1.ListCount Then
+If i >= List1.ListCount Then
 MsgBox "已经播完最后一个了。"
 Exit Sub
 End If
 intBBCS = 0
-List1.ListIndex = I
-A.Speak List1.List(I), SVSFlagsAsync
-I = I + 1
+List1.ListIndex = i
+A.Speak List1.List(i), SVSFlagsAsync
+i = i + 1
 Label2.Caption = CStr(intBBCS)
 End Sub
 
@@ -545,19 +604,16 @@ If CommonDialog1.FileName <> "" Then
     Open CommonDialog1.FileName For Input As #1
     While Not EOF(1)
         Line Input #1, Temp
-        If Temp <> "" And Temp <> " " Then List1.AddItem Temp
+        If Temp <> "" Then List1.AddItem Temp
     Wend
     Close #1
     SetListButtons
+    List1.SetFocus
 End If
 End Sub
 
-Private Sub Command10_Click()
+Private Sub cmdShowCount_Click()
 MsgBox "词语数量：" & List1.ListCount
-End Sub
-
-Private Sub Command11_Click()
-MsgBox Me.Width
 End Sub
 
 Private Sub Command2_Click()
@@ -574,24 +630,35 @@ Frame2.Left = 7560
 Frame3.Left = 7560
 Label10.Left = 7560
 Command2.Left = 7080
-Me.Width = 13000
+Me.Width = 12855
 End If
 End Sub
 
 Private Sub Command3_Click()
-If I <= List1.ListCount And I > 0 Then
-List1.ListIndex = I - 1
-A.Speak List1.List(I - 1), SVSFlagsAsync
+If i <= List1.ListCount And i > 0 Then
+List1.ListIndex = i - 1
+A.Speak List1.List(i - 1), SVSFlagsAsync
 End If
 End Sub
 
-Private Sub Command4_Click()
+Private Sub cmdClear_Click()
 List1.Clear
 SetListButtons
 End Sub
 
+Private Sub Command4_Click()
+  If List1.ListIndex > -1 Then
+    Dim strNewText As String
+    strNewText = InputBox("您准备将 '" & List1.Text & "'修改成?", , List1.Text)
+    If strNewText <> "" Then
+      List1.List(List1.ListIndex) = strNewText
+      SetListButtons
+    End If
+  End If
+End Sub
+
 Private Sub Command5_Click()
-I = 0
+i = 0
 End Sub
 
 Private Sub cmdUp_Click()
@@ -633,13 +700,12 @@ If List1.ListCount = 0 Then
 MsgBox "请先添加词语！", vbOKOnly, Me.Caption
 Exit Sub
 End If
-If Text2.Text = "" Or Text2.Text = "0" Then Text2.Text = "1"
-MsgBox "单击确定按钮开始，开始后修改播报间隔（秒）和播报次数也会及时生效，如无必要，请勿修改。", vbOKOnly, Me.Caption
+MsgBox "开始后修改播报间隔（秒）和播报次数也会及时生效，如无必要，请勿修改。", vbOKOnly, Me.Caption
 Label5.Caption = Text1.Text
 intYGMS = 0
 Timer1.Enabled = True
 Check1.Value = 1
-I = 0
+i = 0
 Command1_Click
 End Sub
 
@@ -648,12 +714,12 @@ Timer1.Enabled = False
 End Sub
 
 Private Sub Command8_Click()
-Form2.Show
+Form2.Show 1
 End Sub
 
 Private Sub Command9_Click()
-If I <= List1.ListCount And I > 1 Then
-I = I - 2
+If i <= List1.ListCount And i > 1 Then
+i = i - 2
 Command1_Click
 End If
 End Sub
@@ -661,15 +727,17 @@ End Sub
 Private Sub Form_Load()
 Set A = New SpVoice
 A.Volume = 100
-For I = 0 To A.GetVoices.Count - 1
-Combo1.AddItem A.GetVoices.Item(I).GetDescription
+For i = 0 To A.GetVoices.Count - 1
+Combo1.AddItem A.GetVoices.Item(i).GetDescription
 Next
 Combo1.ListIndex = 0
 Slider1.Value = A.Rate
 Slider2.Value = A.Volume
-I = 0
+i = 0
 intBBCS = 0
 End Sub
+
+
 
 
 Private Sub List1_Click()
@@ -685,8 +753,61 @@ Sub SetListButtons()
   cmdUp.Enabled = (IntListIndex > 0)
   cmdDown.Enabled = ((IntListIndex > -1) And (IntListIndex < (IntListCount - 1)))
   cmdDelete.Enabled = (IntListIndex > -1)
-  Command4.Enabled = IntListCount
+  cmdClear.Enabled = IntListCount
   Command8.Enabled = IntListCount
+  Command4.Enabled = (IntListIndex > -1)
+End Sub
+
+Private Sub List1_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
+If Button = 2 Then
+    Dim pos As Long, idx As Long
+    pos = X / Screen.TwipsPerPixelX + Y / Screen.TwipsPerPixelY * 65536
+    idx = SendMessage(List1.hwnd, LB_ITEMFROMPOINT, 0, ByVal pos)
+    If idx < 65536 Then
+    List1.ListIndex = idx
+    PopupMenu mnuListPopup
+    Else
+    List1.ListIndex = -1
+    End If
+End If
+End Sub
+
+Private Sub List1_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    Dim pos As Long, idx As Long
+    pos = X / Screen.TwipsPerPixelX + Y / Screen.TwipsPerPixelY * 65536
+    idx = SendMessage(List1.hwnd, LB_ITEMFROMPOINT, 0, ByVal pos)
+    If idx < 65536 Then
+    List1.ToolTipText = List1.List(idx)
+    Else
+    List1.ToolTipText = ""
+    End If
+End Sub
+
+Private Sub mnuAbout_Click()
+frmAbout.Show 1
+End Sub
+
+
+
+Private Sub mnuExit_Click()
+Unload Me
+End Sub
+
+Private Sub mnuOpen_Click()
+Call cmdOpen_Click
+End Sub
+
+Private Sub mnuSave_Click()
+Call cmdSave_Click
+End Sub
+
+Private Sub mnuSpeakSelect_Click()
+If i - 1 = List1.ListIndex Then
+Command3_Click
+Else
+i = List1.ListIndex
+Command1_Click
+End If
 End Sub
 
 Private Sub Slider1_Change()
@@ -698,6 +819,14 @@ Private Sub Slider2_Change()
 A.Volume = Slider2.Value
 End Sub
 
+
+Private Sub Text1_Change()
+If Text1.Text = "" Then
+Text1.Text = "0"
+Text1.SelStart = 0
+Text1.SelLength = 1
+End If
+End Sub
 
 Private Sub Text1_KeyDown(KeyCode As Integer, Shift As Integer)
 If KeyCode = vbKeyReturn Then
@@ -712,6 +841,14 @@ If KeyAscii <> 8 And KeyAscii < 48 Or KeyAscii > 57 Then KeyAscii = 0
 End Sub
 
 
+
+Private Sub Text2_Change()
+If Val(Text2.Text) = 0 Then
+Text2.Text = "1"
+Text2.SelStart = 0
+Text2.SelLength = 1
+End If
+End Sub
 
 Private Sub Text2_KeyDown(KeyCode As Integer, Shift As Integer)
 If KeyCode = vbKeyReturn Then Call Command6_Click
@@ -729,7 +866,7 @@ Else
 Label5.Caption = "0"
 End If
 If intYGMS >= Val(Text1.Text) Then
-    If intBBCS >= Val(Text2.Text) Or I = 0 Then
+    If intBBCS >= Val(Text2.Text) Or i = 0 Then
     Command1_Click
     Else
     Command3_Click

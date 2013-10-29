@@ -1,16 +1,17 @@
 VERSION 5.00
 Begin VB.Form Form2 
    BorderStyle     =   3  'Fixed Dialog
-   Caption         =   "Form2"
+   Caption         =   "快速选词"
    ClientHeight    =   6090
    ClientLeft      =   45
    ClientTop       =   375
    ClientWidth     =   11610
+   Icon            =   "Form2.frx":0000
    LinkTopic       =   "Form2"
    MaxButton       =   0   'False
    ScaleHeight     =   6090
    ScaleWidth      =   11610
-   StartUpPosition =   3  '窗口缺省
+   StartUpPosition =   1  '所有者中心
    Begin VB.TextBox Text1 
       Height          =   270
       Left            =   10200
@@ -31,10 +32,9 @@ Begin VB.Form Form2
    Begin VB.CommandButton cmdUp 
       Height          =   450
       Left            =   10200
-      Picture         =   "Form2.frx":0000
+      Picture         =   "Form2.frx":000C
       Style           =   1  'Graphical
       TabIndex        =   10
-      ToolTipText     =   "5011"
       Top             =   2160
       UseMaskColor    =   -1  'True
       Width           =   450
@@ -42,10 +42,9 @@ Begin VB.Form Form2
    Begin VB.CommandButton cmdDown 
       Height          =   450
       Left            =   10200
-      Picture         =   "Form2.frx":0102
+      Picture         =   "Form2.frx":010E
       Style           =   1  'Graphical
       TabIndex        =   9
-      ToolTipText     =   "5012"
       Top             =   2760
       UseMaskColor    =   -1  'True
       Width           =   450
@@ -336,12 +335,34 @@ Private Sub lstAll_KeyDown(KeyCode As Integer, Shift As Integer)
 If KeyCode = vbKeyReturn Then Call lstAll_DblClick
 End Sub
 
+Private Sub lstAll_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    Dim pos As Long, idx As Long
+    pos = X / Screen.TwipsPerPixelX + Y / Screen.TwipsPerPixelY * 65536
+    idx = SendMessage(lstAll.hwnd, LB_ITEMFROMPOINT, 0, ByVal pos)
+    If idx < 65536 Then
+    lstAll.ToolTipText = lstAll.List(idx)
+    Else
+    lstAll.ToolTipText = ""
+    End If
+End Sub
+
 Private Sub lstSelected_DblClick()
   cmdLeftOne_Click
 End Sub
 
 Private Sub lstSelected_KeyDown(KeyCode As Integer, Shift As Integer)
 If KeyCode = vbKeyReturn Then Call lstSelected_DblClick
+End Sub
+
+Private Sub lstSelected_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    Dim pos As Long, idx As Long
+    pos = X / Screen.TwipsPerPixelX + Y / Screen.TwipsPerPixelY * 65536
+    idx = SendMessage(lstSelected.hwnd, LB_ITEMFROMPOINT, 0, ByVal pos)
+    If idx < 65536 Then
+    lstSelected.ToolTipText = lstSelected.List(idx)
+    Else
+    lstSelected.ToolTipText = ""
+    End If
 End Sub
 
 Private Sub Text1_KeyDown(KeyCode As Integer, Shift As Integer)
