@@ -15,7 +15,6 @@ Begin VB.Form Form2
    Begin VB.TextBox Text1 
       Height          =   270
       Left            =   10200
-      MaxLength       =   4
       TabIndex        =   12
       Text            =   "60"
       Top             =   600
@@ -324,6 +323,7 @@ Private Sub Form_Load()
 For i = 0 To Form1.List1.ListCount - 1
 lstAll.AddItem Form1.List1.List(i)
 Next
+If lstAll.ListCount < 60 Then Text1.Text = CStr(lstAll.ListCount)
 End Sub
 
 
@@ -363,6 +363,14 @@ Private Sub lstSelected_MouseMove(Button As Integer, Shift As Integer, X As Sing
     Else
     lstSelected.ToolTipText = ""
     End If
+End Sub
+
+Private Sub Text1_Change()
+If Val(Text1.Text) < 1 Then
+Text1.Text = "1"
+Text1.SelStart = 0
+Text1.SelLength = 1
+End If
 End Sub
 
 Private Sub Text1_KeyDown(KeyCode As Integer, Shift As Integer)

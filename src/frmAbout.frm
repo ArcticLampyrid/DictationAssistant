@@ -2,7 +2,7 @@ VERSION 5.00
 Begin VB.Form frmAbout 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "关于 %应用程序标题%"
-   ClientHeight    =   3015
+   ClientHeight    =   2910
    ClientLeft      =   2340
    ClientTop       =   1935
    ClientWidth     =   5730
@@ -11,7 +11,7 @@ Begin VB.Form frmAbout
    LinkTopic       =   "Form2"
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   2081.007
+   ScaleHeight     =   2008.535
    ScaleMode       =   0  'User
    ScaleWidth      =   5380.766
    ShowInTaskbar   =   0   'False
@@ -23,7 +23,6 @@ Begin VB.Form frmAbout
       ClipControls    =   0   'False
       Height          =   960
       Left            =   240
-      Picture         =   "frmAbout.frx":000C
       ScaleHeight     =   674.24
       ScaleMode       =   0  'User
       ScaleWidth      =   674.24
@@ -44,9 +43,9 @@ Begin VB.Form frmAbout
    Begin VB.CommandButton cmdSysInfo 
       Caption         =   "系统信息(&S)..."
       Height          =   345
-      Left            =   4140
+      Left            =   4125
       TabIndex        =   2
-      Top             =   2520
+      Top             =   2463
       Width           =   1485
    End
    Begin VB.Line Line1 
@@ -55,8 +54,8 @@ Begin VB.Form frmAbout
       Index           =   1
       X1              =   112.686
       X2              =   5337.57
-      Y1              =   1315.555
-      Y2              =   1315.555
+      Y1              =   1315.556
+      Y2              =   1315.556
    End
    Begin VB.Label lblDescription 
       Caption         =   "一款通过TTS语音引擎播报词语或单词的软件，可自动隔时播报，方便语文和英语课程的默写。"
@@ -82,8 +81,8 @@ Begin VB.Form frmAbout
       Index           =   0
       X1              =   98.6
       X2              =   5309.398
-      Y1              =   1325.218
-      Y2              =   1325.218
+      Y1              =   1325.219
+      Y2              =   1325.219
    End
    Begin VB.Label lblVersion 
       Caption         =   "版本 %程序版本%"
@@ -96,11 +95,11 @@ Begin VB.Form frmAbout
    Begin VB.Label lblDisclaimer 
       Caption         =   "警告：切勿用于商业用途。"
       ForeColor       =   &H00000000&
-      Height          =   825
+      Height          =   735
       Left            =   120
       TabIndex        =   4
       Top             =   2040
-      Width           =   3630
+      Width           =   3975
    End
 End
 Attribute VB_Name = "frmAbout"
@@ -150,6 +149,7 @@ Private Sub Form_Load()
     Me.Caption = "关于 " & App.Title
     lblVersion.Caption = "版本 " & App.Major & "." & App.Minor & "." & App.Revision
     lblTitle.Caption = App.Title
+    picIcon.Picture = Form1.Icon
 End Sub
 
 Public Sub StartSysInfo()
