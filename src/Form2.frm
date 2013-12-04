@@ -202,7 +202,6 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-'i在Form1是记录当前播报项目的与这里的i不关联
 Private Sub cmdUp_Click()
   On Error Resume Next
   Dim nItem As Integer
@@ -239,18 +238,18 @@ End Sub
 
 Private Sub cmdRightOne_Click()
   On Error Resume Next
-  Dim i As Integer
+  Dim Temp As Integer
   
   If lstAll.ListCount = 0 Then Exit Sub
   
   lstSelected.AddItem lstAll.Text
-  i = lstAll.ListIndex
+  Temp = lstAll.ListIndex
   lstAll.RemoveItem lstAll.ListIndex
   If lstAll.ListCount > 0 Then
-    If i > lstAll.ListCount - 1 Then
-      lstAll.ListIndex = i - 1
+    If Temp > lstAll.ListCount - 1 Then
+      lstAll.ListIndex = Temp - 1
     Else
-      lstAll.ListIndex = i
+      lstAll.ListIndex = Temp
     End If
   End If
   lstSelected.ListIndex = lstSelected.NewIndex
@@ -258,9 +257,9 @@ End Sub
 
 Private Sub cmdRightAll_Click()
   On Error Resume Next
-  Dim i As Integer
-  For i = 0 To lstAll.ListCount - 1
-    lstSelected.AddItem lstAll.List(i)
+  Dim Temp As Integer
+  For Temp = 0 To lstAll.ListCount - 1
+    lstSelected.AddItem lstAll.List(Temp)
   Next
   lstAll.Clear
   lstSelected.ListIndex = 0
@@ -268,29 +267,29 @@ End Sub
 
 Private Sub cmdLeftOne_Click()
   On Error Resume Next
-  Dim i As Integer
+  Dim Temp As Integer
   
   If lstSelected.ListCount = 0 Then Exit Sub
   
   lstAll.AddItem lstSelected.Text
-  i = lstSelected.ListIndex
-  lstSelected.RemoveItem i
+  Temp = lstSelected.ListIndex
+  lstSelected.RemoveItem Temp
   
   lstAll.ListIndex = lstAll.NewIndex
   If lstSelected.ListCount > 0 Then
-    If i > lstSelected.ListCount - 1 Then
-      lstSelected.ListIndex = i - 1
+    If Temp > lstSelected.ListCount - 1 Then
+      lstSelected.ListIndex = Temp - 1
     Else
-      lstSelected.ListIndex = i
+      lstSelected.ListIndex = Temp
     End If
   End If
 End Sub
 
 Private Sub cmdLeftAll_Click()
   On Error Resume Next
-  Dim i As Integer
-  For i = 0 To lstSelected.ListCount - 1
-    lstAll.AddItem lstSelected.List(i)
+  Dim Temp As Integer
+  For Temp = 0 To lstSelected.ListCount - 1
+    lstAll.AddItem lstSelected.List(Temp)
   Next
   lstSelected.Clear
   lstAll.ListIndex = lstAll.NewIndex
@@ -299,8 +298,8 @@ End Sub
 
 Private Sub Command1_Click()
 Form1.List1.Clear
-For i = 0 To lstSelected.ListCount - 1
-Form1.List1.AddItem lstSelected.List(i)
+For Temp = 0 To lstSelected.ListCount - 1
+Form1.List1.AddItem lstSelected.List(Temp)
 Next
 Unload Me
 Form1.SetListButtons
@@ -312,7 +311,7 @@ MsgBox "超出词语数量！"
 Exit Sub
 End If
 Call cmdLeftAll_Click
-For i = 1 To Val(Text1.Text)
+For Temp = 1 To Val(Text1.Text)
 Randomize
 lstAll.ListIndex = Int(lstAll.ListCount * Rnd)
 cmdRightOne_Click
@@ -320,8 +319,8 @@ Next
 End Sub
 
 Private Sub Form_Load()
-For i = 0 To Form1.List1.ListCount - 1
-lstAll.AddItem Form1.List1.List(i)
+For Temp = 0 To Form1.List1.ListCount - 1
+lstAll.AddItem Form1.List1.List(Temp)
 Next
 If lstAll.ListCount < 60 Then Text1.Text = CStr(lstAll.ListCount)
 End Sub
@@ -335,9 +334,9 @@ Private Sub lstAll_KeyDown(KeyCode As Integer, Shift As Integer)
 If KeyCode = vbKeyReturn Then Call lstAll_DblClick
 End Sub
 
-Private Sub lstAll_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub lstAll_MouseMove(Button As Integer, Shift As Integer, x As Single, Y As Single)
     Dim pos As Long, idx As Long
-    pos = X / Screen.TwipsPerPixelX + Y / Screen.TwipsPerPixelY * 65536
+    pos = x / Screen.TwipsPerPixelX + Y / Screen.TwipsPerPixelY * 65536
     idx = SendMessage(lstAll.hwnd, LB_ITEMFROMPOINT, 0, ByVal pos)
     If idx < 65536 Then
     lstAll.ToolTipText = lstAll.List(idx)
@@ -354,9 +353,9 @@ Private Sub lstSelected_KeyDown(KeyCode As Integer, Shift As Integer)
 If KeyCode = vbKeyReturn Then Call lstSelected_DblClick
 End Sub
 
-Private Sub lstSelected_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub lstSelected_MouseMove(Button As Integer, Shift As Integer, x As Single, Y As Single)
     Dim pos As Long, idx As Long
-    pos = X / Screen.TwipsPerPixelX + Y / Screen.TwipsPerPixelY * 65536
+    pos = x / Screen.TwipsPerPixelX + Y / Screen.TwipsPerPixelY * 65536
     idx = SendMessage(lstSelected.hwnd, LB_ITEMFROMPOINT, 0, ByVal pos)
     If idx < 65536 Then
     lstSelected.ToolTipText = lstSelected.List(idx)

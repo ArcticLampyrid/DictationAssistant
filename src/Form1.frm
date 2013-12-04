@@ -514,6 +514,7 @@ Begin VB.Form Form1
       _ExtentY        =   847
       _Version        =   393216
       Filter          =   "文本文档(*.txt)|*.txt"
+      MaxFileSize     =   32767
    End
    Begin VB.Label Label10 
       Caption         =   "随机排序：先计算词语数量，在使用快速选词中的随机选词，将随机选词数量填写为词语数量即可。"
@@ -615,8 +616,9 @@ Dim WithEvents A As SpVoice
 Attribute A.VB_VarHelpID = -1
 Dim objVoices As ISpeechObjectTokens
 Dim i As Integer
-Dim intBBCS As Integer
-Dim intYGMS As Integer
+Dim intBBCS As Integer '播报次数
+Dim intYGMS As Integer '已过秒数
+Dim ListPopupIndex As Integer
 Dim EnglishVoiceGood As Boolean, ChineseVoiceGood As Boolean
 
 Private Sub A_EndStream(ByVal StreamNumber As Long, ByVal StreamPosition As Variant)
@@ -638,7 +640,7 @@ If Check1.Value = 1 Then
         Else
         i = 0
         End If
-    Else
+    ElseIf i < List1.ListCount Then
         intYGMS = 0
         Label5.Caption = Text1.Text
         Timer1.Enabled = True
@@ -671,9 +673,11 @@ End Sub
 
 
 Private Sub cmdDelete_Click()
-  If List1.ListIndex > -1 Then
-    If MsgBox("您真的要删除“" & List1.Text & "”吗？", vbQuestion + vbYesNo) = vbYes Then
-      List1.RemoveItem List1.ListIndex
+Dim Temp As Integer
+Temp = List1.ListIndex
+  If Temp > -1 Then
+    If MsgBox("您真的要删除“" & List1.List(Temp) & "”吗？", vbQuestion + vbYesNo) = vbYes Then
+      List1.RemoveItem Temp
       SetListButtons
     End If
   End If
@@ -683,6 +687,7 @@ End Sub
 
 Private Sub cmdSave_Click()
 CommonDialog1.FileName = ""
+CommonDialog1.Flags = cdlOFNExplorer
 CommonDialog1.ShowSave
 If CommonDialog1.FileName <> "" Then
     Dim Temp As String
@@ -715,9 +720,22 @@ End Sub
 
 Private Sub cmdOpen_Click()
 CommonDialog1.FileName = ""
+CommonDialog1.Flags = cdlOFNExplorer Or cdlOFNAllowMultiselect
 CommonDialog1.ShowOpen
 If CommonDialog1.FileName <> "" Then
-OpenFile CommonDialog1.FileName
+    If InStr(1, CommonDialog1.FileName, Chr(0)) > 0 Then
+        Dim FilePath As String
+        Dim FileNames() As String
+        Dim x As Integer
+        FilePath = Mid(CommonDialog1.FileName, 1, InStr(1, CommonDialog1.FileName, Chr(0)) - 1)
+        If Right$(FilePath, 1) <> "\" Then FilePath = FilePath & "\"
+        FileNames = Split(Mid(CommonDialog1.FileName, InStr(1, CommonDialog1.FileName, Chr(0)) + 1), Chr(0))
+        For x = 0 To UBound(FileNames)
+        OpenFile FilePath & FileNames(x)
+        Next
+    Else
+        OpenFile CommonDialog1.FileName
+End If
 End If
 End Sub
 
@@ -785,11 +803,13 @@ SetListButtons
 End Sub
 
 Private Sub Command4_Click()
-  If List1.ListIndex > -1 Then
+Dim Temp As Integer
+Temp = List1.ListIndex
+  If Temp > -1 Then
     Dim strNewText As String
-    strNewText = InputBox("您准备将“" & List1.Text & "”修改成", , List1.Text)
+    strNewText = InputBox("您准备将“" & List1.List(Temp) & "”修改成：", , List1.Text)
     If Len(strNewText) > 0 Then
-      List1.List(List1.ListIndex) = strNewText
+      List1.List(Temp) = strNewText
       SetListButtons
     End If
   End If
@@ -873,6 +893,10 @@ ChineseGrade = 0 '初始化用于记录中文语音引擎质量等级的变量
 Set A = New SpVoice '创建SpVoice对象实例
 A.Volume = 100 '设定音量值为100
 Set objVoices = A.GetVoices '读取发音人物集合
+    If objVoices.Count = 0 Then
+    MsgBox "未发现TTS语音引擎", vbOKOnly, "Error"
+    End
+    End If
 For i = 0 To objVoices.Count - 1 '遍历发音人物集合
 Set objVoice = objVoices.Item(i) '读取发音人物集合中相应索引的语音对象
 strVoiceName = objVoice.GetDescription '读取发音人物名称
@@ -931,13 +955,14 @@ Sub SetListButtons()
   Command4.Enabled = (IntListIndex > -1)
 End Sub
 
-Private Sub List1_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub List1_MouseDown(Button As Integer, Shift As Integer, x As Single, Y As Single)
 If Button = 2 Then
     Dim pos As Long, idx As Long
-    pos = X / Screen.TwipsPerPixelX + Y / Screen.TwipsPerPixelY * 65536
+    pos = x / Screen.TwipsPerPixelX + Y / Screen.TwipsPerPixelY * 65536
     idx = SendMessage(List1.hwnd, LB_ITEMFROMPOINT, 0, ByVal pos)
     If idx < 65536 Then
     List1.ListIndex = idx
+    ListPopupIndex = idx
     PopupMenu mnuListPopup
     Else
     List1.ListIndex = -1
@@ -945,9 +970,9 @@ If Button = 2 Then
 End If
 End Sub
 
-Private Sub List1_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub List1_MouseMove(Button As Integer, Shift As Integer, x As Single, Y As Single)
     Dim pos As Long, idx As Long
-    pos = X / Screen.TwipsPerPixelX + Y / Screen.TwipsPerPixelY * 65536
+    pos = x / Screen.TwipsPerPixelX + Y / Screen.TwipsPerPixelY * 65536
     idx = SendMessage(List1.hwnd, LB_ITEMFROMPOINT, 0, ByVal pos)
     If idx < 65536 Then
     List1.ToolTipText = List1.List(idx)
@@ -978,6 +1003,7 @@ cmdDelete_Click
 End Sub
 
 Private Sub mnuDelete_ListPopup_Click()
+List1.ListIndex = ListPopupIndex
 mnuDelete_Click
 End Sub
 
@@ -987,11 +1013,12 @@ cmdDown_Click
 End Sub
 
 Private Sub mnuDown_ListPopup_Click()
+List1.ListIndex = ListPopupIndex
 mnuDown_Click
 End Sub
 
 Private Sub mnuExit_Click()
-Unload Me
+End
 End Sub
 
 Private Sub mnuModify_Click()
@@ -1000,14 +1027,17 @@ Command4_Click
 End Sub
 
 Private Sub mnuModify_ListPopup_Click()
+List1.ListIndex = ListPopupIndex
 mnuModify_Click
 End Sub
 
 Private Sub mnuOpen_Click()
+If List1.Visible = False Then Exit Sub
 Call cmdOpen_Click
 End Sub
 
 Private Sub mnuSave_Click()
+If List1.Visible = False Then Exit Sub
 Call cmdSave_Click
 End Sub
 
@@ -1017,6 +1047,7 @@ Command8_Click
 End Sub
 
 Private Sub mnuSpeakSelect_ListPopup_Click()
+List1.ListIndex = ListPopupIndex
 If i - 1 = List1.ListIndex Then
 Command3_Click
 Else
@@ -1035,6 +1066,7 @@ cmdUp_Click
 End Sub
 
 Private Sub mnuUp_ListPopup_Click()
+List1.ListIndex = ListPopupIndex
 mnuUp_Click
 End Sub
 
