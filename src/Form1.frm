@@ -629,7 +629,7 @@ Command9.Enabled = True
 intBBCS = intBBCS + 1
 Label2.Caption = CStr(intBBCS)
 If Check1.Value = 1 Then
-    If intBBCS = Val(Text2.Text) Then
+    If intBBCS >= Val(Text2.Text) Then
         If i < List1.ListCount Then
         intYGMS = 0
         Label5.Caption = Text1.Text
@@ -637,10 +637,8 @@ If Check1.Value = 1 Then
         If Val(Text1.Text) = 0 Then
         Timer1_Timer
         End If
-        Else
-        i = 0
         End If
-    ElseIf i < List1.ListCount Then
+    ElseIf i <= List1.ListCount Then
         intYGMS = 0
         Label5.Caption = Text1.Text
         Timer1.Enabled = True
@@ -706,8 +704,12 @@ Set A.Voice = objVoices.Item(Combo1.ListIndex)
 End Sub
 
 Private Sub Command1_Click()
+If List1.ListCount = 0 Then
+MsgBox "请先添加词语！", vbOKOnly, Me.Caption
+Exit Sub
+End If
 If i >= List1.ListCount Then
-MsgBox "已经播完最后一个了。"
+MsgBox "已经播完了。"
 Exit Sub
 End If
 intBBCS = 0
@@ -933,9 +935,6 @@ If Len(FileName) > 0 Then '运行参数不等于空时
     End If
 End If
 End Sub
-
-
-
 
 Private Sub List1_Click()
   SetListButtons
