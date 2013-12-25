@@ -578,6 +578,12 @@ Begin VB.Form Form1
          Caption         =   "快速选词..."
       End
    End
+   Begin VB.Menu Menu1 
+      Caption         =   "引擎(&T)"
+      Begin VB.Menu Menu2 
+         Caption         =   "设置单词增强目录"
+      End
+   End
    Begin VB.Menu mnuHelp 
       Caption         =   "帮助(&H)"
       Begin VB.Menu mnuAbout 
@@ -714,7 +720,18 @@ Exit Sub
 End If
 intBBCS = 0
 List1.ListIndex = i
+If Len(DCZQML) = 0 Then
 A.Speak List1.List(i), SVSFlagsAsync
+Else
+    If FSO.FileExists(DCZQML & List1.List(i) & ".wav") = True Then
+        Dim FileStream As New SpFileStream
+        Call FileStream.Open(DCZQML & List1.List(i) & ".wav")
+        A.SpeakStream FileStream, SVSFlagsAsync
+    Else
+    A.Speak List1.List(i), SVSFlagsAsync
+    End If
+End If
+
 i = i + 1
 Label15.Caption = i
 Label2.Caption = CStr(intBBCS)
@@ -793,7 +810,17 @@ End Sub
 Private Sub Command3_Click()
 If (i <= List1.ListCount) And (i > 0) Then
 List1.ListIndex = i - 1
+If Len(DCZQML) = 0 Then
 A.Speak List1.List(i - 1), SVSFlagsAsync
+Else
+    If FSO.FileExists(DCZQML & List1.List(i - 1) & ".wav") = True Then
+        Dim FileStream As New SpFileStream
+        Call FileStream.Open(DCZQML & List1.List(i - 1) & ".wav")
+        A.SpeakStream FileStream, SVSFlagsAsync
+    Else
+    A.Speak List1.List(i - 1), SVSFlagsAsync
+    End If
+End If
 Else
 MsgBox "还没报过了！"
 End If
@@ -934,6 +961,15 @@ If Len(FileName) > 0 Then '运行参数不等于空时
     OpenFile FileName '打开这个文件
     End If
 End If
+If Right$(App.Path, 1) = "\" Then
+    If FSO.FolderExists(App.Path & "单词增强") = True Then
+    DCZQML = App.Path & "单词增强\"
+    End If
+Else
+    If FSO.FolderExists(App.Path & "\单词增强") = True Then
+    DCZQML = App.Path & "\单词增强\"
+    End If
+End If
 End Sub
 
 Private Sub List1_Click()
@@ -958,7 +994,7 @@ Private Sub List1_MouseDown(Button As Integer, Shift As Integer, x As Single, Y 
 If Button = 2 Then
     Dim pos As Long, idx As Long
     pos = x / Screen.TwipsPerPixelX + Y / Screen.TwipsPerPixelY * 65536
-    idx = SendMessage(List1.hwnd, LB_ITEMFROMPOINT, 0, ByVal pos)
+    idx = SendMessage(List1.hWnd, LB_ITEMFROMPOINT, 0, ByVal pos)
     If idx < 65536 Then
     List1.ListIndex = idx
     ListPopupIndex = idx
@@ -972,12 +1008,16 @@ End Sub
 Private Sub List1_MouseMove(Button As Integer, Shift As Integer, x As Single, Y As Single)
     Dim pos As Long, idx As Long
     pos = x / Screen.TwipsPerPixelX + Y / Screen.TwipsPerPixelY * 65536
-    idx = SendMessage(List1.hwnd, LB_ITEMFROMPOINT, 0, ByVal pos)
+    idx = SendMessage(List1.hWnd, LB_ITEMFROMPOINT, 0, ByVal pos)
     If idx < 65536 Then
     List1.ToolTipText = List1.List(idx)
     Else
     List1.ToolTipText = ""
     End If
+End Sub
+
+Private Sub Menu2_Click()
+Form3.Show 1
 End Sub
 
 Private Sub mnuAbout_Click()
