@@ -71,12 +71,15 @@ Private Sub Command1_Click()
 Text1.Text = BrowseForFolder("单词增强目录：", Me.hWnd, False, False)
 If Text1.Text = "" Then
 Check1.Value = 0
+Else
+Check1.Value = 1
 End If
 End Sub
 
 Private Sub Command2_Click()
 If Check1.Value = 0 Then
 DCZQML = ""
+SaveSetting "自动默写", "TTS引擎", "单词增强", DCZQML
 Unload Me
 Else
     If FSO.FolderExists(Text1.Text) = False Then
@@ -86,6 +89,7 @@ Else
         If Right$(DCZQML, 1) <> "\" Then
         DCZQML = DCZQML & "\"
         End If
+    SaveSetting "自动默写", "TTS引擎", "单词增强", DCZQML
     Unload Me
     End If
 End If

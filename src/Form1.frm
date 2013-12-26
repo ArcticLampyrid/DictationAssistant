@@ -707,6 +707,7 @@ End Sub
 
 Private Sub Combo1_Click()
 Set A.Voice = objVoices.Item(Combo1.ListIndex)
+SaveSetting "自动默写", "TTS引擎", "引擎", Combo1.ListIndex
 End Sub
 
 Private Sub Command1_Click()
@@ -723,9 +724,21 @@ List1.ListIndex = i
 If Len(DCZQML) = 0 Then
 A.Speak List1.List(i), SVSFlagsAsync
 Else
-    If FSO.FileExists(DCZQML & List1.List(i) & ".wav") = True Then
+    Dim StreamFileName As String
+    StreamFileName = List1.List(i)
+    StreamFileName = Replace(StreamFileName, "\", "")
+    StreamFileName = Replace(StreamFileName, "/", "")
+    StreamFileName = Replace(StreamFileName, ":", "")
+    StreamFileName = Replace(StreamFileName, "*", "")
+    StreamFileName = Replace(StreamFileName, "?", "")
+    StreamFileName = Replace(StreamFileName, Chr(34), "")
+    StreamFileName = Replace(StreamFileName, "<", "")
+    StreamFileName = Replace(StreamFileName, ">", "")
+    StreamFileName = Replace(StreamFileName, "|", "")
+    StreamFileName = DCZQML & StreamFileName & ".wav"
+    If FSO.FileExists(StreamFileName) = True Then
         Dim FileStream As New SpFileStream
-        Call FileStream.Open(DCZQML & List1.List(i) & ".wav")
+        Call FileStream.Open(StreamFileName)
         A.SpeakStream FileStream, SVSFlagsAsync
     Else
     A.Speak List1.List(i), SVSFlagsAsync
@@ -813,9 +826,21 @@ List1.ListIndex = i - 1
 If Len(DCZQML) = 0 Then
 A.Speak List1.List(i - 1), SVSFlagsAsync
 Else
-    If FSO.FileExists(DCZQML & List1.List(i - 1) & ".wav") = True Then
+    Dim StreamFileName As String
+    StreamFileName = List1.List(i - 1)
+    StreamFileName = Replace(StreamFileName, "\", "")
+    StreamFileName = Replace(StreamFileName, "/", "")
+    StreamFileName = Replace(StreamFileName, ":", "")
+    StreamFileName = Replace(StreamFileName, "*", "")
+    StreamFileName = Replace(StreamFileName, "?", "")
+    StreamFileName = Replace(StreamFileName, Chr(34), "")
+    StreamFileName = Replace(StreamFileName, "<", "")
+    StreamFileName = Replace(StreamFileName, ">", "")
+    StreamFileName = Replace(StreamFileName, "|", "")
+    StreamFileName = DCZQML & StreamFileName & ".wav"
+    If FSO.FileExists(StreamFileName) = True Then
         Dim FileStream As New SpFileStream
-        Call FileStream.Open(DCZQML & List1.List(i - 1) & ".wav")
+        Call FileStream.Open(StreamFileName)
         A.SpeakStream FileStream, SVSFlagsAsync
     Else
     A.Speak List1.List(i - 1), SVSFlagsAsync
@@ -920,7 +945,6 @@ Dim strVoiceName As String
 EnglishGrade = 0 '初始化用于记录英文语音引擎质量等级的变量
 ChineseGrade = 0 '初始化用于记录中文语音引擎质量等级的变量
 Set A = New SpVoice '创建SpVoice对象实例
-A.Volume = 100 '设定音量值为100
 Set objVoices = A.GetVoices '读取发音人物集合
     If objVoices.Count = 0 Then
     MsgBox "未发现TTS语音引擎", vbOKOnly, "Error"
@@ -945,9 +969,9 @@ Combo1.AddItem strVoiceName '在组合框中添加
 Next
 EnglishVoiceGood = EnglishGrade
 ChineseVoiceGood = ChineseGrade
-If Combo1.ListCount <> 0 Then Combo1.ListIndex = 0
-Slider1.Value = A.Rate
-Slider2.Value = A.Volume
+Combo1.ListIndex = GetSetting("自动默写", "TTS引擎", "引擎", 0)
+Slider1.Value = GetSetting("自动默写", "TTS引擎", "语速", "0")
+Slider2.Value = GetSetting("自动默写", "TTS引擎", "音量", "100")
 i = 0
 intBBCS = 0
 '支持文件关联方式打开：
@@ -961,15 +985,7 @@ If Len(FileName) > 0 Then '运行参数不等于空时
     OpenFile FileName '打开这个文件
     End If
 End If
-If Right$(App.Path, 1) = "\" Then
-    If FSO.FolderExists(App.Path & "单词增强") = True Then
-    DCZQML = App.Path & "单词增强\"
-    End If
-Else
-    If FSO.FolderExists(App.Path & "\单词增强") = True Then
-    DCZQML = App.Path & "\单词增强\"
-    End If
-End If
+DCZQML = GetSetting("自动默写", "TTS引擎", "单词增强", "")
 End Sub
 
 Private Sub List1_Click()
@@ -1111,11 +1127,13 @@ End Sub
 
 Private Sub Slider1_Change()
 A.Rate = Slider1.Value
+SaveSetting "自动默写", "TTS引擎", "语速", Slider1.Value
 End Sub
 
 
 Private Sub Slider2_Change()
 A.Volume = Slider2.Value
+SaveSetting "自动默写", "TTS引擎", "音量", Slider2.Value
 End Sub
 
 
