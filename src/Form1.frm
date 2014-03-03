@@ -5,51 +5,78 @@ Begin VB.Form Form1
    AutoRedraw      =   -1  'True
    BorderStyle     =   1  'Fixed Single
    Caption         =   "自动默写"
-   ClientHeight    =   7335
+   ClientHeight    =   8610
    ClientLeft      =   150
    ClientTop       =   480
    ClientWidth     =   12765
    Icon            =   "Form1.frx":0000
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
-   ScaleHeight     =   7335
+   ScaleHeight     =   8610
    ScaleWidth      =   12765
    StartUpPosition =   2  '屏幕中心
    Begin VB.Frame Frame3 
       Caption         =   "引擎设置"
-      Height          =   1695
+      Height          =   1935
       Left            =   7560
-      TabIndex        =   23
-      Top             =   5040
+      TabIndex        =   22
+      Top             =   6000
       Width           =   5055
       Begin VB.CommandButton Command11 
          Caption         =   "切换到英文阅读引擎"
-         Height          =   255
+         BeginProperty Font 
+            Name            =   "微软雅黑"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   375
          Left            =   2520
-         TabIndex        =   32
-         Top             =   1320
+         TabIndex        =   31
+         Top             =   1440
          Width           =   2415
       End
       Begin VB.CommandButton Command10 
          Caption         =   "切换到中文阅读引擎"
-         Height          =   255
+         BeginProperty Font 
+            Name            =   "微软雅黑"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   375
          Left            =   120
-         TabIndex        =   31
-         Top             =   1320
+         TabIndex        =   30
+         Top             =   1440
          Width           =   2415
       End
       Begin VB.ComboBox Combo1 
-         Height          =   300
+         BeginProperty Font 
+            Name            =   "微软雅黑"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   375
          Left            =   720
          Style           =   2  'Dropdown List
-         TabIndex        =   29
+         TabIndex        =   28
          Top             =   960
          Width           =   4215
       End
       Begin MSComctlLib.Slider Slider2 
          Height          =   255
          Left            =   720
-         TabIndex        =   25
+         TabIndex        =   24
          Top             =   240
          Width           =   4215
          _ExtentX        =   7435
@@ -65,7 +92,7 @@ Begin VB.Form Form1
       Begin MSComctlLib.Slider Slider1 
          Height          =   255
          Left            =   720
-         TabIndex        =   27
+         TabIndex        =   26
          Top             =   600
          Width           =   4215
          _ExtentX        =   7435
@@ -77,126 +104,227 @@ Begin VB.Form Form1
       Begin VB.Label Label8 
          AutoSize        =   -1  'True
          Caption         =   "引擎："
-         Height          =   180
+         BeginProperty Font 
+            Name            =   "微软雅黑"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   255
          Left            =   120
-         TabIndex        =   28
-         Top             =   960
-         Width           =   660
+         TabIndex        =   27
+         Top             =   1020
+         Width           =   540
       End
       Begin VB.Label Label9 
          AutoSize        =   -1  'True
          Caption         =   "语速："
-         Height          =   180
+         BeginProperty Font 
+            Name            =   "微软雅黑"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   255
          Left            =   120
-         TabIndex        =   26
+         TabIndex        =   25
          Top             =   600
          Width           =   540
       End
       Begin VB.Label Label11 
          AutoSize        =   -1  'True
          Caption         =   "音量："
-         Height          =   180
+         BeginProperty Font 
+            Name            =   "微软雅黑"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   255
          Left            =   120
-         TabIndex        =   24
+         TabIndex        =   23
          Top             =   240
          Width           =   540
       End
    End
    Begin VB.Frame Frame2 
       Caption         =   "词语播报"
-      Height          =   4815
+      Height          =   5775
       Left            =   7560
       TabIndex        =   5
       Top             =   120
       Width           =   5055
       Begin VB.CommandButton Command3 
          Caption         =   "再报一遍(&A)"
-         Height          =   375
-         Left            =   3360
-         TabIndex        =   19
-         Top             =   3720
-         Width           =   1455
-      End
-      Begin VB.CommandButton Command9 
-         Caption         =   "报上一个(&L)"
-         Height          =   375
-         Left            =   3360
-         TabIndex        =   17
-         Top             =   3240
-         Width           =   1455
-      End
-      Begin VB.CommandButton Command7 
-         Caption         =   "暂停自动播报(&P)"
-         Height          =   1455
-         Left            =   710
-         TabIndex        =   13
-         Top             =   2640
-         Width           =   470
-      End
-      Begin VB.CommandButton Command1 
-         Caption         =   "报下一个(&N)"
-         Height          =   375
-         Left            =   1800
-         TabIndex        =   16
-         Top             =   3240
-         Width           =   1455
-      End
-      Begin VB.CommandButton Command5 
-         Caption         =   "从头开始(&H)"
-         Height          =   375
-         Left            =   1800
-         TabIndex        =   18
-         Top             =   3720
-         Width           =   1455
-      End
-      Begin VB.TextBox Text1 
-         Height          =   270
-         Left            =   3120
-         MaxLength       =   3
-         TabIndex        =   9
-         Text            =   "3"
-         Top             =   720
-         Width           =   1695
-      End
-      Begin VB.CommandButton Command6 
-         Caption         =   "开始自动播报(&S)"
-         Height          =   1455
-         Left            =   240
-         TabIndex        =   12
-         Top             =   2640
-         Width           =   470
-      End
-      Begin VB.TextBox Text2 
-         Height          =   270
-         Left            =   3120
-         MaxLength       =   3
-         TabIndex        =   11
-         Text            =   "2"
-         Top             =   1080
-         Width           =   1695
-      End
-      Begin VB.CheckBox Check1 
-         Caption         =   "自动播报"
          BeginProperty Font 
-            Name            =   "宋体"
-            Size            =   21.75
+            Name            =   "微软雅黑"
+            Size            =   9
             Charset         =   134
             Weight          =   400
             Underline       =   0   'False
             Italic          =   0   'False
             Strikethrough   =   0   'False
          EndProperty
-         Height          =   435
-         Left            =   1800
+         Height          =   375
+         Left            =   2460
+         TabIndex        =   18
+         Top             =   4680
+         Width           =   2355
+      End
+      Begin VB.CommandButton Command9 
+         Caption         =   "报上一个(&L)"
+         BeginProperty Font 
+            Name            =   "微软雅黑"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   375
+         Left            =   120
+         TabIndex        =   16
+         Top             =   4680
+         Width           =   2355
+      End
+      Begin VB.CommandButton Command5 
+         Caption         =   "从头开始(&H)"
+         BeginProperty Font 
+            Name            =   "微软雅黑"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   375
+         Left            =   2460
+         TabIndex        =   17
+         Top             =   4320
+         Width           =   2355
+      End
+      Begin VB.CommandButton Command1 
+         Caption         =   "报下一个(&N)"
+         BeginProperty Font 
+            Name            =   "微软雅黑"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   375
+         Left            =   120
          TabIndex        =   15
-         Top             =   2700
-         Width           =   3015
+         Top             =   4320
+         Width           =   2355
+      End
+      Begin VB.CommandButton Command7 
+         Caption         =   "暂停自动播报(&P)"
+         Enabled         =   0   'False
+         BeginProperty Font 
+            Name            =   "微软雅黑"
+            Size            =   15.75
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   735
+         Left            =   120
+         TabIndex        =   13
+         Top             =   3600
+         Width           =   4695
+      End
+      Begin VB.CommandButton Command12 
+         Caption         =   "停止自动播报(&E)"
+         Enabled         =   0   'False
+         BeginProperty Font 
+            Name            =   "微软雅黑"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   375
+         Left            =   2460
+         TabIndex        =   43
+         Top             =   3240
+         Width           =   2355
+      End
+      Begin VB.CommandButton Command6 
+         Caption         =   "开始自动播报(&S)"
+         BeginProperty Font 
+            Name            =   "微软雅黑"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   375
+         Left            =   120
+         TabIndex        =   12
+         Top             =   3240
+         Width           =   2355
+      End
+      Begin VB.TextBox Text1 
+         BeginProperty Font 
+            Name            =   "微软雅黑"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   390
+         Left            =   3240
+         MaxLength       =   4
+         TabIndex        =   9
+         Text            =   "3"
+         Top             =   960
+         Width           =   1575
+      End
+      Begin VB.TextBox Text2 
+         BeginProperty Font 
+            Name            =   "微软雅黑"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   405
+         Left            =   3240
+         MaxLength       =   4
+         TabIndex        =   11
+         Text            =   "2"
+         Top             =   1560
+         Width           =   1575
       End
       Begin VB.Label Label15 
          Alignment       =   2  'Center
          Caption         =   "0"
          BeginProperty Font 
-            Name            =   "宋体"
+            Name            =   "微软雅黑"
             Size            =   21.75
             Charset         =   134
             Weight          =   400
@@ -204,16 +332,16 @@ Begin VB.Form Form1
             Italic          =   0   'False
             Strikethrough   =   0   'False
          EndProperty
-         Height          =   375
-         Left            =   2400
-         TabIndex        =   43
-         Top             =   1440
+         Height          =   570
+         Left            =   2280
+         TabIndex        =   42
+         Top             =   1920
          Width           =   2055
       End
       Begin VB.Label Label14 
          Caption         =   "个"
          BeginProperty Font 
-            Name            =   "宋体"
+            Name            =   "微软雅黑"
             Size            =   21.75
             Charset         =   134
             Weight          =   400
@@ -221,16 +349,16 @@ Begin VB.Form Form1
             Italic          =   0   'False
             Strikethrough   =   0   'False
          EndProperty
-         Height          =   435
-         Left            =   4440
-         TabIndex        =   42
-         Top             =   1440
+         Height          =   570
+         Left            =   4320
+         TabIndex        =   41
+         Top             =   1920
          Width           =   435
       End
       Begin VB.Label Label13 
          Caption         =   "正在播报第"
          BeginProperty Font 
-            Name            =   "宋体"
+            Name            =   "微软雅黑"
             Size            =   21.75
             Charset         =   134
             Weight          =   400
@@ -238,24 +366,33 @@ Begin VB.Form Form1
             Italic          =   0   'False
             Strikethrough   =   0   'False
          EndProperty
-         Height          =   435
-         Left            =   240
-         TabIndex        =   41
-         Top             =   1440
+         Height          =   570
+         Left            =   120
+         TabIndex        =   40
+         Top             =   1920
          Width           =   2175
       End
       Begin VB.Label Label12 
-         Caption         =   "暂停自动播报后不把“自动播报”这个勾去掉的话，按“报下一个”、“报上一个”或“再报一遍”后会自动开始下一轮自动播报。"
+         Caption         =   "暂停自动播报后按“报下一个”、“报上一个”或“再报一遍”后会自动开始自动播报。"
+         BeginProperty Font 
+            Name            =   "微软雅黑"
+            Size            =   10.5
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
          Height          =   615
-         Left            =   240
+         Left            =   120
          TabIndex        =   14
-         Top             =   2040
+         Top             =   2520
          Width           =   4695
       End
       Begin VB.Label Label3 
          Caption         =   "将于"
          BeginProperty Font 
-            Name            =   "宋体"
+            Name            =   "微软雅黑"
             Size            =   21.75
             Charset         =   134
             Weight          =   400
@@ -264,15 +401,15 @@ Begin VB.Form Form1
             Strikethrough   =   0   'False
          EndProperty
          Height          =   495
-         Left            =   360
-         TabIndex        =   20
-         Top             =   4200
+         Left            =   120
+         TabIndex        =   19
+         Top             =   5160
          Width           =   975
       End
       Begin VB.Label Label4 
          Caption         =   "秒后自动播报"
          BeginProperty Font 
-            Name            =   "宋体"
+            Name            =   "微软雅黑"
             Size            =   21.75
             Charset         =   134
             Weight          =   400
@@ -282,15 +419,15 @@ Begin VB.Form Form1
          EndProperty
          Height          =   495
          Left            =   2205
-         TabIndex        =   22
-         Top             =   4200
+         TabIndex        =   21
+         Top             =   5160
          Width           =   2655
       End
       Begin VB.Label Label5 
          Alignment       =   2  'Center
          Caption         =   "0"
          BeginProperty Font 
-            Name            =   "宋体"
+            Name            =   "微软雅黑"
             Size            =   21.75
             Charset         =   134
             Weight          =   400
@@ -299,15 +436,15 @@ Begin VB.Form Form1
             Strikethrough   =   0   'False
          EndProperty
          Height          =   495
-         Left            =   1335
-         TabIndex        =   21
-         Top             =   4200
-         Width           =   855
+         Left            =   1095
+         TabIndex        =   20
+         Top             =   5160
+         Width           =   1095
       End
       Begin VB.Label Label1 
          Caption         =   "本词语播报次数"
          BeginProperty Font 
-            Name            =   "宋体"
+            Name            =   "微软雅黑"
             Size            =   21.75
             Charset         =   134
             Weight          =   400
@@ -315,16 +452,17 @@ Begin VB.Form Form1
             Italic          =   0   'False
             Strikethrough   =   0   'False
          EndProperty
-         Height          =   435
-         Left            =   240
+         Height          =   570
+         Left            =   120
          TabIndex        =   6
          Top             =   240
          Width           =   3045
       End
       Begin VB.Label Label2 
+         Alignment       =   2  'Center
          Caption         =   "0"
          BeginProperty Font 
-            Name            =   "宋体"
+            Name            =   "微软雅黑"
             Size            =   21.75
             Charset         =   134
             Weight          =   400
@@ -332,26 +470,44 @@ Begin VB.Form Form1
             Italic          =   0   'False
             Strikethrough   =   0   'False
          EndProperty
-         Height          =   495
-         Left            =   3480
+         Height          =   570
+         Left            =   3240
          TabIndex        =   7
          Top             =   240
-         Width           =   1335
+         Width           =   1575
       End
       Begin VB.Label Label6 
          Caption         =   "自动播报间隔（秒）"
-         Height          =   180
-         Left            =   360
+         BeginProperty Font 
+            Name            =   "微软雅黑"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   300
+         Left            =   120
          TabIndex        =   8
-         Top             =   720
+         Top             =   960
          Width           =   1620
       End
       Begin VB.Label Label7 
          Caption         =   "自动播报次数（每个词语）"
-         Height          =   180
-         Left            =   360
+         BeginProperty Font 
+            Name            =   "微软雅黑"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   300
+         Left            =   120
          TabIndex        =   10
-         Top             =   1080
+         Top             =   1560
          Width           =   2160
       End
    End
@@ -363,7 +519,7 @@ Begin VB.Form Form1
    End
    Begin VB.CommandButton Command2 
       Caption         =   "显示/隐藏词语控制区"
-      Height          =   6975
+      Height          =   8295
       Left            =   7080
       TabIndex        =   4
       Top             =   240
@@ -371,7 +527,7 @@ Begin VB.Form Form1
    End
    Begin VB.Frame Frame1 
       Caption         =   "词语控制"
-      Height          =   7095
+      Height          =   8415
       Left            =   120
       TabIndex        =   0
       Top             =   120
@@ -381,7 +537,7 @@ Begin VB.Form Form1
          Left            =   6360
          Picture         =   "Form1.frx":324A
          Style           =   1  'Graphical
-         TabIndex        =   40
+         TabIndex        =   39
          ToolTipText     =   "将列表项保存到一个TXT文件中（每个词语作为一行）"
          Top             =   720
          UseMaskColor    =   -1  'True
@@ -392,7 +548,7 @@ Begin VB.Form Form1
          Left            =   6360
          Picture         =   "Form1.frx":334C
          Style           =   1  'Graphical
-         TabIndex        =   39
+         TabIndex        =   38
          ToolTipText     =   "添加列表项"
          Top             =   2160
          UseMaskColor    =   -1  'True
@@ -404,7 +560,7 @@ Begin VB.Form Form1
          Left            =   6360
          Picture         =   "Form1.frx":344E
          Style           =   1  'Graphical
-         TabIndex        =   38
+         TabIndex        =   37
          ToolTipText     =   "删除选定列表项"
          Top             =   3120
          UseMaskColor    =   -1  'True
@@ -416,7 +572,7 @@ Begin VB.Form Form1
          Left            =   6360
          Picture         =   "Form1.frx":3550
          Style           =   1  'Graphical
-         TabIndex        =   37
+         TabIndex        =   36
          ToolTipText     =   "向上移动"
          Top             =   1200
          UseMaskColor    =   -1  'True
@@ -428,7 +584,7 @@ Begin VB.Form Form1
          Left            =   6360
          Picture         =   "Form1.frx":3652
          Style           =   1  'Graphical
-         TabIndex        =   36
+         TabIndex        =   35
          ToolTipText     =   "向下移动"
          Top             =   1680
          UseMaskColor    =   -1  'True
@@ -441,7 +597,7 @@ Begin VB.Form Form1
          MaskColor       =   &H00FFFFFF&
          Picture         =   "Form1.frx":3994
          Style           =   1  'Graphical
-         TabIndex        =   35
+         TabIndex        =   34
          ToolTipText     =   "清空列表"
          Top             =   3600
          UseMaskColor    =   -1  'True
@@ -452,7 +608,7 @@ Begin VB.Form Form1
          Left            =   6360
          Picture         =   "Form1.frx":3B36
          Style           =   1  'Graphical
-         TabIndex        =   34
+         TabIndex        =   33
          ToolTipText     =   "从一个TXT文件中添加列表项（每行作为一个词语）"
          Top             =   240
          UseMaskColor    =   -1  'True
@@ -465,32 +621,52 @@ Begin VB.Form Form1
          MaskColor       =   &H00FFFFFF&
          Picture         =   "Form1.frx":3C38
          Style           =   1  'Graphical
-         TabIndex        =   33
+         TabIndex        =   32
          ToolTipText     =   "修改选中列表项"
          Top             =   2640
          UseMaskColor    =   -1  'True
          Width           =   330
       End
       Begin VB.CommandButton cmdShowCount 
-         Caption         =   "计算词语数量"
-         Height          =   1455
+         Caption         =   "计"
+         BeginProperty Font 
+            Name            =   "微软雅黑"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   330
          Left            =   6360
          TabIndex        =   2
-         Top             =   4200
-         Width           =   375
+         ToolTipText     =   "计算词语总数"
+         Top             =   4080
+         Width           =   330
       End
       Begin VB.CommandButton Command8 
-         Caption         =   "快速选词"
+         Caption         =   "选"
          Enabled         =   0   'False
-         Height          =   975
+         BeginProperty Font 
+            Name            =   "微软雅黑"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   330
          Left            =   6360
          TabIndex        =   3
-         Top             =   5880
-         Width           =   375
+         ToolTipText     =   "快速选词"
+         Top             =   4560
+         Width           =   330
       End
       Begin VB.ListBox List1 
          BeginProperty Font 
-            Name            =   "宋体"
+            Name            =   "微软雅黑"
             Size            =   21.75
             Charset         =   134
             Weight          =   400
@@ -498,7 +674,7 @@ Begin VB.Form Form1
             Italic          =   0   'False
             Strikethrough   =   0   'False
          EndProperty
-         Height          =   6585
+         Height          =   8040
          ItemData        =   "Form1.frx":3D6A
          Left            =   120
          List            =   "Form1.frx":3D6C
@@ -518,10 +694,19 @@ Begin VB.Form Form1
    End
    Begin VB.Label Label10 
       Caption         =   "随机排序：先计算词语数量，在使用快速选词中的随机选词，将随机选词数量填写为词语数量即可。"
+      BeginProperty Font 
+         Name            =   "微软雅黑"
+         Size            =   9
+         Charset         =   134
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       Height          =   465
       Left            =   7560
-      TabIndex        =   30
-      Top             =   6840
+      TabIndex        =   29
+      Top             =   8040
       Width           =   5040
    End
    Begin VB.Menu mnuFile 
@@ -581,7 +766,7 @@ Begin VB.Form Form1
    Begin VB.Menu Menu1 
       Caption         =   "引擎(&T)"
       Begin VB.Menu Menu2 
-         Caption         =   "设置单词增强目录"
+         Caption         =   "设置单词增强目录..."
       End
    End
    Begin VB.Menu mnuHelp 
@@ -593,6 +778,13 @@ Begin VB.Form Form1
    Begin VB.Menu mnuListPopup 
       Caption         =   "列表弹出菜单"
       Visible         =   0   'False
+      Begin VB.Menu mnuName_ListPopup 
+         Caption         =   "当前选择：*（第#条）"
+         Enabled         =   0   'False
+      End
+      Begin VB.Menu mnuListPopupSep1 
+         Caption         =   "-"
+      End
       Begin VB.Menu mnuUp_ListPopup 
          Caption         =   "上移"
       End
@@ -605,7 +797,7 @@ Begin VB.Form Form1
       Begin VB.Menu mnuDelete_ListPopup 
          Caption         =   "删除"
       End
-      Begin VB.Menu mnuListPopupSep 
+      Begin VB.Menu mnuListPopupSep2 
          Caption         =   "-"
       End
       Begin VB.Menu mnuSpeakSelect_ListPopup 
@@ -630,27 +822,32 @@ Dim EnglishVoiceGood As Boolean, ChineseVoiceGood As Boolean
 Private Sub A_EndStream(ByVal StreamNumber As Long, ByVal StreamPosition As Variant)
 Command1.Enabled = True
 Command3.Enabled = True
-Command7.Enabled = True
+If Zdbb = True Then Command7.Enabled = True
 Command9.Enabled = True
+mnuSpeakSelect_ListPopup.Enabled = True
 intBBCS = intBBCS + 1
 Label2.Caption = CStr(intBBCS)
-If Check1.Value = 1 Then
-    If intBBCS >= Val(Text2.Text) Then
-        If i < List1.ListCount Then
+If Zdbb = True Then
+    If intBBCS >= Val(Text2.Text) And i < List1.ListCount Then
+            intYGMS = 0
+            Label5.Caption = Text1.Text
+            Timer1.Enabled = True
+                If Val(Text1.Text) = 0 Then
+                Timer1_Timer
+                End If
+    ElseIf intBBCS < Val(Text2.Text) And i <= List1.ListCount Then
         intYGMS = 0
         Label5.Caption = Text1.Text
         Timer1.Enabled = True
-        If Val(Text1.Text) = 0 Then
-        Timer1_Timer
-        End If
-        End If
-    ElseIf i <= List1.ListCount Then
-        intYGMS = 0
-        Label5.Caption = Text1.Text
-        Timer1.Enabled = True
-        If Val(Text1.Text) = 0 Then
-        Timer1_Timer
-        End If
+            If Val(Text1.Text) = 0 Then
+            Timer1_Timer
+            End If
+    Else
+    Zdbb = False
+    Command6.Enabled = True
+    Command12.Enabled = False
+    Command7.Enabled = False
+    MsgBox "自动播报已完成！"
     End If
 End If
 End Sub
@@ -661,9 +858,12 @@ Command1.Enabled = False
 Command3.Enabled = False
 Command7.Enabled = False
 Command9.Enabled = False
+mnuSpeakSelect_ListPopup.Enabled = False
 Timer1.Enabled = False
 Label5.Caption = "0"
 End Sub
+
+
 
 
 Private Sub cmdAdd_Click()
@@ -802,6 +1002,23 @@ End If
 Combo1.ListIndex = Val(Command11.Tag)
 End Sub
 
+Private Sub Command12_Click()
+Zdbb = False
+Command6.Enabled = True
+Command7.Enabled = False
+Command12.Enabled = False
+Timer1.Enabled = False
+Label5.Caption = "0"
+If A.Status.RunningState <> SRSEDone Then
+A.Speak vbNullString, SVSFPurgeBeforeSpeak
+Command1.Enabled = True
+Command3.Enabled = True
+Command9.Enabled = True
+mnuSpeakSelect_ListPopup.Enabled = True
+End If
+MsgBox "自动播报已结束！"
+End Sub
+
 Private Sub Command2_Click()
 If Frame1.Visible = True Then
 Frame1.Visible = False
@@ -823,29 +1040,29 @@ End Sub
 Private Sub Command3_Click()
 If (i <= List1.ListCount) And (i > 0) Then
 List1.ListIndex = i - 1
-If Len(DCZQML) = 0 Then
-A.Speak List1.List(i - 1), SVSFlagsAsync
-Else
-    Dim StreamFileName As String
-    StreamFileName = List1.List(i - 1)
-    StreamFileName = Replace(StreamFileName, "\", "")
-    StreamFileName = Replace(StreamFileName, "/", "")
-    StreamFileName = Replace(StreamFileName, ":", "")
-    StreamFileName = Replace(StreamFileName, "*", "")
-    StreamFileName = Replace(StreamFileName, "?", "")
-    StreamFileName = Replace(StreamFileName, Chr(34), "")
-    StreamFileName = Replace(StreamFileName, "<", "")
-    StreamFileName = Replace(StreamFileName, ">", "")
-    StreamFileName = Replace(StreamFileName, "|", "")
-    StreamFileName = DCZQML & StreamFileName & ".wav"
-    If FSO.FileExists(StreamFileName) = True Then
-        Dim FileStream As New SpFileStream
-        Call FileStream.Open(StreamFileName)
-        A.SpeakStream FileStream, SVSFlagsAsync
-    Else
+    If Len(DCZQML) = 0 Then
     A.Speak List1.List(i - 1), SVSFlagsAsync
+    Else
+        Dim StreamFileName As String
+        StreamFileName = List1.List(i - 1)
+        StreamFileName = Replace(StreamFileName, "\", "")
+        StreamFileName = Replace(StreamFileName, "/", "")
+        StreamFileName = Replace(StreamFileName, ":", "")
+        StreamFileName = Replace(StreamFileName, "*", "")
+        StreamFileName = Replace(StreamFileName, "?", "")
+        StreamFileName = Replace(StreamFileName, Chr(34), "")
+        StreamFileName = Replace(StreamFileName, "<", "")
+        StreamFileName = Replace(StreamFileName, ">", "")
+        StreamFileName = Replace(StreamFileName, "|", "")
+        StreamFileName = DCZQML & StreamFileName & ".wav"
+        If FSO.FileExists(StreamFileName) = True Then
+            Dim FileStream As New SpFileStream
+            Call FileStream.Open(StreamFileName)
+            A.SpeakStream FileStream, SVSFlagsAsync
+        Else
+        A.Speak List1.List(i - 1), SVSFlagsAsync
+        End If
     End If
-End If
 Else
 MsgBox "还没报过了！"
 End If
@@ -871,6 +1088,7 @@ End Sub
 
 Private Sub Command5_Click()
 i = 0
+If List1.ListCount > 0 Then List1.ListIndex = 0
 End Sub
 
 Private Sub cmdUp_Click()
@@ -912,16 +1130,20 @@ If List1.ListCount = 0 Then
 MsgBox "请先添加词语！", vbOKOnly, Me.Caption
 Exit Sub
 End If
+Command6.Enabled = False
+Command12.Enabled = True
 Label5.Caption = Text1.Text
 intYGMS = 0
 Timer1.Enabled = True
-Check1.Value = 1
+Zdbb = True
 i = 0
 Command1_Click
 End Sub
 
 Private Sub Command7_Click()
+Command7.Enabled = False
 Timer1.Enabled = False
+Command3.SetFocus
 End Sub
 
 Private Sub Command8_Click()
@@ -967,7 +1189,7 @@ Combo1.AddItem strVoiceName '在组合框中添加
         End If
     End If
 Next
-EnglishVoiceGood = EnglishGrade
+EnglishVoiceGood = EnglishGrade > 0 And EnglishGrade < 5
 ChineseVoiceGood = ChineseGrade
 Combo1.ListIndex = GetSetting("自动默写", "TTS引擎", "引擎", 0)
 Slider1.Value = GetSetting("自动默写", "TTS引擎", "语速", "0")
@@ -987,6 +1209,20 @@ If Len(FileName) > 0 Then '运行参数不等于空时
 End If
 DCZQML = GetSetting("自动默写", "TTS引擎", "单词增强", "")
 End Sub
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Private Sub List1_Click()
   SetListButtons
@@ -1014,6 +1250,7 @@ If Button = 2 Then
     If idx < 65536 Then
     List1.ListIndex = idx
     ListPopupIndex = idx
+    mnuName_ListPopup.Caption = "当前选择：" & List1.List(ListPopupIndex) & "（第" & ListPopupIndex + 1 & "条）"
     PopupMenu mnuListPopup
     Else
     List1.ListIndex = -1
@@ -1184,9 +1421,27 @@ Label5.Caption = "0"
 End If
 If intYGMS >= Val(Text1.Text) Then
     If intBBCS >= Val(Text2.Text) Or i = 0 Then
-    Command1_Click
+        If i < List1.ListCount Then
+        Command1_Click
+        Else
+        Zdbb = False
+        Command6.Enabled = True
+        Command12.Enabled = False
+        Command7.Enabled = False
+        Timer1.Enabled = False
+        MsgBox "自动播报已完成！"
+        End If
     Else
-    Command3_Click
+        If i <= List1.ListCount Then
+        Command3_Click
+        Else
+        Zdbb = False
+        Command6.Enabled = True
+        Command12.Enabled = False
+        Command7.Enabled = False
+        Timer1.Enabled = False
+        MsgBox "自动播报已完成！"
+        End If
     End If
 End If
 End Sub

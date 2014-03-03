@@ -2,26 +2,44 @@ VERSION 5.00
 Begin VB.Form Form2 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "快速选词"
-   ClientHeight    =   6090
+   ClientHeight    =   6120
    ClientLeft      =   45
    ClientTop       =   375
    ClientWidth     =   11610
    Icon            =   "Form2.frx":0000
    LinkTopic       =   "Form2"
    MaxButton       =   0   'False
-   ScaleHeight     =   6090
+   ScaleHeight     =   6120
    ScaleWidth      =   11610
    StartUpPosition =   1  '所有者中心
    Begin VB.TextBox Text1 
-      Height          =   270
+      BeginProperty Font 
+         Name            =   "微软雅黑"
+         Size            =   9
+         Charset         =   134
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Height          =   390
       Left            =   10200
       TabIndex        =   12
       Text            =   "60"
-      Top             =   600
+      Top             =   480
       Width           =   1335
    End
    Begin VB.CommandButton Command2 
       Caption         =   "随机选词"
+      BeginProperty Font 
+         Name            =   "微软雅黑"
+         Size            =   9
+         Charset         =   134
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       Height          =   375
       Left            =   10200
       TabIndex        =   11
@@ -34,7 +52,7 @@ Begin VB.Form Form2
       Picture         =   "Form2.frx":000C
       Style           =   1  'Graphical
       TabIndex        =   10
-      Top             =   2160
+      Top             =   2280
       UseMaskColor    =   -1  'True
       Width           =   450
    End
@@ -44,21 +62,30 @@ Begin VB.Form Form2
       Picture         =   "Form2.frx":010E
       Style           =   1  'Graphical
       TabIndex        =   9
-      Top             =   2760
+      Top             =   2880
       UseMaskColor    =   -1  'True
       Width           =   450
    End
    Begin VB.CommandButton Command1 
       Caption         =   "生效"
+      BeginProperty Font 
+         Name            =   "微软雅黑"
+         Size            =   9
+         Charset         =   134
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       Height          =   375
       Left            =   10200
       TabIndex        =   8
-      Top             =   5520
+      Top             =   5640
       Width           =   1335
    End
    Begin VB.ListBox lstAll 
       BeginProperty Font 
-         Name            =   "宋体"
+         Name            =   "微软雅黑"
          Size            =   21.75
          Charset         =   134
          Weight          =   400
@@ -66,7 +93,7 @@ Begin VB.Form Form2
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Height          =   5715
+      Height          =   5760
       Left            =   0
       TabIndex        =   5
       Top             =   255
@@ -74,7 +101,7 @@ Begin VB.Form Form2
    End
    Begin VB.ListBox lstSelected 
       BeginProperty Font 
-         Name            =   "宋体"
+         Name            =   "微软雅黑"
          Size            =   21.75
          Charset         =   134
          Weight          =   400
@@ -82,7 +109,7 @@ Begin VB.Form Form2
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Height          =   5715
+      Height          =   5760
       Left            =   5400
       TabIndex        =   4
       Top             =   255
@@ -91,7 +118,7 @@ Begin VB.Form Form2
    Begin VB.CommandButton cmdRightOne 
       Caption         =   ">"
       BeginProperty Font 
-         Name            =   "宋体"
+         Name            =   "微软雅黑"
          Size            =   9.75
          Charset         =   134
          Weight          =   700
@@ -109,7 +136,7 @@ Begin VB.Form Form2
    Begin VB.CommandButton cmdRightAll 
       Caption         =   ">>"
       BeginProperty Font 
-         Name            =   "宋体"
+         Name            =   "微软雅黑"
          Size            =   9.75
          Charset         =   134
          Weight          =   700
@@ -127,7 +154,7 @@ Begin VB.Form Form2
    Begin VB.CommandButton cmdLeftOne 
       Caption         =   "<"
       BeginProperty Font 
-         Name            =   "宋体"
+         Name            =   "微软雅黑"
          Size            =   9.75
          Charset         =   134
          Weight          =   700
@@ -145,7 +172,7 @@ Begin VB.Form Form2
    Begin VB.CommandButton cmdLeftAll 
       Caption         =   "<<"
       BeginProperty Font 
-         Name            =   "宋体"
+         Name            =   "微软雅黑"
          Size            =   9.75
          Charset         =   134
          Weight          =   700
@@ -162,25 +189,42 @@ Begin VB.Form Form2
    End
    Begin VB.Label Label1 
       Caption         =   "随机选词数量："
+      BeginProperty Font 
+         Name            =   "微软雅黑"
+         Size            =   9
+         Charset         =   134
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       Height          =   255
       Left            =   10200
       TabIndex        =   13
-      Top             =   240
-      Width           =   1335
+      Top             =   120
+      Width           =   1260
    End
    Begin VB.Label lblAll 
       Appearance      =   0  'Flat
-      AutoSize        =   -1  'True
       BackColor       =   &H80000005&
       BackStyle       =   0  'Transparent
       Caption         =   "所有项目:"
+      BeginProperty Font 
+         Name            =   "微软雅黑"
+         Size            =   9
+         Charset         =   134
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       ForeColor       =   &H80000008&
-      Height          =   195
+      Height          =   255
       Left            =   0
       TabIndex        =   7
       Tag             =   "2406"
       Top             =   0
-      Width           =   630
+      Width           =   765
    End
    Begin VB.Label lblSelected 
       Appearance      =   0  'Flat
@@ -188,13 +232,22 @@ Begin VB.Form Form2
       BackColor       =   &H80000005&
       BackStyle       =   0  'Transparent
       Caption         =   "要保留的项目:"
+      BeginProperty Font 
+         Name            =   "微软雅黑"
+         Size            =   9
+         Charset         =   134
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       ForeColor       =   &H80000008&
-      Height          =   180
-      Left            =   5520
+      Height          =   255
+      Left            =   5400
       TabIndex        =   6
       Tag             =   "2407"
       Top             =   0
-      Width           =   1170
+      Width           =   1125
    End
 End
 Attribute VB_Name = "Form2"
@@ -337,7 +390,7 @@ End Sub
 Private Sub lstAll_MouseMove(Button As Integer, Shift As Integer, x As Single, Y As Single)
     Dim pos As Long, idx As Long
     pos = x / Screen.TwipsPerPixelX + Y / Screen.TwipsPerPixelY * 65536
-    idx = SendMessage(lstAll.hwnd, LB_ITEMFROMPOINT, 0, ByVal pos)
+    idx = SendMessage(lstAll.hWnd, LB_ITEMFROMPOINT, 0, ByVal pos)
     If idx < 65536 Then
     lstAll.ToolTipText = lstAll.List(idx)
     Else
@@ -356,7 +409,7 @@ End Sub
 Private Sub lstSelected_MouseMove(Button As Integer, Shift As Integer, x As Single, Y As Single)
     Dim pos As Long, idx As Long
     pos = x / Screen.TwipsPerPixelX + Y / Screen.TwipsPerPixelY * 65536
-    idx = SendMessage(lstSelected.hwnd, LB_ITEMFROMPOINT, 0, ByVal pos)
+    idx = SendMessage(lstSelected.hWnd, LB_ITEMFROMPOINT, 0, ByVal pos)
     If idx < 65536 Then
     lstSelected.ToolTipText = lstSelected.List(idx)
     Else

@@ -2,6 +2,7 @@ Attribute VB_Name = "Module1"
 Public Declare Function SendMessage Lib "user32" Alias "SendMessageA" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, lParam As Any) As Long
 Public Const LB_ITEMFROMPOINT = &H1A9
 Public FSO As New FileSystemObject
+Public Zdbb As Boolean
 Public DCZQML As String '单词增强目录
 Private Declare Function SHBrowseForFolder Lib "shell32" (lpbi As BrowseInfo) As Long
 Private Declare Sub CoTaskMemFree Lib "ole32.dll" (ByVal hMem As Long)
@@ -20,6 +21,7 @@ Private Const BIF_RETURNONLYFSDIRS          As Long = 1
 Private Const BIF_DONTGOBELOWDOMAIN         As Long = 2
 Private Const BIF_EDITBOX = &H10
 Private Const BIF_USENEWUI = &H40
+
 
 Public Function BrowseForFolder(ByVal Title As String, hWnd As Long, EditBox As Boolean, NewButton As Boolean) As String
 Dim lIDList As Long

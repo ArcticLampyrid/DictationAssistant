@@ -34,6 +34,15 @@ Begin VB.Form frmAbout
       Cancel          =   -1  'True
       Caption         =   "确定"
       Default         =   -1  'True
+      BeginProperty Font 
+         Name            =   "微软雅黑"
+         Size            =   9
+         Charset         =   134
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       Height          =   345
       Left            =   4125
       TabIndex        =   0
@@ -42,6 +51,15 @@ Begin VB.Form frmAbout
    End
    Begin VB.CommandButton cmdSysInfo 
       Caption         =   "系统信息(&S)..."
+      BeginProperty Font 
+         Name            =   "微软雅黑"
+         Size            =   9
+         Charset         =   134
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       Height          =   345
       Left            =   4125
       TabIndex        =   2
@@ -59,15 +77,33 @@ Begin VB.Form frmAbout
    End
    Begin VB.Label lblDescription 
       Caption         =   "一款通过TTS语音引擎播报词语或单词的软件，可自动隔时播报，方便语文和英语课程的默写。"
+      BeginProperty Font 
+         Name            =   "微软雅黑"
+         Size            =   9
+         Charset         =   134
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       ForeColor       =   &H00000000&
       Height          =   570
-      Left            =   360
+      Left            =   120
       TabIndex        =   3
       Top             =   1125
-      Width           =   5205
+      Width           =   5445
    End
    Begin VB.Label lblTitle 
       Caption         =   "%应用程序标题%"
+      BeginProperty Font 
+         Name            =   "微软雅黑"
+         Size            =   9
+         Charset         =   134
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       ForeColor       =   &H00000000&
       Height          =   480
       Left            =   1560
@@ -86,6 +122,15 @@ Begin VB.Form frmAbout
    End
    Begin VB.Label lblVersion 
       Caption         =   "版本 %程序版本%"
+      BeginProperty Font 
+         Name            =   "微软雅黑"
+         Size            =   9
+         Charset         =   134
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       Height          =   225
       Left            =   1560
       TabIndex        =   6
@@ -94,6 +139,15 @@ Begin VB.Form frmAbout
    End
    Begin VB.Label lblDisclaimer 
       Caption         =   "警告：切勿用于商业用途。"
+      BeginProperty Font 
+         Name            =   "微软雅黑"
+         Size            =   9
+         Charset         =   134
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       ForeColor       =   &H00000000&
       Height          =   735
       Left            =   120
