@@ -3,20 +3,36 @@ Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "comdlg32.ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.ocx"
 Begin VB.Form Form1 
    AutoRedraw      =   -1  'True
-   BorderStyle     =   1  'Fixed Single
    Caption         =   "自动默写"
    ClientHeight    =   8610
-   ClientLeft      =   150
-   ClientTop       =   480
-   ClientWidth     =   12765
+   ClientLeft      =   225
+   ClientTop       =   555
+   ClientWidth     =   12810
+   BeginProperty Font 
+      Name            =   "微软雅黑"
+      Size            =   36
+      Charset         =   134
+      Weight          =   400
+      Underline       =   0   'False
+      Italic          =   0   'False
+      Strikethrough   =   0   'False
+   EndProperty
    Icon            =   "Form1.frx":0000
    LinkTopic       =   "Form1"
-   MaxButton       =   0   'False
    ScaleHeight     =   8610
-   ScaleWidth      =   12765
+   ScaleWidth      =   12810
    StartUpPosition =   2  '屏幕中心
    Begin VB.Frame Frame3 
       Caption         =   "引擎设置"
+      BeginProperty Font 
+         Name            =   "宋体"
+         Size            =   9
+         Charset         =   134
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       Height          =   1935
       Left            =   7560
       TabIndex        =   22
@@ -158,6 +174,15 @@ Begin VB.Form Form1
    End
    Begin VB.Frame Frame2 
       Caption         =   "词语播报"
+      BeginProperty Font 
+         Name            =   "宋体"
+         Size            =   9
+         Charset         =   134
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       Height          =   5775
       Left            =   7560
       TabIndex        =   5
@@ -518,24 +543,54 @@ Begin VB.Form Form1
       Top             =   0
    End
    Begin VB.CommandButton Command2 
-      Caption         =   "显示/隐藏词语控制区"
-      Height          =   8295
+      BeginProperty Font 
+         Name            =   "宋体"
+         Size            =   9
+         Charset         =   134
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Height          =   8415
       Left            =   7080
+      MaskColor       =   &H00FFFFFF&
+      Picture         =   "Form1.frx":324A
+      Style           =   1  'Graphical
       TabIndex        =   4
-      Top             =   240
+      Top             =   120
+      UseMaskColor    =   -1  'True
       Width           =   375
    End
    Begin VB.Frame Frame1 
-      Caption         =   "词语控制"
+      Caption         =   "词语列表"
+      BeginProperty Font 
+         Name            =   "宋体"
+         Size            =   9
+         Charset         =   134
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       Height          =   8415
       Left            =   120
       TabIndex        =   0
       Top             =   120
       Width           =   6855
       Begin VB.CommandButton cmdSave 
+         BeginProperty Font 
+            Name            =   "宋体"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
          Height          =   330
-         Left            =   6360
-         Picture         =   "Form1.frx":324A
+         Left            =   6375
+         Picture         =   "Form1.frx":4348
          Style           =   1  'Graphical
          TabIndex        =   39
          ToolTipText     =   "将列表项保存到一个TXT文件中（每个词语作为一行）"
@@ -544,9 +599,18 @@ Begin VB.Form Form1
          Width           =   330
       End
       Begin VB.CommandButton cmdAdd 
+         BeginProperty Font 
+            Name            =   "宋体"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
          Height          =   330
-         Left            =   6360
-         Picture         =   "Form1.frx":334C
+         Left            =   6375
+         Picture         =   "Form1.frx":444A
          Style           =   1  'Graphical
          TabIndex        =   38
          ToolTipText     =   "添加列表项"
@@ -556,9 +620,18 @@ Begin VB.Form Form1
       End
       Begin VB.CommandButton cmdDelete 
          Enabled         =   0   'False
+         BeginProperty Font 
+            Name            =   "宋体"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
          Height          =   330
-         Left            =   6360
-         Picture         =   "Form1.frx":344E
+         Left            =   6375
+         Picture         =   "Form1.frx":454C
          Style           =   1  'Graphical
          TabIndex        =   37
          ToolTipText     =   "删除选定列表项"
@@ -568,9 +641,18 @@ Begin VB.Form Form1
       End
       Begin VB.CommandButton cmdUp 
          Enabled         =   0   'False
+         BeginProperty Font 
+            Name            =   "宋体"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
          Height          =   330
-         Left            =   6360
-         Picture         =   "Form1.frx":3550
+         Left            =   6375
+         Picture         =   "Form1.frx":464E
          Style           =   1  'Graphical
          TabIndex        =   36
          ToolTipText     =   "向上移动"
@@ -580,9 +662,18 @@ Begin VB.Form Form1
       End
       Begin VB.CommandButton cmdDown 
          Enabled         =   0   'False
+         BeginProperty Font 
+            Name            =   "宋体"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
          Height          =   330
-         Left            =   6360
-         Picture         =   "Form1.frx":3652
+         Left            =   6375
+         Picture         =   "Form1.frx":4750
          Style           =   1  'Graphical
          TabIndex        =   35
          ToolTipText     =   "向下移动"
@@ -592,10 +683,19 @@ Begin VB.Form Form1
       End
       Begin VB.CommandButton cmdClear 
          Enabled         =   0   'False
+         BeginProperty Font 
+            Name            =   "宋体"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
          Height          =   330
-         Left            =   6360
+         Left            =   6375
          MaskColor       =   &H00FFFFFF&
-         Picture         =   "Form1.frx":3994
+         Picture         =   "Form1.frx":4A92
          Style           =   1  'Graphical
          TabIndex        =   34
          ToolTipText     =   "清空列表"
@@ -604,9 +704,18 @@ Begin VB.Form Form1
          Width           =   330
       End
       Begin VB.CommandButton cmdOpen 
+         BeginProperty Font 
+            Name            =   "宋体"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
          Height          =   330
-         Left            =   6360
-         Picture         =   "Form1.frx":3B36
+         Left            =   6375
+         Picture         =   "Form1.frx":4C34
          Style           =   1  'Graphical
          TabIndex        =   33
          ToolTipText     =   "从一个TXT文件中添加列表项（每行作为一个词语）"
@@ -616,10 +725,19 @@ Begin VB.Form Form1
       End
       Begin VB.CommandButton Command4 
          Enabled         =   0   'False
+         BeginProperty Font 
+            Name            =   "宋体"
+            Size            =   9
+            Charset         =   134
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
          Height          =   330
-         Left            =   6360
+         Left            =   6375
          MaskColor       =   &H00FFFFFF&
-         Picture         =   "Form1.frx":3C38
+         Picture         =   "Form1.frx":4D36
          Style           =   1  'Graphical
          TabIndex        =   32
          ToolTipText     =   "修改选中列表项"
@@ -639,7 +757,7 @@ Begin VB.Form Form1
             Strikethrough   =   0   'False
          EndProperty
          Height          =   330
-         Left            =   6360
+         Left            =   6375
          TabIndex        =   2
          ToolTipText     =   "计算词语总数"
          Top             =   4080
@@ -658,7 +776,7 @@ Begin VB.Form Form1
             Strikethrough   =   0   'False
          EndProperty
          Height          =   330
-         Left            =   6360
+         Left            =   6375
          TabIndex        =   3
          ToolTipText     =   "快速选词"
          Top             =   4560
@@ -675,9 +793,9 @@ Begin VB.Form Form1
             Strikethrough   =   0   'False
          EndProperty
          Height          =   8040
-         ItemData        =   "Form1.frx":3D6A
+         ItemData        =   "Form1.frx":4E68
          Left            =   120
-         List            =   "Form1.frx":3D6C
+         List            =   "Form1.frx":4E6A
          TabIndex        =   1
          Top             =   240
          Width           =   6255
@@ -691,6 +809,26 @@ Begin VB.Form Form1
       _Version        =   393216
       Filter          =   "文本文档(*.txt)|*.txt"
       MaxFileSize     =   32767
+   End
+   Begin VB.Label Label16 
+      Alignment       =   2  'Center
+      AutoSize        =   -1  'True
+      Caption         =   "词语列表"
+      BeginProperty Font 
+         Name            =   "微软雅黑"
+         Size            =   27.75
+         Charset         =   134
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Height          =   750
+      Left            =   2295
+      TabIndex        =   44
+      Top             =   3240
+      Visible         =   0   'False
+      Width           =   2235
    End
    Begin VB.Label Label10 
       Caption         =   "随机排序：先计算词语数量，在使用快速选词中的随机选词，将随机选词数量填写为词语数量即可。"
@@ -1020,20 +1158,12 @@ MsgBox "自动播报已结束！"
 End Sub
 
 Private Sub Command2_Click()
-If Frame1.Visible = True Then
+If Frame1.Visible Then
 Frame1.Visible = False
-Frame2.Left = 120
-Frame3.Left = 120
-Label10.Left = 120
-Command2.Left = 5285
-Me.Width = 5900
+Label16.Visible = True
 Else
 Frame1.Visible = True
-Frame2.Left = 7560
-Frame3.Left = 7560
-Label10.Left = 7560
-Command2.Left = 7080
-Me.Width = 12855
+Label16.Visible = False
 End If
 End Sub
 
@@ -1160,6 +1290,7 @@ End If
 End Sub
 
 Private Sub Form_Load()
+Label16.Caption = "词语列表" & vbNewLine & "已隐藏"
 Dim EnglishGrade As Integer, ChineseGrade As Integer '声明用于记录语音引擎质量等级的变量
 Dim objVoice As SpObjectToken
 Dim strVoiceLanguage As String
@@ -1210,15 +1341,62 @@ End If
 DCZQML = GetSetting("自动默写", "TTS引擎", "单词增强", "")
 End Sub
 
-
-
-
-
-
-
-
-
-
+Private Sub Form_Resize()
+On Error Resume Next
+If Me.Width < 8430 Then
+Me.Width = 8430
+End If
+If Me.Height < 9480 Then
+Me.Height = 9480
+End If
+Frame1.Width = Me.Width - 6150
+Command2.Left = Frame1.Width + Frame1.Left + 105
+Frame2.Left = Command2.Width + Command2.Left + 105
+Frame3.Left = Command2.Width + Command2.Left + 105
+Label10.Left = Command2.Width + Command2.Left + 105
+List1.Width = Frame1.Width - 600
+cmdOpen.Left = List1.Width + List1.Left
+cmdSave.Left = List1.Width + List1.Left
+cmdUp.Left = List1.Width + List1.Left
+cmdDown.Left = List1.Width + List1.Left
+cmdAdd.Left = List1.Width + List1.Left
+Command4.Left = List1.Width + List1.Left
+cmdDelete.Left = List1.Width + List1.Left
+cmdClear.Left = List1.Width + List1.Left
+cmdShowCount.Left = List1.Width + List1.Left
+Command8.Left = List1.Width + List1.Left
+Frame1.Height = Me.Height - 1065
+List1.Height = Frame1.Height - 375
+Label10.Top = Me.Height - 1440
+Frame3.Top = Label10.Top - 105 - Frame3.Height
+Frame2.Height = Me.Height - 3585 - Frame2.Top
+Label3.Top = Frame2.Height - 615
+Label5.Top = Frame2.Height - 615
+Label4.Top = Frame2.Height - 615
+Command2.Height = Frame1.Height
+Dim Temp1 As Integer
+Dim Temp2 As Integer
+Temp1 = Frame2.Height - 3960
+Temp2 = Screen.TwipsPerPixelY
+Temp1 = Temp1 + Temp2 * 5
+Temp1 = Temp1 / 5
+Temp1 = Temp1 \ Temp2
+Temp1 = Temp1 * Temp2
+Command6.Height = Temp1
+Command12.Height = Temp1
+Command7.Top = Command12.Top + Temp1 - Temp2
+Command7.Height = Temp1 + Temp1
+Command1.Top = Command7.Top + Temp1 + Temp1 - Temp2
+Command1.Height = Temp1
+Command5.Top = Command7.Top + Temp1 + Temp1 - Temp2
+Command5.Height = Temp1
+Command9.Top = Command1.Top + Temp1 - Temp2
+Command9.Height = Temp1
+Command3.Top = Command1.Top + Temp1 - Temp2
+Command3.Height = Temp1
+Label16.Left = Frame1.Left + ((Frame1.Width - Label16.Width) / 2)
+Label16.Top = Frame1.Top + ((Frame1.Height - Label16.Height) / 3)
+End Sub
 
 
 
