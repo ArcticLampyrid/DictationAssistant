@@ -34,14 +34,15 @@ Partial Class Form1
         Me.UpButton = New System.Windows.Forms.Button()
         Me.SaveButton = New System.Windows.Forms.Button()
         Me.OpenButton = New System.Windows.Forms.Button()
-        Me.ListView1 = New System.Windows.Forms.ListView()
+        Me.CiYuListView = New System.Windows.Forms.ListView()
         Me.ColumnHeader1 = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.ColumnHeader2 = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
-        Me.ContextMenuStrip1 = New System.Windows.Forms.ContextMenuStrip(Me.components)
+        Me.CiYuListViewContextMenuStrip = New System.Windows.Forms.ContextMenuStrip(Me.components)
         Me.读选定词语ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.在百度词典中查看ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripMenuItem9 = New System.Windows.Forms.ToolStripSeparator()
         Me.修改ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.删除ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.移除ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripMenuItem5 = New System.Windows.Forms.ToolStripSeparator()
         Me.上移ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.下移ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
@@ -59,9 +60,9 @@ Partial Class Form1
         Me.显示隐藏词语列表ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripMenuItem2 = New System.Windows.Forms.ToolStripSeparator()
         Me.添加词语ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.删除选中词语ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.清空词语列表ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.修改选中词语ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.移除选中词语ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.清空词语列表ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripMenuItem3 = New System.Windows.Forms.ToolStripSeparator()
         Me.向上移动ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.向下移动ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
@@ -74,7 +75,7 @@ Partial Class Form1
         Me.自动翻页ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.字词跟随ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripMenuItem7 = New System.Windows.Forms.ToolStripSeparator()
-        Me.设置单词增强ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.设置词组增强ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.辅助ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.随机排序ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.随机选词ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
@@ -83,10 +84,22 @@ Partial Class Form1
         Me.OpenFileDialog1 = New System.Windows.Forms.OpenFileDialog()
         Me.SaveFileDialog1 = New System.Windows.Forms.SaveFileDialog()
         Me.GroupBox2 = New System.Windows.Forms.GroupBox()
+        Me.ZiDongBoBaoJianGeTextBox = New System.Windows.Forms.TextBox()
+        Me.ZiDongBoBaoJianGeTextBoxContextMenuStrip = New System.Windows.Forms.ContextMenuStrip(Me.components)
+        Me.ZiDongBoBaoJianGeTextBox撤销ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ToolStripSeparator1 = New System.Windows.Forms.ToolStripSeparator()
+        Me.ZiDongBoBaoJianGeTextBox剪切ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ZiDongBoBaoJianGeTextBox复制ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ZiDongBoBaoJianGeTextBox粘贴ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ZiDongBoBaoJianGeTextBox删除ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ToolStripSeparator2 = New System.Windows.Forms.ToolStripSeparator()
+        Me.ZiDongBoBaoJianGeTextBox全选ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ToolStripSeparator3 = New System.Windows.Forms.ToolStripSeparator()
+        Me.插入LengthToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.插入WordCountToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ZiDongBoBaoCiShuTextBox = New System.Windows.Forms.TextBox()
         Me.Label4 = New System.Windows.Forms.Label()
-        Me.TextBox2 = New System.Windows.Forms.TextBox()
         Me.Label3 = New System.Windows.Forms.Label()
-        Me.TextBox1 = New System.Windows.Forms.TextBox()
         Me.Label2 = New System.Windows.Forms.Label()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.GroupBox3 = New System.Windows.Forms.GroupBox()
@@ -97,7 +110,6 @@ Partial Class Form1
         Me.Button3 = New System.Windows.Forms.Button()
         Me.Button2 = New System.Windows.Forms.Button()
         Me.Button1 = New System.Windows.Forms.Button()
-        Me.Timer1 = New System.Windows.Forms.Timer(Me.components)
         Me.Button9 = New System.Windows.Forms.Button()
         Me.GroupBox4 = New System.Windows.Forms.GroupBox()
         Me.Button11 = New System.Windows.Forms.Button()
@@ -109,14 +121,17 @@ Partial Class Form1
         Me.TrackBar1 = New System.Windows.Forms.TrackBar()
         Me.Label6 = New System.Windows.Forms.Label()
         Me.FontDialog1 = New System.Windows.Forms.FontDialog()
+        Me.ErrorProvider1 = New System.Windows.Forms.ErrorProvider(Me.components)
         Me.GroupBox1.SuspendLayout()
-        Me.ContextMenuStrip1.SuspendLayout()
+        Me.CiYuListViewContextMenuStrip.SuspendLayout()
         Me.MenuStrip1.SuspendLayout()
         Me.GroupBox2.SuspendLayout()
+        Me.ZiDongBoBaoJianGeTextBoxContextMenuStrip.SuspendLayout()
         Me.GroupBox3.SuspendLayout()
         Me.GroupBox4.SuspendLayout()
         CType(Me.TrackBar2, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.TrackBar1, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.ErrorProvider1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'GroupBox1
@@ -133,7 +148,7 @@ Partial Class Form1
         Me.GroupBox1.Controls.Add(Me.UpButton)
         Me.GroupBox1.Controls.Add(Me.SaveButton)
         Me.GroupBox1.Controls.Add(Me.OpenButton)
-        Me.GroupBox1.Controls.Add(Me.ListView1)
+        Me.GroupBox1.Controls.Add(Me.CiYuListView)
         Me.GroupBox1.Controls.Add(Me.Label5)
         Me.GroupBox1.Font = New System.Drawing.Font("微软雅黑", 9.0!)
         Me.GroupBox1.Location = New System.Drawing.Point(12, 27)
@@ -251,23 +266,26 @@ Partial Class Form1
         Me.OpenButton.TabIndex = 1
         Me.OpenButton.UseVisualStyleBackColor = True
         '
-        'ListView1
+        'CiYuListView
         '
-        Me.ListView1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+        Me.CiYuListView.AllowColumnReorder = True
+        Me.CiYuListView.AllowDrop = True
+        Me.CiYuListView.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.ListView1.Columns.AddRange(New System.Windows.Forms.ColumnHeader() {Me.ColumnHeader1, Me.ColumnHeader2})
-        Me.ListView1.ContextMenuStrip = Me.ContextMenuStrip1
-        Me.ListView1.Font = New System.Drawing.Font("微软雅黑", 12.0!)
-        Me.ListView1.FullRowSelect = True
-        Me.ListView1.HideSelection = False
-        Me.ListView1.LabelEdit = True
-        Me.ListView1.Location = New System.Drawing.Point(6, 20)
-        Me.ListView1.Name = "ListView1"
-        Me.ListView1.Size = New System.Drawing.Size(376, 632)
-        Me.ListView1.TabIndex = 0
-        Me.ListView1.UseCompatibleStateImageBehavior = False
-        Me.ListView1.View = System.Windows.Forms.View.Details
+        Me.CiYuListView.Columns.AddRange(New System.Windows.Forms.ColumnHeader() {Me.ColumnHeader1, Me.ColumnHeader2})
+        Me.CiYuListView.ContextMenuStrip = Me.CiYuListViewContextMenuStrip
+        Me.CiYuListView.Font = New System.Drawing.Font("微软雅黑", 12.0!)
+        Me.CiYuListView.FullRowSelect = True
+        Me.CiYuListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable
+        Me.CiYuListView.HideSelection = False
+        Me.CiYuListView.LabelEdit = True
+        Me.CiYuListView.Location = New System.Drawing.Point(6, 20)
+        Me.CiYuListView.Name = "CiYuListView"
+        Me.CiYuListView.Size = New System.Drawing.Size(376, 632)
+        Me.CiYuListView.TabIndex = 0
+        Me.CiYuListView.UseCompatibleStateImageBehavior = False
+        Me.CiYuListView.View = System.Windows.Forms.View.Details
         '
         'ColumnHeader1
         '
@@ -279,69 +297,76 @@ Partial Class Form1
         Me.ColumnHeader2.Text = "播报次数"
         Me.ColumnHeader2.Width = 120
         '
-        'ContextMenuStrip1
+        'CiYuListViewContextMenuStrip
         '
-        Me.ContextMenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.读选定词语ToolStripMenuItem, Me.ToolStripMenuItem9, Me.修改ToolStripMenuItem, Me.删除ToolStripMenuItem, Me.ToolStripMenuItem5, Me.上移ToolStripMenuItem, Me.下移ToolStripMenuItem, Me.ToolStripMenuItem6, Me.全选ToolStripMenuItem1, Me.反向选择ToolStripMenuItem})
-        Me.ContextMenuStrip1.Name = "ContextMenuStrip1"
-        Me.ContextMenuStrip1.Size = New System.Drawing.Size(163, 176)
+        Me.CiYuListViewContextMenuStrip.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.读选定词语ToolStripMenuItem, Me.在百度词典中查看ToolStripMenuItem, Me.ToolStripMenuItem9, Me.修改ToolStripMenuItem, Me.移除ToolStripMenuItem, Me.ToolStripMenuItem5, Me.上移ToolStripMenuItem, Me.下移ToolStripMenuItem, Me.ToolStripMenuItem6, Me.全选ToolStripMenuItem1, Me.反向选择ToolStripMenuItem})
+        Me.CiYuListViewContextMenuStrip.Name = "ContextMenuStrip1"
+        Me.CiYuListViewContextMenuStrip.Size = New System.Drawing.Size(173, 198)
         '
         '读选定词语ToolStripMenuItem
         '
         Me.读选定词语ToolStripMenuItem.Name = "读选定词语ToolStripMenuItem"
-        Me.读选定词语ToolStripMenuItem.Size = New System.Drawing.Size(162, 22)
+        Me.读选定词语ToolStripMenuItem.Size = New System.Drawing.Size(172, 22)
         Me.读选定词语ToolStripMenuItem.Text = "读选定词语"
+        '
+        '在百度词典中查看ToolStripMenuItem
+        '
+        Me.在百度词典中查看ToolStripMenuItem.Name = "在百度词典中查看ToolStripMenuItem"
+        Me.在百度词典中查看ToolStripMenuItem.Size = New System.Drawing.Size(172, 22)
+        Me.在百度词典中查看ToolStripMenuItem.Text = "在百度词典中查看"
         '
         'ToolStripMenuItem9
         '
         Me.ToolStripMenuItem9.Name = "ToolStripMenuItem9"
-        Me.ToolStripMenuItem9.Size = New System.Drawing.Size(159, 6)
+        Me.ToolStripMenuItem9.Size = New System.Drawing.Size(169, 6)
         '
         '修改ToolStripMenuItem
         '
         Me.修改ToolStripMenuItem.Name = "修改ToolStripMenuItem"
-        Me.修改ToolStripMenuItem.Size = New System.Drawing.Size(162, 22)
+        Me.修改ToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F2
+        Me.修改ToolStripMenuItem.Size = New System.Drawing.Size(172, 22)
         Me.修改ToolStripMenuItem.Text = "修改(&M)"
         '
-        '删除ToolStripMenuItem
+        '移除ToolStripMenuItem
         '
-        Me.删除ToolStripMenuItem.Name = "删除ToolStripMenuItem"
-        Me.删除ToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Delete
-        Me.删除ToolStripMenuItem.Size = New System.Drawing.Size(162, 22)
-        Me.删除ToolStripMenuItem.Text = "删除(&D)"
+        Me.移除ToolStripMenuItem.Name = "移除ToolStripMenuItem"
+        Me.移除ToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Delete
+        Me.移除ToolStripMenuItem.Size = New System.Drawing.Size(172, 22)
+        Me.移除ToolStripMenuItem.Text = "移除(&R)"
         '
         'ToolStripMenuItem5
         '
         Me.ToolStripMenuItem5.Name = "ToolStripMenuItem5"
-        Me.ToolStripMenuItem5.Size = New System.Drawing.Size(159, 6)
+        Me.ToolStripMenuItem5.Size = New System.Drawing.Size(169, 6)
         '
         '上移ToolStripMenuItem
         '
         Me.上移ToolStripMenuItem.Name = "上移ToolStripMenuItem"
-        Me.上移ToolStripMenuItem.Size = New System.Drawing.Size(162, 22)
+        Me.上移ToolStripMenuItem.Size = New System.Drawing.Size(172, 22)
         Me.上移ToolStripMenuItem.Text = "上移"
         '
         '下移ToolStripMenuItem
         '
         Me.下移ToolStripMenuItem.Name = "下移ToolStripMenuItem"
-        Me.下移ToolStripMenuItem.Size = New System.Drawing.Size(162, 22)
+        Me.下移ToolStripMenuItem.Size = New System.Drawing.Size(172, 22)
         Me.下移ToolStripMenuItem.Text = "下移"
         '
         'ToolStripMenuItem6
         '
         Me.ToolStripMenuItem6.Name = "ToolStripMenuItem6"
-        Me.ToolStripMenuItem6.Size = New System.Drawing.Size(159, 6)
+        Me.ToolStripMenuItem6.Size = New System.Drawing.Size(169, 6)
         '
         '全选ToolStripMenuItem1
         '
         Me.全选ToolStripMenuItem1.Name = "全选ToolStripMenuItem1"
         Me.全选ToolStripMenuItem1.ShortcutKeys = CType((System.Windows.Forms.Keys.Control Or System.Windows.Forms.Keys.A), System.Windows.Forms.Keys)
-        Me.全选ToolStripMenuItem1.Size = New System.Drawing.Size(162, 22)
+        Me.全选ToolStripMenuItem1.Size = New System.Drawing.Size(172, 22)
         Me.全选ToolStripMenuItem1.Text = "全选(&A)"
         '
         '反向选择ToolStripMenuItem
         '
         Me.反向选择ToolStripMenuItem.Name = "反向选择ToolStripMenuItem"
-        Me.反向选择ToolStripMenuItem.Size = New System.Drawing.Size(162, 22)
+        Me.反向选择ToolStripMenuItem.Size = New System.Drawing.Size(172, 22)
         Me.反向选择ToolStripMenuItem.Text = "反向选择(&I)"
         '
         'Label5
@@ -367,7 +392,7 @@ Partial Class Form1
         Me.MenuStrip1.Name = "MenuStrip1"
         Me.MenuStrip1.Size = New System.Drawing.Size(803, 25)
         Me.MenuStrip1.TabIndex = 1
-        Me.MenuStrip1.Text = "MenuStrip1"
+        Me.MenuStrip1.Text = "菜单栏"
         '
         'FileToolStripMenuItem
         '
@@ -404,7 +429,7 @@ Partial Class Form1
         '
         '编辑EToolStripMenuItem
         '
-        Me.编辑EToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.显示隐藏词语列表ToolStripMenuItem, Me.ToolStripMenuItem2, Me.添加词语ToolStripMenuItem, Me.删除选中词语ToolStripMenuItem, Me.清空词语列表ToolStripMenuItem, Me.修改选中词语ToolStripMenuItem, Me.ToolStripMenuItem3, Me.向上移动ToolStripMenuItem, Me.向下移动ToolStripMenuItem, Me.ToolStripMenuItem4, Me.全选ToolStripMenuItem, Me.反向选择ToolStripMenuItem1})
+        Me.编辑EToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.显示隐藏词语列表ToolStripMenuItem, Me.ToolStripMenuItem2, Me.添加词语ToolStripMenuItem, Me.修改选中词语ToolStripMenuItem, Me.移除选中词语ToolStripMenuItem, Me.清空词语列表ToolStripMenuItem, Me.ToolStripMenuItem3, Me.向上移动ToolStripMenuItem, Me.向下移动ToolStripMenuItem, Me.ToolStripMenuItem4, Me.全选ToolStripMenuItem, Me.反向选择ToolStripMenuItem1})
         Me.编辑EToolStripMenuItem.Name = "编辑EToolStripMenuItem"
         Me.编辑EToolStripMenuItem.Size = New System.Drawing.Size(59, 21)
         Me.编辑EToolStripMenuItem.Text = "编辑(&E)"
@@ -412,87 +437,87 @@ Partial Class Form1
         '显示隐藏词语列表ToolStripMenuItem
         '
         Me.显示隐藏词语列表ToolStripMenuItem.Name = "显示隐藏词语列表ToolStripMenuItem"
-        Me.显示隐藏词语列表ToolStripMenuItem.Size = New System.Drawing.Size(189, 22)
-        Me.显示隐藏词语列表ToolStripMenuItem.Text = "显示/隐藏词语控制区"
+        Me.显示隐藏词语列表ToolStripMenuItem.Size = New System.Drawing.Size(203, 22)
+        Me.显示隐藏词语列表ToolStripMenuItem.Text = "显示/隐藏词语控制区(&L)"
         Me.显示隐藏词语列表ToolStripMenuItem.ToolTipText = "显示或隐藏词语列表"
         '
         'ToolStripMenuItem2
         '
         Me.ToolStripMenuItem2.Name = "ToolStripMenuItem2"
-        Me.ToolStripMenuItem2.Size = New System.Drawing.Size(186, 6)
+        Me.ToolStripMenuItem2.Size = New System.Drawing.Size(200, 6)
         '
         '添加词语ToolStripMenuItem
         '
         Me.添加词语ToolStripMenuItem.Name = "添加词语ToolStripMenuItem"
-        Me.添加词语ToolStripMenuItem.Size = New System.Drawing.Size(189, 22)
+        Me.添加词语ToolStripMenuItem.Size = New System.Drawing.Size(203, 22)
         Me.添加词语ToolStripMenuItem.Text = "添加词语(&A)..."
         Me.添加词语ToolStripMenuItem.ToolTipText = "添加一个词语"
-        '
-        '删除选中词语ToolStripMenuItem
-        '
-        Me.删除选中词语ToolStripMenuItem.Name = "删除选中词语ToolStripMenuItem"
-        Me.删除选中词语ToolStripMenuItem.Size = New System.Drawing.Size(189, 22)
-        Me.删除选中词语ToolStripMenuItem.Text = "删除选中词语(&D)"
-        Me.删除选中词语ToolStripMenuItem.ToolTipText = "选中选中的词语"
-        '
-        '清空词语列表ToolStripMenuItem
-        '
-        Me.清空词语列表ToolStripMenuItem.Name = "清空词语列表ToolStripMenuItem"
-        Me.清空词语列表ToolStripMenuItem.Size = New System.Drawing.Size(189, 22)
-        Me.清空词语列表ToolStripMenuItem.Text = "清空词语列表(&C)"
-        Me.清空词语列表ToolStripMenuItem.ToolTipText = "清空词语列表"
         '
         '修改选中词语ToolStripMenuItem
         '
         Me.修改选中词语ToolStripMenuItem.Name = "修改选中词语ToolStripMenuItem"
-        Me.修改选中词语ToolStripMenuItem.Size = New System.Drawing.Size(189, 22)
+        Me.修改选中词语ToolStripMenuItem.Size = New System.Drawing.Size(203, 22)
         Me.修改选中词语ToolStripMenuItem.Text = "修改选中词语(&M)"
         Me.修改选中词语ToolStripMenuItem.ToolTipText = "修改选中的词语"
+        '
+        '移除选中词语ToolStripMenuItem
+        '
+        Me.移除选中词语ToolStripMenuItem.Name = "移除选中词语ToolStripMenuItem"
+        Me.移除选中词语ToolStripMenuItem.Size = New System.Drawing.Size(203, 22)
+        Me.移除选中词语ToolStripMenuItem.Text = "移除选中词语(&R)"
+        Me.移除选中词语ToolStripMenuItem.ToolTipText = "选中选中的词语"
+        '
+        '清空词语列表ToolStripMenuItem
+        '
+        Me.清空词语列表ToolStripMenuItem.Name = "清空词语列表ToolStripMenuItem"
+        Me.清空词语列表ToolStripMenuItem.Size = New System.Drawing.Size(203, 22)
+        Me.清空词语列表ToolStripMenuItem.Text = "清空词语列表(&C)"
+        Me.清空词语列表ToolStripMenuItem.ToolTipText = "清空词语列表"
         '
         'ToolStripMenuItem3
         '
         Me.ToolStripMenuItem3.Name = "ToolStripMenuItem3"
-        Me.ToolStripMenuItem3.Size = New System.Drawing.Size(186, 6)
+        Me.ToolStripMenuItem3.Size = New System.Drawing.Size(200, 6)
         '
         '向上移动ToolStripMenuItem
         '
         Me.向上移动ToolStripMenuItem.Name = "向上移动ToolStripMenuItem"
-        Me.向上移动ToolStripMenuItem.Size = New System.Drawing.Size(189, 22)
-        Me.向上移动ToolStripMenuItem.Text = "向上移动"
+        Me.向上移动ToolStripMenuItem.Size = New System.Drawing.Size(203, 22)
+        Me.向上移动ToolStripMenuItem.Text = "向上移动(&U)"
         Me.向上移动ToolStripMenuItem.ToolTipText = "向上移动选中词语"
         '
         '向下移动ToolStripMenuItem
         '
         Me.向下移动ToolStripMenuItem.Name = "向下移动ToolStripMenuItem"
-        Me.向下移动ToolStripMenuItem.Size = New System.Drawing.Size(189, 22)
-        Me.向下移动ToolStripMenuItem.Text = "向下移动"
+        Me.向下移动ToolStripMenuItem.Size = New System.Drawing.Size(203, 22)
+        Me.向下移动ToolStripMenuItem.Text = "向下移动(&D)"
         Me.向下移动ToolStripMenuItem.ToolTipText = "向下移动选中词语"
         '
         'ToolStripMenuItem4
         '
         Me.ToolStripMenuItem4.Name = "ToolStripMenuItem4"
-        Me.ToolStripMenuItem4.Size = New System.Drawing.Size(186, 6)
+        Me.ToolStripMenuItem4.Size = New System.Drawing.Size(200, 6)
         '
         '全选ToolStripMenuItem
         '
         Me.全选ToolStripMenuItem.Name = "全选ToolStripMenuItem"
-        Me.全选ToolStripMenuItem.Size = New System.Drawing.Size(189, 22)
+        Me.全选ToolStripMenuItem.Size = New System.Drawing.Size(203, 22)
         Me.全选ToolStripMenuItem.Text = "全选(&A)"
         Me.全选ToolStripMenuItem.ToolTipText = "选择全部词语"
         '
         '反向选择ToolStripMenuItem1
         '
         Me.反向选择ToolStripMenuItem1.Name = "反向选择ToolStripMenuItem1"
-        Me.反向选择ToolStripMenuItem1.Size = New System.Drawing.Size(189, 22)
+        Me.反向选择ToolStripMenuItem1.Size = New System.Drawing.Size(203, 22)
         Me.反向选择ToolStripMenuItem1.Text = "反向选择(&I)"
         Me.反向选择ToolStripMenuItem1.ToolTipText = "选择没有选中的词语"
         '
         '选项ToolStripMenuItem
         '
-        Me.选项ToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.字体FToolStripMenuItem, Me.ToolStripMenuItem8, Me.自动翻页ToolStripMenuItem, Me.字词跟随ToolStripMenuItem, Me.ToolStripMenuItem7, Me.设置单词增强ToolStripMenuItem})
+        Me.选项ToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.字体FToolStripMenuItem, Me.ToolStripMenuItem8, Me.自动翻页ToolStripMenuItem, Me.字词跟随ToolStripMenuItem, Me.ToolStripMenuItem7, Me.设置词组增强ToolStripMenuItem})
         Me.选项ToolStripMenuItem.Name = "选项ToolStripMenuItem"
-        Me.选项ToolStripMenuItem.Size = New System.Drawing.Size(44, 21)
-        Me.选项ToolStripMenuItem.Text = "选项"
+        Me.选项ToolStripMenuItem.Size = New System.Drawing.Size(62, 21)
+        Me.选项ToolStripMenuItem.Text = "选项(&O)"
         '
         '字体FToolStripMenuItem
         '
@@ -529,31 +554,31 @@ Partial Class Form1
         Me.ToolStripMenuItem7.Name = "ToolStripMenuItem7"
         Me.ToolStripMenuItem7.Size = New System.Drawing.Size(145, 6)
         '
-        '设置单词增强ToolStripMenuItem
+        '设置词组增强ToolStripMenuItem
         '
-        Me.设置单词增强ToolStripMenuItem.Name = "设置单词增强ToolStripMenuItem"
-        Me.设置单词增强ToolStripMenuItem.Size = New System.Drawing.Size(148, 22)
-        Me.设置单词增强ToolStripMenuItem.Text = "设置单词增强"
-        Me.设置单词增强ToolStripMenuItem.ToolTipText = "通过WAV文件增强语音引擎效果（文件名与词语相同，查找时自动忽略不可作为文件名的字符）"
+        Me.设置词组增强ToolStripMenuItem.Name = "设置词组增强ToolStripMenuItem"
+        Me.设置词组增强ToolStripMenuItem.Size = New System.Drawing.Size(148, 22)
+        Me.设置词组增强ToolStripMenuItem.Text = "设置词组增强"
+        Me.设置词组增强ToolStripMenuItem.ToolTipText = "通过音频文件增强语音（文件名与词组相同，查找时忽略不可作为文件名的字符）"
         '
         '辅助ToolStripMenuItem
         '
         Me.辅助ToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.随机排序ToolStripMenuItem, Me.随机选词ToolStripMenuItem})
         Me.辅助ToolStripMenuItem.Name = "辅助ToolStripMenuItem"
-        Me.辅助ToolStripMenuItem.Size = New System.Drawing.Size(44, 21)
-        Me.辅助ToolStripMenuItem.Text = "辅助"
+        Me.辅助ToolStripMenuItem.Size = New System.Drawing.Size(60, 21)
+        Me.辅助ToolStripMenuItem.Text = "辅助(&A)"
         '
         '随机排序ToolStripMenuItem
         '
         Me.随机排序ToolStripMenuItem.Name = "随机排序ToolStripMenuItem"
-        Me.随机排序ToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.随机排序ToolStripMenuItem.Size = New System.Drawing.Size(124, 22)
         Me.随机排序ToolStripMenuItem.Text = "随机排序"
         Me.随机排序ToolStripMenuItem.ToolTipText = "打乱现有词语的顺序"
         '
         '随机选词ToolStripMenuItem
         '
         Me.随机选词ToolStripMenuItem.Name = "随机选词ToolStripMenuItem"
-        Me.随机选词ToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.随机选词ToolStripMenuItem.Size = New System.Drawing.Size(124, 22)
         Me.随机选词ToolStripMenuItem.Text = "随机选词"
         Me.随机选词ToolStripMenuItem.ToolTipText = "随机保留指定数量的词语"
         '
@@ -587,10 +612,10 @@ Partial Class Form1
         'GroupBox2
         '
         Me.GroupBox2.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.GroupBox2.Controls.Add(Me.ZiDongBoBaoJianGeTextBox)
+        Me.GroupBox2.Controls.Add(Me.ZiDongBoBaoCiShuTextBox)
         Me.GroupBox2.Controls.Add(Me.Label4)
-        Me.GroupBox2.Controls.Add(Me.TextBox2)
         Me.GroupBox2.Controls.Add(Me.Label3)
-        Me.GroupBox2.Controls.Add(Me.TextBox1)
         Me.GroupBox2.Controls.Add(Me.Label2)
         Me.GroupBox2.Controls.Add(Me.Label1)
         Me.GroupBox2.Font = New System.Drawing.Font("微软雅黑", 9.0!)
@@ -601,54 +626,124 @@ Partial Class Form1
         Me.GroupBox2.TabStop = False
         Me.GroupBox2.Text = "播报信息"
         '
+        'ZiDongBoBaoJianGeTextBox
+        '
+        Me.ZiDongBoBaoJianGeTextBox.ContextMenuStrip = Me.ZiDongBoBaoJianGeTextBoxContextMenuStrip
+        Me.ZiDongBoBaoJianGeTextBox.Font = New System.Drawing.Font("微软雅黑", 12.0!)
+        Me.ZiDongBoBaoJianGeTextBox.Location = New System.Drawing.Point(253, 68)
+        Me.ZiDongBoBaoJianGeTextBox.Name = "ZiDongBoBaoJianGeTextBox"
+        Me.ZiDongBoBaoJianGeTextBox.Size = New System.Drawing.Size(86, 29)
+        Me.ZiDongBoBaoJianGeTextBox.TabIndex = 2
+        Me.ZiDongBoBaoJianGeTextBox.Text = "3"
+        '
+        'ZiDongBoBaoJianGeTextBoxContextMenuStrip
+        '
+        Me.ZiDongBoBaoJianGeTextBoxContextMenuStrip.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ZiDongBoBaoJianGeTextBox撤销ToolStripMenuItem, Me.ToolStripSeparator1, Me.ZiDongBoBaoJianGeTextBox剪切ToolStripMenuItem, Me.ZiDongBoBaoJianGeTextBox复制ToolStripMenuItem, Me.ZiDongBoBaoJianGeTextBox粘贴ToolStripMenuItem, Me.ZiDongBoBaoJianGeTextBox删除ToolStripMenuItem, Me.ToolStripSeparator2, Me.ZiDongBoBaoJianGeTextBox全选ToolStripMenuItem, Me.ToolStripSeparator3, Me.插入LengthToolStripMenuItem, Me.插入WordCountToolStripMenuItem})
+        Me.ZiDongBoBaoJianGeTextBoxContextMenuStrip.Name = "ZiDongBoBaoJianGeTextBoxContextMenuStrip"
+        Me.ZiDongBoBaoJianGeTextBoxContextMenuStrip.Size = New System.Drawing.Size(200, 198)
+        '
+        'ZiDongBoBaoJianGeTextBox撤销ToolStripMenuItem
+        '
+        Me.ZiDongBoBaoJianGeTextBox撤销ToolStripMenuItem.Name = "ZiDongBoBaoJianGeTextBox撤销ToolStripMenuItem"
+        Me.ZiDongBoBaoJianGeTextBox撤销ToolStripMenuItem.Size = New System.Drawing.Size(199, 22)
+        Me.ZiDongBoBaoJianGeTextBox撤销ToolStripMenuItem.Text = "撤销(&U)"
+        '
+        'ToolStripSeparator1
+        '
+        Me.ToolStripSeparator1.Name = "ToolStripSeparator1"
+        Me.ToolStripSeparator1.Size = New System.Drawing.Size(196, 6)
+        '
+        'ZiDongBoBaoJianGeTextBox剪切ToolStripMenuItem
+        '
+        Me.ZiDongBoBaoJianGeTextBox剪切ToolStripMenuItem.Name = "ZiDongBoBaoJianGeTextBox剪切ToolStripMenuItem"
+        Me.ZiDongBoBaoJianGeTextBox剪切ToolStripMenuItem.Size = New System.Drawing.Size(199, 22)
+        Me.ZiDongBoBaoJianGeTextBox剪切ToolStripMenuItem.Text = "剪切(&T)"
+        '
+        'ZiDongBoBaoJianGeTextBox复制ToolStripMenuItem
+        '
+        Me.ZiDongBoBaoJianGeTextBox复制ToolStripMenuItem.Name = "ZiDongBoBaoJianGeTextBox复制ToolStripMenuItem"
+        Me.ZiDongBoBaoJianGeTextBox复制ToolStripMenuItem.Size = New System.Drawing.Size(199, 22)
+        Me.ZiDongBoBaoJianGeTextBox复制ToolStripMenuItem.Text = "复制(&C)"
+        '
+        'ZiDongBoBaoJianGeTextBox粘贴ToolStripMenuItem
+        '
+        Me.ZiDongBoBaoJianGeTextBox粘贴ToolStripMenuItem.Name = "ZiDongBoBaoJianGeTextBox粘贴ToolStripMenuItem"
+        Me.ZiDongBoBaoJianGeTextBox粘贴ToolStripMenuItem.Size = New System.Drawing.Size(199, 22)
+        Me.ZiDongBoBaoJianGeTextBox粘贴ToolStripMenuItem.Text = "粘贴(&P)"
+        '
+        'ZiDongBoBaoJianGeTextBox删除ToolStripMenuItem
+        '
+        Me.ZiDongBoBaoJianGeTextBox删除ToolStripMenuItem.Name = "ZiDongBoBaoJianGeTextBox删除ToolStripMenuItem"
+        Me.ZiDongBoBaoJianGeTextBox删除ToolStripMenuItem.Size = New System.Drawing.Size(199, 22)
+        Me.ZiDongBoBaoJianGeTextBox删除ToolStripMenuItem.Text = "删除(&D)"
+        '
+        'ToolStripSeparator2
+        '
+        Me.ToolStripSeparator2.Name = "ToolStripSeparator2"
+        Me.ToolStripSeparator2.Size = New System.Drawing.Size(196, 6)
+        '
+        'ZiDongBoBaoJianGeTextBox全选ToolStripMenuItem
+        '
+        Me.ZiDongBoBaoJianGeTextBox全选ToolStripMenuItem.Name = "ZiDongBoBaoJianGeTextBox全选ToolStripMenuItem"
+        Me.ZiDongBoBaoJianGeTextBox全选ToolStripMenuItem.Size = New System.Drawing.Size(199, 22)
+        Me.ZiDongBoBaoJianGeTextBox全选ToolStripMenuItem.Text = "全选(&A)"
+        '
+        'ToolStripSeparator3
+        '
+        Me.ToolStripSeparator3.Name = "ToolStripSeparator3"
+        Me.ToolStripSeparator3.Size = New System.Drawing.Size(196, 6)
+        '
+        '插入LengthToolStripMenuItem
+        '
+        Me.插入LengthToolStripMenuItem.Name = "插入LengthToolStripMenuItem"
+        Me.插入LengthToolStripMenuItem.Size = New System.Drawing.Size(199, 22)
+        Me.插入LengthToolStripMenuItem.Text = "插入[Length] (&L)"
+        '
+        '插入WordCountToolStripMenuItem
+        '
+        Me.插入WordCountToolStripMenuItem.Name = "插入WordCountToolStripMenuItem"
+        Me.插入WordCountToolStripMenuItem.Size = New System.Drawing.Size(199, 22)
+        Me.插入WordCountToolStripMenuItem.Text = "插入[WordCount] (&W)"
+        '
+        'ZiDongBoBaoCiShuTextBox
+        '
+        Me.ZiDongBoBaoCiShuTextBox.Font = New System.Drawing.Font("微软雅黑", 12.0!)
+        Me.ZiDongBoBaoCiShuTextBox.ImeMode = System.Windows.Forms.ImeMode.Disable
+        Me.ZiDongBoBaoCiShuTextBox.Location = New System.Drawing.Point(253, 103)
+        Me.ZiDongBoBaoCiShuTextBox.MaxLength = 5
+        Me.ZiDongBoBaoCiShuTextBox.Name = "ZiDongBoBaoCiShuTextBox"
+        Me.ZiDongBoBaoCiShuTextBox.Size = New System.Drawing.Size(86, 29)
+        Me.ZiDongBoBaoCiShuTextBox.TabIndex = 4
+        Me.ZiDongBoBaoCiShuTextBox.Text = "2"
+        '
         'Label4
         '
         Me.Label4.Font = New System.Drawing.Font("微软雅黑", 20.0!)
         Me.Label4.Location = New System.Drawing.Point(7, 135)
         Me.Label4.Name = "Label4"
-        Me.Label4.Size = New System.Drawing.Size(333, 49)
+        Me.Label4.Size = New System.Drawing.Size(332, 49)
         Me.Label4.TabIndex = 5
         Me.Label4.Text = "等待播报"
         Me.Label4.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
-        '
-        'TextBox2
-        '
-        Me.TextBox2.Font = New System.Drawing.Font("微软雅黑", 12.0!)
-        Me.TextBox2.ImeMode = System.Windows.Forms.ImeMode.Disable
-        Me.TextBox2.Location = New System.Drawing.Point(254, 103)
-        Me.TextBox2.MaxLength = 4
-        Me.TextBox2.Name = "TextBox2"
-        Me.TextBox2.Size = New System.Drawing.Size(86, 29)
-        Me.TextBox2.TabIndex = 4
-        Me.TextBox2.Text = "2"
         '
         'Label3
         '
         Me.Label3.Font = New System.Drawing.Font("微软雅黑", 12.0!)
         Me.Label3.Location = New System.Drawing.Point(7, 103)
         Me.Label3.Name = "Label3"
-        Me.Label3.Size = New System.Drawing.Size(221, 29)
+        Me.Label3.Size = New System.Drawing.Size(212, 29)
         Me.Label3.TabIndex = 3
         Me.Label3.Text = "自动播报次数（每个词语）"
         '
-        'TextBox1
-        '
-        Me.TextBox1.Font = New System.Drawing.Font("微软雅黑", 12.0!)
-        Me.TextBox1.ImeMode = System.Windows.Forms.ImeMode.Disable
-        Me.TextBox1.Location = New System.Drawing.Point(254, 68)
-        Me.TextBox1.MaxLength = 4
-        Me.TextBox1.Name = "TextBox1"
-        Me.TextBox1.Size = New System.Drawing.Size(86, 29)
-        Me.TextBox1.TabIndex = 2
-        Me.TextBox1.Text = "3"
-        '
         'Label2
         '
+        Me.Label2.Cursor = System.Windows.Forms.Cursors.Hand
         Me.Label2.Font = New System.Drawing.Font("微软雅黑", 12.0!)
         Me.Label2.Location = New System.Drawing.Point(7, 68)
         Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(207, 29)
+        Me.Label2.Size = New System.Drawing.Size(212, 29)
         Me.Label2.TabIndex = 1
+        Me.Label2.Tag = ""
         Me.Label2.Text = "自动播报间隔（秒）"
         '
         'Label1
@@ -722,7 +817,6 @@ Partial Class Form1
         '
         'Button3
         '
-        Me.Button3.Enabled = False
         Me.Button3.Font = New System.Drawing.Font("微软雅黑", 18.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(134, Byte))
         Me.Button3.Location = New System.Drawing.Point(6, 58)
         Me.Button3.Name = "Button3"
@@ -733,13 +827,12 @@ Partial Class Form1
         '
         'Button2
         '
-        Me.Button2.Enabled = False
         Me.Button2.Font = New System.Drawing.Font("微软雅黑", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(134, Byte))
         Me.Button2.Location = New System.Drawing.Point(175, 20)
         Me.Button2.Name = "Button2"
         Me.Button2.Size = New System.Drawing.Size(165, 32)
         Me.Button2.TabIndex = 1
-        Me.Button2.Text = "停止自动播报(&E)"
+        Me.Button2.Text = "停止播报(&E)"
         Me.Button2.UseVisualStyleBackColor = True
         '
         'Button1
@@ -749,12 +842,8 @@ Partial Class Form1
         Me.Button1.Name = "Button1"
         Me.Button1.Size = New System.Drawing.Size(165, 32)
         Me.Button1.TabIndex = 0
-        Me.Button1.Text = "开始自动播报(&S)"
+        Me.Button1.Text = "自动播报(&S)"
         Me.Button1.UseVisualStyleBackColor = True
-        '
-        'Timer1
-        '
-        Me.Timer1.Interval = 1000
         '
         'Button9
         '
@@ -830,7 +919,6 @@ Partial Class Form1
         '
         'TrackBar2
         '
-        Me.TrackBar2.LargeChange = 10
         Me.TrackBar2.Location = New System.Drawing.Point(83, 73)
         Me.TrackBar2.Minimum = -10
         Me.TrackBar2.Name = "TrackBar2"
@@ -872,8 +960,11 @@ Partial Class Form1
         '
         'FontDialog1
         '
-        Me.FontDialog1.ShowApply = True
         Me.FontDialog1.ShowColor = True
+        '
+        'ErrorProvider1
+        '
+        Me.ErrorProvider1.ContainerControl = Me
         '
         'Form1
         '
@@ -889,27 +980,29 @@ Partial Class Form1
         Me.Font = New System.Drawing.Font("微软雅黑", 9.0!)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.MainMenuStrip = Me.MenuStrip1
-        Me.MinimumSize = New System.Drawing.Size(551, 700)
+        Me.MinimumSize = New System.Drawing.Size(551, 664)
         Me.Name = "Form1"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
-        Me.Text = " 自动默写"
+        Me.Text = "自动默写"
         Me.GroupBox1.ResumeLayout(False)
-        Me.ContextMenuStrip1.ResumeLayout(False)
+        Me.CiYuListViewContextMenuStrip.ResumeLayout(False)
         Me.MenuStrip1.ResumeLayout(False)
         Me.MenuStrip1.PerformLayout()
         Me.GroupBox2.ResumeLayout(False)
         Me.GroupBox2.PerformLayout()
+        Me.ZiDongBoBaoJianGeTextBoxContextMenuStrip.ResumeLayout(False)
         Me.GroupBox3.ResumeLayout(False)
         Me.GroupBox4.ResumeLayout(False)
         Me.GroupBox4.PerformLayout()
         CType(Me.TrackBar2, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.TrackBar1, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.ErrorProvider1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
     End Sub
     Friend WithEvents GroupBox1 As System.Windows.Forms.GroupBox
-    Friend WithEvents ListView1 As System.Windows.Forms.ListView
+    Friend WithEvents CiYuListView As System.Windows.Forms.ListView
     Friend WithEvents OpenButton As System.Windows.Forms.Button
     Friend WithEvents SaveButton As System.Windows.Forms.Button
     Friend WithEvents UpButton As System.Windows.Forms.Button
@@ -928,9 +1021,9 @@ Partial Class Form1
     Friend WithEvents SaveFileDialog1 As System.Windows.Forms.SaveFileDialog
     Friend WithEvents GroupBox2 As System.Windows.Forms.GroupBox
     Friend WithEvents Label1 As System.Windows.Forms.Label
-    Friend WithEvents TextBox2 As System.Windows.Forms.TextBox
+    Friend WithEvents ZiDongBoBaoCiShuTextBox As System.Windows.Forms.TextBox
     Friend WithEvents Label3 As System.Windows.Forms.Label
-    Friend WithEvents TextBox1 As System.Windows.Forms.TextBox
+    Friend WithEvents ZiDongBoBaoJianGeTextBox As System.Windows.Forms.TextBox
     Friend WithEvents Label2 As System.Windows.Forms.Label
     Friend WithEvents Label4 As System.Windows.Forms.Label
     Friend WithEvents GroupBox3 As System.Windows.Forms.GroupBox
@@ -941,17 +1034,16 @@ Partial Class Form1
     Friend WithEvents Button3 As System.Windows.Forms.Button
     Friend WithEvents Button2 As System.Windows.Forms.Button
     Friend WithEvents Button1 As System.Windows.Forms.Button
-    Friend WithEvents Timer1 As System.Windows.Forms.Timer
     Friend WithEvents 保存SToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents ToolStripMenuItem1 As System.Windows.Forms.ToolStripSeparator
     Friend WithEvents 退出EToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents Button9 As System.Windows.Forms.Button
     Friend WithEvents Label5 As System.Windows.Forms.Label
-    Friend WithEvents ContextMenuStrip1 As System.Windows.Forms.ContextMenuStrip
+    Friend WithEvents CiYuListViewContextMenuStrip As System.Windows.Forms.ContextMenuStrip
     Friend WithEvents 上移ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents 下移ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents 修改ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents 删除ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents 移除ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents 反向选择ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents ToolStripMenuItem5 As System.Windows.Forms.ToolStripSeparator
     Friend WithEvents ToolStripMenuItem6 As System.Windows.Forms.ToolStripSeparator
@@ -960,7 +1052,7 @@ Partial Class Form1
     Friend WithEvents 显示隐藏词语列表ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents ToolStripMenuItem2 As System.Windows.Forms.ToolStripSeparator
     Friend WithEvents 添加词语ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents 删除选中词语ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents 移除选中词语ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents 清空词语列表ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents 修改选中词语ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents ToolStripMenuItem3 As System.Windows.Forms.ToolStripSeparator
@@ -982,7 +1074,7 @@ Partial Class Form1
     Friend WithEvents 自动翻页ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents 字词跟随ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents ToolStripMenuItem7 As System.Windows.Forms.ToolStripSeparator
-    Friend WithEvents 设置单词增强ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents 设置词组增强ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents 帮助HToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents 关于AToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents 辅助ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
@@ -993,5 +1085,18 @@ Partial Class Form1
     Friend WithEvents ToolStripMenuItem8 As System.Windows.Forms.ToolStripSeparator
     Friend WithEvents 读选定词语ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents ToolStripMenuItem9 As System.Windows.Forms.ToolStripSeparator
-
+    Friend WithEvents 在百度词典中查看ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents ZiDongBoBaoJianGeTextBoxContextMenuStrip As ContextMenuStrip
+    Friend WithEvents ZiDongBoBaoJianGeTextBox撤销ToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents ToolStripSeparator1 As ToolStripSeparator
+    Friend WithEvents ZiDongBoBaoJianGeTextBox剪切ToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents ZiDongBoBaoJianGeTextBox复制ToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents ZiDongBoBaoJianGeTextBox粘贴ToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents ZiDongBoBaoJianGeTextBox删除ToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents ToolStripSeparator2 As ToolStripSeparator
+    Friend WithEvents ZiDongBoBaoJianGeTextBox全选ToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents ErrorProvider1 As ErrorProvider
+    Friend WithEvents ToolStripSeparator3 As ToolStripSeparator
+    Friend WithEvents 插入LengthToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents 插入WordCountToolStripMenuItem As ToolStripMenuItem
 End Class

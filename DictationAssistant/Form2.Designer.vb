@@ -39,7 +39,7 @@ Partial Class Form2
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(107, 29)
         Me.Label1.TabIndex = 0
-        Me.Label1.Text = "单词增强目录："
+        Me.Label1.Text = "词组增强目录："
         Me.Label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         '
         'TextBox1
@@ -53,8 +53,7 @@ Partial Class Form2
         '
         'FolderBrowserDialog1
         '
-        Me.FolderBrowserDialog1.Description = "单词增强目录："
-        Me.FolderBrowserDialog1.ShowNewFolderButton = False
+        Me.FolderBrowserDialog1.Description = "词组增强目录："
         '
         'Button1
         '
@@ -74,7 +73,7 @@ Partial Class Form2
         Me.CheckBox1.Name = "CheckBox1"
         Me.CheckBox1.Size = New System.Drawing.Size(99, 21)
         Me.CheckBox1.TabIndex = 3
-        Me.CheckBox1.Text = "启用单词增强"
+        Me.CheckBox1.Text = "启用词组增强"
         Me.CheckBox1.UseVisualStyleBackColor = True
         '
         'Button2
@@ -119,7 +118,7 @@ Partial Class Form2
         Me.MinimizeBox = False
         Me.Name = "Form2"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
-        Me.Text = "单词增强"
+        Me.Text = "词组增强"
         Me.ResumeLayout(False)
         Me.PerformLayout()
 

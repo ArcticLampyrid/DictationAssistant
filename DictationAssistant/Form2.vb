@@ -7,15 +7,15 @@
     End Sub
 
     Private Sub Form2_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        If DCZQML = "" Then
+        If CiZuZengQiangMuLu = "" Then
             CheckBox1.Checked = False
         Else
             CheckBox1.Checked = True
         End If
-        If Strings.Right(DCZQML, 1) = "\" And Len(DCZQML) > 3 Then
-            TextBox1.Text = Mid(DCZQML, 1, Len(DCZQML) - 1)
+        If Strings.Right(CiZuZengQiangMuLu, 1) = "\" And Len(CiZuZengQiangMuLu) > 3 Then
+            TextBox1.Text = Mid(CiZuZengQiangMuLu, 1, Len(CiZuZengQiangMuLu) - 1)
         Else
-            TextBox1.Text = DCZQML
+            TextBox1.Text = CiZuZengQiangMuLu
         End If
     End Sub
 
@@ -25,18 +25,18 @@
 
     Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
         If CheckBox1.Checked = False Then
-            DCZQML = ""
+            CiZuZengQiangMuLu = ""
+            SaveSetting("自动默写", "选项", "词组增强", CiZuZengQiangMuLu)
             Me.Close()
-            SaveSetting("自动默写", "TTS引擎", "单词增强", DCZQML)
         Else
             If System.IO.Directory.Exists(TextBox1.Text) = False Then
                 MsgBox("不存在该文件夹！")
             Else
-                DCZQML = TextBox1.Text
-                If Strings.Right(DCZQML, 1) <> "\" Then
-                    DCZQML = DCZQML & "\"
+                CiZuZengQiangMuLu = TextBox1.Text
+                If Strings.Right(CiZuZengQiangMuLu, 1) <> "\" Then
+                    CiZuZengQiangMuLu = CiZuZengQiangMuLu & "\"
                 End If
-                SaveSetting("自动默写", "TTS引擎", "单词增强", DCZQML)
+                SaveSetting("自动默写", "选项", "词组增强", CiZuZengQiangMuLu)
                 Me.Close()
             End If
         End If

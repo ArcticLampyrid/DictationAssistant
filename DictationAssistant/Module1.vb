@@ -1,24 +1,19 @@
 ﻿Module Module1
-    Public DCZQML As String
-    Public Enum VoiceLanguage
-        英文 = 1
-        中文 = 2
-        其他 = 0
-    End Enum
-    Public Function GetVoiceLanguage(Voice As SpeechLib.SpObjectToken) As VoiceLanguage
-        Dim Language As String
-        Dim Chinese As Boolean
-        Dim English As Boolean
-        Language = Voice.GetAttribute("Language")
-        Chinese = Language = "804" Or Language Like "*;804" Or Language Like "804;*" Or Language Like "*;804;*"
-        English = Language = "409" Or Language Like "*;409" Or Language Like "409;*" Or Language Like "*;409;*"
-        If Chinese Then '当发音人物语言为中文时
-            Return VoiceLanguage.中文
-        ElseIf English Then '当发音人物语言为英文时
-            Return VoiceLanguage.英文
-        Else
-            Return VoiceLanguage.其他
-        End If
+    Public CiZuZengQiangMuLu As String
+
+    Public Function IsVoiceLanguageIDEquals(Voice As SpeechLib.SpObjectToken, ID As Int32) As Boolean
+        Try
+            Dim Languages() As String
+            Languages = Split(Voice.GetAttribute("Language"), ";")
+            For Each Language As String In Languages
+                If Convert.ToInt32(Language, 16) = ID Then
+                    Return True
+                End If
+            Next
+        Catch ex As Exception
+
+        End Try
+        Return False
     End Function
     Public Function GetChineseGrade(VoiceName As String) As Integer
         Select Case VoiceName
