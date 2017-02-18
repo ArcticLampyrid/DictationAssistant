@@ -2,21 +2,16 @@
 Imports System.IO
 
 Public Class Form1
-    Dim WithEvents SpVoice1 As New SpeechLib.SpVoice
+    Dim SpeakEngines As New List(Of ISpeakEngine)
+    Dim WithEvents CurrectSpeakEngine As ISpeakEngine
     Dim WithEvents BoBao As New BoBaoLuoJi
     Dim WithEvents AudioFileStream As BASS_Stream
-
-    Dim ChuFaSpVoice1EndStream As Boolean = True '触发SpVoice1EndStream
-
 
     ''' <summary>
     ''' 词组增强支持的音频文件扩展名
     ''' </summary>
     ''' <remarks></remarks>
     Dim AudioFileExtension As String() = Split("wav;ape;flac;m4a;mp3;mp2;mp1;ogg;aif", ";")
-
-    Dim EnglishVoiceGood As Boolean = False '是否安装了语音质量良好的英文语音引擎
-    Dim ChineseVoiceGood As Boolean = False '是否安装了语音质量良好的中文语音引擎
 
     ''' <summary>
     ''' 打开多个词语文件
@@ -142,7 +137,6 @@ Public Class Form1
 
     Private Sub Form1_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
         If AudioFileStream IsNot Nothing Then
-            AudioFileStream.Dispose()
             AudioFileStream = Nothing
         End If
         BASS.FreeAllPlugin()
@@ -150,18 +144,7 @@ Public Class Form1
     End Sub
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        ReadFontSettings()
-        自动翻页ToolStripMenuItem.Checked = Convert.ToBoolean(GetSetting("自动默写", "选项", "自动翻页", System.Boolean.TrueString))
-        字词跟随ToolStripMenuItem.Checked = Convert.ToBoolean(GetSetting("自动默写", "选项", "字词跟随", System.Boolean.TrueString))
-        CiZuZengQiangMuLu = GetSetting("自动默写", "选项", "词组增强", "")
         InitVoiceList()
-
-        TrackBar1.Value = Convert.ToInt32(GetSetting("自动默写", "TTS引擎", "音量", "100"))
-        TrackBar1_Scroll(TrackBar1, Nothing)
-
-        TrackBar2.Value = Convert.ToInt32(GetSetting("自动默写", "TTS引擎", "语速", "0"))
-        TrackBar2_Scroll(TrackBar2, Nothing)
-
         Try
             ComboBox1.SelectedIndex = Convert.ToInt32(GetSetting("自动默写", "TTS引擎", "引擎", "0"))
         Catch ex As Exception
@@ -170,41 +153,63 @@ Public Class Form1
             End If
         End Try
 
+        ReadFontSettings()
+        自动翻页ToolStripMenuItem.Checked = Convert.ToBoolean(GetSetting("自动默写", "选项", "自动翻页", Boolean.TrueString))
+        字词跟随ToolStripMenuItem.Checked = Convert.ToBoolean(GetSetting("自动默写", "选项", "字词跟随", Boolean.TrueString))
+
+        TrackBar1.Value = Convert.ToInt32(GetSetting("自动默写", "TTS引擎", "音量", "100"))
+        TrackBar1_Scroll(TrackBar1, Nothing)
+
+        TrackBar2.Value = Convert.ToInt32(GetSetting("自动默写", "TTS引擎", "语速", "0"))
+        TrackBar2_Scroll(TrackBar2, Nothing)
+
         For Each CommandLine As String In My.Application.CommandLineArgs
             If System.IO.File.Exists(CommandLine) = True Then
                 OpenFiles({CommandLine})
             End If
         Next
 
-        BASS.Init(-1, 44100, 0, Me.Handle)
-        BASS.LoadPlugin("bassflac.dll")
-        BASS.LoadPlugin("bass_ape.dll")
-        BASS.LoadPlugin("bass_alac.dll")
+        If BASS.Init(-1, 44100, 0, Handle) Then
+            BASS.LoadPlugin("bassflac.dll")
+            BASS.LoadPlugin("bass_ape.dll")
+            BASS.LoadPlugin("bassalac.dll")
+
+            CiZuZengQiangMuLu = GetSetting("自动默写", "选项", "词组增强", "")
+        Else
+            设置词组增强ToolStripMenuItem.Enabled = False
+            设置词组增强ToolStripMenuItem.Text = "加载词组增强功能失败"
+        End If
     End Sub
     Private Sub InitVoiceList()
-        Dim EnglishGrade As Integer '声明用于记录英文语音引擎质量等级的变量
-        Dim ChineseGrade As Integer '声明用于记录中文语音引擎质量等级的变量
-        For Each Voice As SpeechLib.SpObjectToken In SpVoice1.GetVoices
-            Dim VoiceName As String
-            VoiceName = Voice.GetAttribute("name") '用GetDescription在部分罕见的引擎会出错
-            If IsVoiceLanguageIDEquals(Voice, 1033) Then
-                If (EnglishGrade = 0) Or (EnglishGrade > GetEnglishGrade(VoiceName) And GetEnglishGrade(VoiceName) <> 0) Then
-                    Button11.Tag = (ComboBox1.Items.Count)
-                    EnglishGrade = GetEnglishGrade(VoiceName)
-                End If
-                VoiceName = "（英）" & VoiceName
-            ElseIf IsVoiceLanguageIDEquals(Voice, 2052) Then
-                If (ChineseGrade = 0) Or (ChineseGrade > GetChineseGrade(VoiceName) And GetChineseGrade(VoiceName) <> 0) Then
-                    Button10.Tag = (ComboBox1.Items.Count)
-                    ChineseGrade = GetChineseGrade(VoiceName)
-                End If
-                VoiceName = "（中）" & VoiceName
-            End If
-            ComboBox1.Items.Add(VoiceName)
+        For Each NativeEngine As Object In SpeakEngine_SAPI.GetAllNativeEngines()
+            SpeakEngines.Add(New SpeakEngine_SAPI(NativeEngine))
         Next
 
-        EnglishVoiceGood = EnglishGrade > 0
-        ChineseVoiceGood = ChineseGrade > 0 And EnglishGrade < 5
+        Dim EnglishEngineLevel As Integer '用于记录英文语音引擎等级，越高表示引擎越好
+        Dim ChineseEngineLevel As Integer '用于记录中文语音引擎等级，越高表示引擎越好
+        For Each SpeakEngine As ISpeakEngine In SpeakEngines
+            Dim EngineName As String = SpeakEngine.Name
+            If SpeakEngine.Culture IsNot Nothing Then
+                If SpeakEngine.Culture.LCID = 1033 Or SpeakEngine.Culture.LCID = 2057 Then
+                    If Button11.Tag Is Nothing OrElse EnglishEngineLevel < GetEnglishEngineLevel(EngineName) Then
+                        Button11.Tag = (ComboBox1.Items.Count)
+                        EnglishEngineLevel = GetEnglishEngineLevel(EngineName)
+                    End If
+                    If SpeakEngine.Culture.LCID = 1033 Then
+                        EngineName = "（US）" & EngineName
+                    ElseIf SpeakEngine.Culture.LCID = 2057 Then
+                        EngineName = "（UK）" & EngineName
+                    End If
+                ElseIf SpeakEngine.Culture.LCID = 2052 Then
+                    If Button10.Tag Is Nothing OrElse ChineseEngineLevel < GetChineseEngineLevel(EngineName) Then
+                        Button10.Tag = (ComboBox1.Items.Count)
+                        ChineseEngineLevel = GetChineseEngineLevel(EngineName)
+                    End If
+                    EngineName = "（CN）" & EngineName
+                End If
+            End If
+            ComboBox1.Items.Add(EngineName)
+        Next
     End Sub
     Private Sub ReadFontSettings()
         Dim ListViewFontName As String = GetSetting("自动默写", "字体", "名称", CiYuListView.Font.Name)
@@ -392,36 +397,22 @@ Public Class Form1
 
     Private Sub Button10_Click(sender As Object, e As EventArgs) Handles Button10.Click
         If Button10.Tag Is Nothing Then
-            If MessageBox.Show("未发现中文语音引擎！请下载中文引擎！", "", MessageBoxButtons.YesNo) = Windows.Forms.DialogResult.Yes Then
-                System.Diagnostics.Process.Start("http://pan.baidu.com/share/link?shareid=454161&uk=553949470")
-            End If
+            MessageBox.Show("未发现中文语音引擎！")
             Exit Sub
-        End If
-        If ChineseVoiceGood = False Then
-            If MessageBox.Show("建议安装更好的中文语音引擎！是否安装？", "", MessageBoxButtons.YesNo) = Windows.Forms.DialogResult.Yes Then
-                System.Diagnostics.Process.Start("http://pan.baidu.com/share/link?shareid=454161&uk=553949470")
-            End If
         End If
         ComboBox1.SelectedIndex = CType(Button10.Tag, Int32)
     End Sub
 
     Private Sub Button11_Click(sender As Object, e As EventArgs) Handles Button11.Click
         If Button11.Tag Is Nothing Then
-            If MessageBox.Show("未发现英文语音引擎！请下载英文引擎！", "", MessageBoxButtons.YesNo) = Windows.Forms.DialogResult.Yes Then
-                System.Diagnostics.Process.Start("http://pan.baidu.com/share/link?shareid=454161&uk=553949470")
-            End If
+            MessageBox.Show("未发现英文语音引擎！")
             Exit Sub
-        End If
-        If EnglishVoiceGood = False Then
-            If MessageBox.Show("建议安装更好的英文语音引擎！是否安装？", "", MessageBoxButtons.YesNo) = Windows.Forms.DialogResult.Yes Then
-                System.Diagnostics.Process.Start("http://pan.baidu.com/share/link?shareid=454161&uk=553949470")
-            End If
         End If
         ComboBox1.SelectedIndex = CType(Button11.Tag, Int32)
     End Sub
 
     Private Sub ComboBox1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ComboBox1.SelectedIndexChanged
-        SpVoice1.Voice = SpVoice1.GetVoices.Item(ComboBox1.SelectedIndex)
+        CurrectSpeakEngine = SpeakEngines(ComboBox1.SelectedIndex)
         SaveSetting("自动默写", "TTS引擎", "引擎", ComboBox1.SelectedIndex.ToString)
     End Sub
 
@@ -452,14 +443,18 @@ Public Class Form1
     End Sub
 
     Private Sub TrackBar1_Scroll(sender As Object, e As EventArgs) Handles TrackBar1.Scroll
-        SpVoice1.Volume = TrackBar1.Value
-        BASS.SetVolume(TrackBar1.Value / 100.0F)
-        SaveSetting("自动默写", "TTS引擎", "音量", SpVoice1.Volume.ToString)
+        For Each SpeakEngineObject In SpeakEngines
+            SpeakEngineObject.Volume = CByte(TrackBar1.Value)
+        Next
+        AudioFileStream?.SetVolume(TrackBar1.Value / 100.0F)
+        SaveSetting("自动默写", "TTS引擎", "音量", CByte(TrackBar1.Value).ToString)
     End Sub
 
     Private Sub TrackBar2_Scroll(sender As Object, e As EventArgs) Handles TrackBar2.Scroll
-        SpVoice1.Rate = TrackBar2.Value
-        SaveSetting("自动默写", "TTS引擎", "语速", SpVoice1.Rate.ToString)
+        For Each SpeakEngineObject In SpeakEngines
+            SpeakEngineObject.Rate = CSByte(TrackBar2.Value)
+        Next
+        SaveSetting("自动默写", "TTS引擎", "语速", CSByte(TrackBar2.Value).ToString)
     End Sub
 
 
@@ -581,11 +576,7 @@ Public Class Form1
         End If
     End Sub
 
-    Private Sub SpVoice1_EndStream(StreamNumber As Integer, StreamPosition As Object) Handles SpVoice1.EndStream
-        If ChuFaSpVoice1EndStream = False Then
-            ChuFaSpVoice1EndStream = True
-            Exit Sub
-        End If
+    Private Sub CurrectSpeakEngine_EndSpeak() Handles CurrectSpeakEngine.EndSpeak
         BoBaoWanBi()
     End Sub
     Private Sub BoBaoWanBi()
@@ -626,18 +617,13 @@ Public Class Form1
         Dim AudioFile As String = GetAudioFile(CiYuListView.Items(i).Text)
 
         If AudioFile Is Nothing Then
-            SpVoice1.Speak(CiYuListView.Items(i).Text, SpeechLib.SpeechVoiceSpeakFlags.SVSFlagsAsync)
+            CurrectSpeakEngine.Speak(CiYuListView.Items(i).Text)
         Else
             Try
-                If AudioFileStream IsNot Nothing Then
-                    AudioFileStream.Dispose()
-                    AudioFileStream = Nothing
-                End If
-                AudioFileStream = New BASS_Stream(AudioFile)
-                AudioFileStream.Play()
+                AudioFileStream = New BASS_Stream(AudioFile, TrackBar1.Value / 100.0F)
             Catch ex As Exception
                 MessageBox.Show("无法识别文件：" & AudioFile)
-                SpVoice1.Speak(CiYuListView.Items(i).Text, SpeechLib.SpeechVoiceSpeakFlags.SVSFlagsAsync)
+                CurrectSpeakEngine.Speak(CiYuListView.Items(i).Text)
             End Try
         End If
 
@@ -648,7 +634,7 @@ Public Class Form1
             CiYuListView.Items(i).EnsureVisible()
         End If
         If 字词跟随ToolStripMenuItem.Checked = True Then
-            For Each ListItem As System.Windows.Forms.ListViewItem In CiYuListView.SelectedItems
+            For Each ListItem As ListViewItem In CiYuListView.SelectedItems
                 ListItem.Selected = False
             Next
             CiYuListView.Items(i).Selected = True
@@ -663,7 +649,6 @@ Public Class Form1
     ''' <remarks>该事件不在UI线程触发！</remarks>
     Private Sub AudioFileStream_EndStream() Handles AudioFileStream.EndStream
         If AudioFileStream IsNot Nothing Then
-            AudioFileStream.Dispose()
             AudioFileStream = Nothing
         End If
         Me.Invoke(New MethodInvoker(AddressOf BoBaoWanBi))
@@ -684,19 +669,10 @@ Public Class Form1
         CiYuListView.Items(i).SubItems.Item(1).Text = newValue.ToString()
     End Sub
     Private Sub BoBao_TingZhiDangQianBoBao() Handles BoBao.TingZhiDangQianBoBao
-        If SpVoice1.Status.RunningState <> SpeechLib.SpeechRunState.SRSEDone Then
-            ChuFaSpVoice1EndStream = False
-            Try
-                SpVoice1.Speak(String.Empty, SpeechLib.SpeechVoiceSpeakFlags.SVSFPurgeBeforeSpeak) '部分引擎似乎会出错，所以加个Try
-            Catch ex As Exception
-
-            End Try
-        Else
-            If AudioFileStream IsNot Nothing Then
-                AudioFileStream.StopPlay()
-                AudioFileStream.Dispose()
-                AudioFileStream = Nothing
-            End If
+        CurrectSpeakEngine.StopSpeak()
+        If AudioFileStream IsNot Nothing Then
+            AudioFileStream.StopPlay()
+            AudioFileStream = Nothing
         End If
     End Sub
     Private Sub BoBao_ZiDongBoBaoWanCheng(YuanYin As Integer) Handles BoBao.ZiDongBoBaoWanCheng

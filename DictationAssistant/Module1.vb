@@ -1,46 +1,34 @@
 ﻿Module Module1
     Public CiZuZengQiangMuLu As String
 
-    Public Function IsVoiceLanguageIDEquals(Voice As SpeechLib.SpObjectToken, ID As Int32) As Boolean
-        Try
-            Dim Languages() As String
-            Languages = Split(Voice.GetAttribute("Language"), ";")
-            For Each Language As String In Languages
-                If Convert.ToInt32(Language, 16) = ID Then
-                    Return True
-                End If
-            Next
-        Catch ex As Exception
-
-        End Try
-        Return False
-    End Function
-    Public Function GetChineseGrade(VoiceName As String) As Integer
-        Select Case VoiceName
+    Public Function GetChineseEngineLevel(Name As String) As Integer
+        Select Case Name
             Case "VW Lily"
-                GetChineseGrade = 1
+                Return 5
             Case "VW Hui"
-                GetChineseGrade = 2
+                Return 4
             Case "VW Liang"
-                GetChineseGrade = 3
+                Return 3
             Case "VW Wang"
-                GetChineseGrade = 4
+                Return 2
             Case "Girl XiaoKun"
-                GetChineseGrade = 5
+                Return 1
             Case Else
-                GetChineseGrade = 0
+                Return 0
         End Select
     End Function
-    Public Function GetEnglishGrade(VoiceName As String) As Integer
-        Select Case VoiceName
+    Public Function GetEnglishEngineLevel(Name As String) As Integer
+        Select Case Name
+            Case "Microsoft Hazel Desktop"
+                Return 4
             Case "VW Julie"
-                GetEnglishGrade = 1
+                Return 3
             Case "VW Paul"
-                GetEnglishGrade = 2
+                Return 2
             Case "VW Kate"
-                GetEnglishGrade = 3
+                Return 1
             Case Else
-                GetEnglishGrade = 0
+                Return 0
         End Select
     End Function
 End Module
