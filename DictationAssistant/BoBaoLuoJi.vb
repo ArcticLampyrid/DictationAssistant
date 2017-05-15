@@ -159,10 +159,7 @@ Public Class BoBaoLuoJi
     ''' <param name="retu">传址参数，调用后应为结果（是否已暂停）</param>
     ''' <remarks></remarks>
     Event IsZanTing(ByRef retu As Boolean)
-    Public Structure MeiCiJianGeXinXi  '每次间隔信息
-        Public LeiXin As Integer '0=ShiChang/1=单词数*ShiChang
-        Public ShiChang As Integer
-    End Structure
+
     Sub New()
         ZiDongBoBaoShiZhong.Enabled = False
         ZiDongBoBaoShiZhong.Interval = 1000

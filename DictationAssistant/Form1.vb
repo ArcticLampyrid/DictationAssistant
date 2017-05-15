@@ -6,6 +6,7 @@ Public Class Form1
     Dim WithEvents CurrectSpeakEngine As ISpeakEngine
     Dim WithEvents BoBao As New BoBaoLuoJi
     Dim WithEvents AudioFileStream As BASS_Stream
+    Dim WithEvents CurrentSpeakStateControler As ISpeakStateControler
 
     ''' <summary>
     ''' 词组增强支持的音频文件扩展名
@@ -576,7 +577,8 @@ Public Class Form1
         End If
     End Sub
 
-    Private Sub CurrectSpeakEngine_EndSpeak() Handles CurrectSpeakEngine.EndSpeak
+    Private Sub CurrentSpeakStateControler_EndSpeak() Handles CurrentSpeakStateControler.EndSpeak
+        CurrentSpeakStateControler = Nothing
         BoBaoWanBi()
     End Sub
     Private Sub BoBaoWanBi()
@@ -612,18 +614,16 @@ Public Class Form1
         Return Nothing
     End Function
     Private Sub BoBao_BoBao(i As Integer) Handles BoBao.BoBao
-
-
         Dim AudioFile As String = GetAudioFile(CiYuListView.Items(i).Text)
 
         If AudioFile Is Nothing Then
-            CurrectSpeakEngine.Speak(CiYuListView.Items(i).Text)
+            CurrentSpeakStateControler = CurrectSpeakEngine.Speak(CiYuListView.Items(i).Text)
         Else
             Try
                 AudioFileStream = New BASS_Stream(AudioFile, TrackBar1.Value / 100.0F)
             Catch ex As Exception
                 MessageBox.Show("无法识别文件：" & AudioFile)
-                CurrectSpeakEngine.Speak(CiYuListView.Items(i).Text)
+                CurrentSpeakStateControler = CurrectSpeakEngine.Speak(CiYuListView.Items(i).Text)
             End Try
         End If
 
@@ -669,7 +669,10 @@ Public Class Form1
         CiYuListView.Items(i).SubItems.Item(1).Text = newValue.ToString()
     End Sub
     Private Sub BoBao_TingZhiDangQianBoBao() Handles BoBao.TingZhiDangQianBoBao
-        CurrectSpeakEngine.StopSpeak()
+        If CurrentSpeakStateControler IsNot Nothing Then
+            CurrentSpeakStateControler.StopSpeak()
+            CurrentSpeakStateControler = Nothing
+        End If
         If AudioFileStream IsNot Nothing Then
             AudioFileStream.StopPlay()
             AudioFileStream = Nothing

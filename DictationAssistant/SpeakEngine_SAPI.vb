@@ -6,7 +6,6 @@ Imports System.Globalization
 Public Class SpeakEngine_SAPI
     Implements ISpeakEngine
 
-
     Private Shared AllNativeEngines As ReadOnlyCollection(Of Object)
     Shared Sub New()
         Dim CategoryIds As String() = {"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices", "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech Server\v11.0\Voices", "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech_OneCore\Voices"}
@@ -35,14 +34,12 @@ Public Class SpeakEngine_SAPI
 
 
     Private WithEvents SpVoiceObject As SpVoice
-    Private NotRaiseEndSpeakEventOne As Boolean
-    Private _Culture As CultureInfo
-    Public Event EndSpeak() Implements ISpeakEngine.EndSpeak
+    Private CurrentSpeakStateControler As SpeakStateControler_SAPI
     Public Sub New(NativeEngine As Object)
         SpVoiceObject = New SpVoice
         SpVoiceObject.Voice = CType(NativeEngine, SpObjectToken)
         Try
-            _Culture = New CultureInfo(Integer.Parse(SpVoiceObject.Voice.GetAttribute("Language").Split(";"c)(0),
+            Culture = New CultureInfo(Integer.Parse(SpVoiceObject.Voice.GetAttribute("Language").Split(";"c)(0),
                                                      NumberStyles.HexNumber,
                                                      CultureInfo.InvariantCulture),
                                        False)
@@ -51,29 +48,25 @@ Public Class SpeakEngine_SAPI
         End Try
     End Sub
 
-    Public Sub Speak(Text As String) Implements ISpeakEngine.Speak
-        SpVoiceObject.Speak(Text, SpeechVoiceSpeakFlags.SVSFlagsAsync)
-    End Sub
-
-    Public Sub StopSpeak() Implements ISpeakEngine.StopSpeak
-        If SpVoiceObject.Status.RunningState = SpeechRunState.SRSEDone Then
-            Return
+    Public Function Speak(Text As String) As ISpeakStateControler Implements ISpeakEngine.Speak
+        If CurrentSpeakStateControler IsNot Nothing Then
+            Dim LocalSpeakStateControler As SpeakStateControler_SAPI = CurrentSpeakStateControler
+            CurrentSpeakStateControler = Nothing
+            LocalSpeakStateControler.StopSpeak()
+            LocalSpeakStateControler.OnEndSpeak()
         End If
-
-        NotRaiseEndSpeakEventOne = True
-        Try
-            SpVoiceObject.Speak(String.Empty, SpeechVoiceSpeakFlags.SVSFPurgeBeforeSpeak) '部分引擎似乎会出错，所以加个Try
-        Catch ex As Exception
-
-        End Try
-    End Sub
+        SpVoiceObject.Speak(Text, SpeechVoiceSpeakFlags.SVSFlagsAsync)
+        CurrentSpeakStateControler = New SpeakStateControler_SAPI(Me)
+        Return CurrentSpeakStateControler
+    End Function
 
     Private Sub SpVoiceObject_EndStream(StreamNumber As Integer, StreamPosition As Object) Handles SpVoiceObject.EndStream
-        If NotRaiseEndSpeakEventOne Then
-            NotRaiseEndSpeakEventOne = False
-            Return
+        If CurrentSpeakStateControler IsNot Nothing Then
+            Dim LocalSpeakStateControler As SpeakStateControler_SAPI = CurrentSpeakStateControler
+            CurrentSpeakStateControler = Nothing
+            LocalSpeakStateControler.OnEndSpeak()
+            LocalSpeakStateControler = Nothing
         End If
-        RaiseEvent EndSpeak()
     End Sub
 
     Public ReadOnly Property Name As String Implements ISpeakEngine.Name
@@ -105,22 +98,44 @@ Public Class SpeakEngine_SAPI
     End Property
 
     Public ReadOnly Property Culture As CultureInfo Implements ISpeakEngine.Culture
-        Get
-            Return _Culture
-        End Get
-    End Property
 
-    Private Function IsSupportedLanguage(LanguageID As Integer) As Boolean
-        Try
-            Dim Languages() As String = SpVoiceObject.Voice.GetAttribute("Language").Split(";"c)
-            For Each Language As String In Languages
-                If Integer.Parse(Language, Globalization.NumberStyles.HexNumber) = LanguageID Then
-                    Return True
-                End If
-            Next
-        Catch ex As Exception
+    Private Class SpeakStateControler_SAPI
+        Implements ISpeakStateControler
 
-        End Try
-        Return False
-    End Function
+        Private SpeakEngineObject As SpeakEngine_SAPI
+
+        Public Sub New(SpeakEngineObject As SpeakEngine_SAPI)
+            Me.SpeakEngineObject = SpeakEngineObject
+        End Sub
+
+        Public Event EndSpeak() Implements ISpeakStateControler.EndSpeak
+
+        Public Sub OnEndSpeak()
+            SpeakEngineObject = Nothing
+            RaiseEvent EndSpeak()
+        End Sub
+
+        Public Sub StopSpeak() Implements ISpeakStateControler.StopSpeak
+            If Me.SpeakEngineObject Is Nothing Then
+                Return
+            End If
+            If SpeakEngineObject.SpVoiceObject.Status.RunningState = SpeechRunState.SRSEDone Then
+                SpeakEngineObject.CurrentSpeakStateControler = Nothing
+                SpeakEngineObject = Nothing
+                Return
+            End If
+
+            SpeakEngineObject.CurrentSpeakStateControler = Nothing
+            Try
+                Dim OldEventInterests As SpeechVoiceEvents
+                OldEventInterests = SpeakEngineObject.SpVoiceObject.EventInterests
+                SpeakEngineObject.SpVoiceObject.EventInterests = 0
+                SpeakEngineObject.SpVoiceObject.Speak(String.Empty, SpeechVoiceSpeakFlags.SVSFPurgeBeforeSpeak) '部分引擎似乎会出错，所以加个Try
+                SpeakEngineObject.SpVoiceObject.EventInterests = OldEventInterests
+            Catch ex As Exception
+
+            End Try
+            SpeakEngineObject = Nothing
+        End Sub
+    End Class
 End Class
