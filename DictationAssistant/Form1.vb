@@ -1,18 +1,8 @@
-﻿Imports System.ComponentModel
-Imports System.IO
+﻿Imports System.IO
 
 Public Class Form1
     Dim SpeakEngines As New List(Of ISpeakEngine)
-    Dim WithEvents CurrectSpeakEngine As ISpeakEngine
-    Dim WithEvents BoBao As New BoBaoLuoJi
-    Dim WithEvents AudioFileStream As BASS_Stream
-    Dim WithEvents CurrentSpeakStateControler As ISpeakStateControler
-
-    ''' <summary>
-    ''' 词组增强支持的音频文件扩展名
-    ''' </summary>
-    ''' <remarks></remarks>
-    Dim AudioFileExtension As String() = Split("wav;ape;flac;m4a;mp3;mp2;mp1;ogg;aif", ";")
+    Friend WithEvents BoBao As New SpeakControler
 
     ''' <summary>
     ''' 打开多个词语文件
@@ -20,20 +10,20 @@ Public Class Form1
     ''' <param name="Files">词语文件列表（Ansi编码）</param>
     ''' <remarks>不会在列表中移除原词语</remarks>
     Public Sub OpenFiles(Files As String())
-        CiYuListView.BeginUpdate()
+        WordListView.BeginUpdate()
 
         For Each FileName As String In Files
-            Dim ReadText As New StreamReader(FileName, System.Text.Encoding.Default)
-            While Not ReadText.EndOfStream
-                Dim CiYu As String = ReadText.ReadLine()
-                If CiYu.Trim() <> "" Then
-                    CiYuListView.Items.Add(CiYu).SubItems.Add("0")
-                End If
-            End While
-            ReadText.Dispose()
+            Using ReadText As New StreamReader(FileName, System.Text.Encoding.Default)
+                While Not ReadText.EndOfStream
+                    Dim CiYu As String = ReadText.ReadLine()
+                    If CiYu.Trim() <> "" Then
+                        WordListView.Items.Add(CiYu)
+                    End If
+                End While
+            End Using
         Next
 
-        CiYuListView.EndUpdate()
+        WordListView.EndUpdate()
     End Sub
     ''' <summary>
     ''' 保存词语文件
@@ -41,11 +31,11 @@ Public Class Form1
     ''' <param name="FileName">文件路径</param>
     ''' <remarks></remarks>
     Public Sub SaveFile(FileName As String)
-        Dim WriterText As New StreamWriter(FileName, False, System.Text.Encoding.Default)
-        For Each ListItem As ListViewItem In CiYuListView.Items
-            WriterText.WriteLine(ListItem.Text)
-        Next
-        WriterText.Dispose()
+        Using WriterText As New StreamWriter(FileName, False, System.Text.Encoding.Default)
+            For Each ListItem As ListViewItem In WordListView.Items
+                WriterText.WriteLine(ListItem.Text)
+            Next
+        End Using
     End Sub
     Private Sub OpenButton_Click(sender As Object, e As EventArgs) Handles OpenButton.Click
         If OpenFileDialog1.ShowDialog = Windows.Forms.DialogResult.OK Then
@@ -54,67 +44,70 @@ Public Class Form1
     End Sub
 
     Private Sub ClearButton_Click(sender As Object, e As EventArgs) Handles ClearButton.Click
-        CiYuListView.Items.Clear()
+        WordListView.Items.Clear()
     End Sub
 
     Private Sub DeleteButton_Click(sender As Object, e As EventArgs) Handles DeleteButton.Click
-        For Each SelectedItem As System.Windows.Forms.ListViewItem In CiYuListView.SelectedItems
+        WordListView.BeginUpdate()
+        For Each SelectedItem As ListViewItem In WordListView.SelectedItems
             SelectedItem.Remove()
         Next
+        WordListView.EndUpdate()
     End Sub
 
     Private Sub AddButton_Click(sender As Object, e As EventArgs) Handles AddButton.Click
-        Dim AddString As String
-        AddString = InputBox("要添加的词语：", "添加词语")
-        If AddString.Trim() <> "" Then
-            CiYuListView.Items.Add(AddString).SubItems.Add("0")
-        End If
+        Dim AddString As String = ""
+        AddString = InputBox("要添加的词语：", "添加词语")?.Trim()
+        While Not String.IsNullOrEmpty(AddString)
+            WordListView.Items.Add(AddString)
+            AddString = InputBox("要添加的词语：", "添加词语")?.Trim()
+        End While
     End Sub
 
     Private Sub EditButton_Click(sender As Object, e As EventArgs) Handles EditButton.Click
-        If CiYuListView.SelectedItems.Count > 0 Then
-            CiYuListView.SelectedItems.Item(0).BeginEdit()
+        If WordListView.SelectedItems.Count > 0 Then
+            WordListView.SelectedItems.Item(0).BeginEdit()
         End If
     End Sub
     Private Sub UpButton_Click(sender As Object, e As EventArgs) Handles UpButton.Click
-        Dim SelectedItems As ListView.SelectedListViewItemCollection = CiYuListView.SelectedItems
+        Dim SelectedItems As ListView.SelectedListViewItemCollection = WordListView.SelectedItems
         If SelectedItems.Count > 0 Then
             If SelectedItems.Item(0).Index > 0 Then
-                CiYuListView.BeginUpdate()
+                WordListView.BeginUpdate()
 
                 For Each SelectedItem As ListViewItem In SelectedItems
                     Dim SelectedItemIndex As Integer = SelectedItem.Index
                     SelectedItem.Remove()
-                    CiYuListView.Items.Insert(SelectedItemIndex - 1, SelectedItem).EnsureVisible()
+                    WordListView.Items.Insert(SelectedItemIndex - 1, SelectedItem).EnsureVisible()
                 Next
 
-                CiYuListView.EndUpdate()
+                WordListView.EndUpdate()
             End If
         End If
     End Sub
     Private Sub DownButton_Click(sender As Object, e As EventArgs) Handles DownButton.Click
-        Dim SelectedItems As ListView.SelectedListViewItemCollection = CiYuListView.SelectedItems
+        Dim SelectedItems As ListView.SelectedListViewItemCollection = WordListView.SelectedItems
         If SelectedItems.Count > 0 Then
-            If SelectedItems.Item(SelectedItems.Count - 1).Index < CiYuListView.Items.Count - 1 Then
-                CiYuListView.BeginUpdate()
+            If SelectedItems.Item(SelectedItems.Count - 1).Index < WordListView.Items.Count - 1 Then
+                WordListView.BeginUpdate()
 
                 For i = SelectedItems.Count - 1 To 0 Step -1
                     Dim SelectedItem As ListViewItem = SelectedItems.Item(i)
                     Dim SelectedItemIndex As Integer = SelectedItem.Index
                     SelectedItem.Remove()
-                    CiYuListView.Items.Insert(SelectedItemIndex + 1, SelectedItem).EnsureVisible()
+                    WordListView.Items.Insert(SelectedItemIndex + 1, SelectedItem).EnsureVisible()
                 Next
 
-                CiYuListView.EndUpdate()
+                WordListView.EndUpdate()
             End If
         End If
     End Sub
     Private Sub CountButton_Click(sender As Object, e As EventArgs) Handles CountButton.Click
-        MessageBox.Show("词语数量：" & CiYuListView.Items.Count.ToString())
+        MessageBox.Show("词语数量：" & WordListView.Items.Count.ToString())
     End Sub
 
     Private Sub OpenToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles OpenToolStripMenuItem.Click
-        Call OpenButton_Click(OpenButton, System.EventArgs.Empty)
+        Call OpenButton_Click(OpenButton, EventArgs.Empty)
     End Sub
 
     Private Sub SaveButton_Click(sender As Object, e As EventArgs) Handles SaveButton.Click
@@ -124,27 +117,41 @@ Public Class Form1
     End Sub
 
     Private Sub Button4_Click(sender As Object, e As EventArgs) Handles Button4.Click
-        If CiYuListView.Items.Count = 0 Then
+        If WordListView.Items.Count = 0 Then
             MessageBox.Show("请先添加词语！")
             Exit Sub
         End If
-        If BoBao.GetXiaYiGeWeiZhi() >= CiYuListView.Items.Count Then
+        If BoBao.GetNextWordIndex() >= WordListView.Items.Count Then
             MessageBox.Show("已经播完了。")
             Exit Sub
         End If
         Button3.Text = "暂停自动播报(&P)"
-        BoBao.BoBaoXiaYiGe()
+        BoBao.SpeakNext()
     End Sub
 
     Private Sub Form1_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
-        If AudioFileStream IsNot Nothing Then
-            AudioFileStream = Nothing
-        End If
+        BoBao.StopThis()
         BASS.FreeAllPlugin()
         BASS.Free()
     End Sub
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        If BASS.Init(-1, 44100, 0, Handle) Then
+            Try
+                Dim pluginDir As New DirectoryInfo(AppDomain.CurrentDomain.SetupInformation.ApplicationBase & "bass_plugin")
+                For Each File In pluginDir.GetFiles()
+                    BASS.LoadPlugin(File.FullName)
+                Next
+            Catch ex As Exception
+
+            End Try
+            CiZuZengQiangMuLu = GetSetting("自动默写", "选项", "词组增强", "")
+        Else
+            设置词组增强ToolStripMenuItem.Enabled = False
+            设置词组增强ToolStripMenuItem.Text = "加载词组增强功能失败"
+        End If
+        BoBao.Speaker = New Speaker()
+        BoBao.WordListSource = New WordListAdapterForListView(WordListView)
         InitVoiceList()
         Try
             ComboBox1.SelectedIndex = Convert.ToInt32(GetSetting("自动默写", "TTS引擎", "引擎", "0"))
@@ -159,31 +166,23 @@ Public Class Form1
         字词跟随ToolStripMenuItem.Checked = Convert.ToBoolean(GetSetting("自动默写", "选项", "字词跟随", Boolean.TrueString))
 
         TrackBar1.Value = Convert.ToInt32(GetSetting("自动默写", "TTS引擎", "音量", "100"))
-        TrackBar1_Scroll(TrackBar1, Nothing)
+        TrackBar1_Scroll(TrackBar1, EventArgs.Empty)
 
         TrackBar2.Value = Convert.ToInt32(GetSetting("自动默写", "TTS引擎", "语速", "0"))
-        TrackBar2_Scroll(TrackBar2, Nothing)
+        TrackBar2_Scroll(TrackBar2, EventArgs.Empty)
+
+        ComboBox1_SelectedIndexChanged(ComboBox1, EventArgs.Empty)
 
         For Each CommandLine As String In My.Application.CommandLineArgs
-            If System.IO.File.Exists(CommandLine) = True Then
+            If File.Exists(CommandLine) Then
                 OpenFiles({CommandLine})
             End If
         Next
 
-        If BASS.Init(-1, 44100, 0, Handle) Then
-            BASS.LoadPlugin("bassflac.dll")
-            BASS.LoadPlugin("bass_ape.dll")
-            BASS.LoadPlugin("bassalac.dll")
-
-            CiZuZengQiangMuLu = GetSetting("自动默写", "选项", "词组增强", "")
-        Else
-            设置词组增强ToolStripMenuItem.Enabled = False
-            设置词组增强ToolStripMenuItem.Text = "加载词组增强功能失败"
-        End If
     End Sub
     Private Sub InitVoiceList()
-        For Each NativeEngine As Object In SpeakEngine_SAPI.GetAllNativeEngines()
-            SpeakEngines.Add(New SpeakEngine_SAPI(NativeEngine))
+        For Each NativeEngine As Object In MicrosoftSpeechEngine.GetAllNativeEngines()
+            SpeakEngines.Add(New MicrosoftSpeechEngine(NativeEngine))
         Next
 
         Dim EnglishEngineLevel As Integer '用于记录英文语音引擎等级，越高表示引擎越好
@@ -213,69 +212,70 @@ Public Class Form1
         Next
     End Sub
     Private Sub ReadFontSettings()
-        Dim ListViewFontName As String = GetSetting("自动默写", "字体", "名称", CiYuListView.Font.Name)
-        Dim ListViewFontSize As Single = Convert.ToSingle(GetSetting("自动默写", "字体", "大小", CiYuListView.Font.Size.ToString))
-        Dim ListViewFontGdiVertical As Boolean = Convert.ToBoolean(GetSetting("自动默写", "字体", "垂直", CiYuListView.Font.GdiVerticalFont.ToString))
-        Dim ListViewFontFontGdiCharSet As Byte = Convert.ToByte(GetSetting("自动默写", "字体", "字符集", CiYuListView.Font.GdiCharSet.ToString))
-        Dim ListViewFontStyle As FontStyle = CType(GetSetting("自动默写", "字体", "样式", Convert.ToInt32(CiYuListView.Font.Style).ToString), FontStyle)
-        CiYuListView.Font = New Font(ListViewFontName, ListViewFontSize, ListViewFontStyle, CiYuListView.Font.Unit, ListViewFontFontGdiCharSet, ListViewFontGdiVertical)
-        CiYuListView.ForeColor = System.Drawing.Color.FromArgb(Convert.ToInt32(GetSetting("自动默写", "字体", "颜色", CiYuListView.ForeColor.ToArgb.ToString)))
+        Dim ListViewFontName As String = GetSetting("自动默写", "字体", "名称", WordListView.Font.Name)
+        Dim ListViewFontSize As Single = Convert.ToSingle(GetSetting("自动默写", "字体", "大小", WordListView.Font.Size.ToString))
+        Dim ListViewFontGdiVertical As Boolean = Convert.ToBoolean(GetSetting("自动默写", "字体", "垂直", WordListView.Font.GdiVerticalFont.ToString))
+        Dim ListViewFontFontGdiCharSet As Byte = Convert.ToByte(GetSetting("自动默写", "字体", "字符集", WordListView.Font.GdiCharSet.ToString))
+        Dim ListViewFontStyle As FontStyle = CType(GetSetting("自动默写", "字体", "样式", Convert.ToInt32(WordListView.Font.Style).ToString), FontStyle)
+        WordListView.Font = New Font(ListViewFontName, ListViewFontSize, ListViewFontStyle, WordListView.Font.Unit, ListViewFontFontGdiCharSet, ListViewFontGdiVertical)
+        WordListView.ForeColor = Color.FromArgb(Convert.ToInt32(GetSetting("自动默写", "字体", "颜色", WordListView.ForeColor.ToArgb.ToString)))
     End Sub
     Private Sub Button8_Click(sender As Object, e As EventArgs) Handles Button8.Click
-        If (BoBao.GetXiaYiGeWeiZhi() <= CiYuListView.Items.Count) And (BoBao.GetXiaYiGeWeiZhi() > 0) Then
+        If (BoBao.GetNextWordIndex() <= WordListView.Items.Count) And (BoBao.GetNextWordIndex() > 0) Then
             Button3.Text = "暂停自动播报(&P)"
-            BoBao.BoBaoDangQian()
+            BoBao.SpeakAgain()
         Else
-            MessageBox.Show("还没报过或已移除报过的词语！")
+            MessageBox.Show(Me, "还没报过或已移除报过的词语！")
         End If
-
     End Sub
 
     Private Sub Button7_Click(sender As Object, e As EventArgs) Handles Button7.Click
-        If BoBao.GetXiaYiGeWeiZhi() <= CiYuListView.Items.Count And BoBao.GetXiaYiGeWeiZhi() > 1 Then
+        If BoBao.GetNextWordIndex() <= WordListView.Items.Count And BoBao.GetNextWordIndex() > 1 Then
             Button3.Text = "暂停自动播报(&P)"
-            BoBao.BoBaoShangYiGe()
+            BoBao.SpeakLast()
         Else
-            MessageBox.Show("已经是第1个了！")
+            MessageBox.Show(Me, "已经是第1个了！")
         End If
     End Sub
 
     Private Sub Button5_Click(sender As Object, e As EventArgs) Handles Button5.Click
-        If Not BoBao.IsZddb() Then
-            BoBao.CongTouKaiShi()
-            For Each ListItem As System.Windows.Forms.ListViewItem In CiYuListView.Items
-                ListItem.SubItems.Item(1).Text = "0"
+        If Not BoBao.IsAutoMode Then
+            BoBao.ResetProgress()
+            WordListView.BeginUpdate()
+            For Each ListItem As ListViewItem In WordListView.Items
+                ListItem.BackColor = Color.Empty
             Next
+            WordListView.EndUpdate()
         Else
-            MessageBox.Show("请先停止自动播报！")
+            MessageBox.Show(Me, "请先停止自动播报！")
         End If
     End Sub
 
 
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
-        If CiYuListView.Items.Count = 0 Then
-            MessageBox.Show("请先添加词语！")
+        If WordListView.Items.Count = 0 Then
             Exit Sub
         End If
-        Button1.Enabled = False
-        Button5_Click(Button1, System.EventArgs.Empty) '记录归零
-        BoBao.KaiShiZiDongBoBao()
+        If BoBao.IsAutoMode Then
+            BoBao.StopAuto()
+        End If
+        Button5_Click(Button1, EventArgs.Empty) '记录归零
+        BoBao.StartAuto()
     End Sub
 
     Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
-        If BoBao.IsZddb() Then
-            BoBao.JieShuZiDongBoBao()
-            BoBaoWanBi()
-            MessageBox.Show("自动播报已结束！")
+        If BoBao.IsAutoMode Then
+            BoBao.StopAuto()
+        ElseIf BoBao.IsSpeaking Then
+            BoBao.StopThis()
         Else
-            BoBao_TingZhiDangQianBoBao()
-            BoBaoWanBi()
-            MessageBox.Show("播报已结束！")
+            Exit Sub
         End If
+        BoBao_StoppedThis(BoBao.GetNextWordIndex() - 1, False)
     End Sub
 
     Private Sub 保存SToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 保存SToolStripMenuItem.Click
-        Call SaveButton_Click(保存SToolStripMenuItem, System.EventArgs.Empty)
+        Call SaveButton_Click(保存SToolStripMenuItem, EventArgs.Empty)
     End Sub
 
     Private Sub 退出EToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 退出EToolStripMenuItem.Click
@@ -284,7 +284,7 @@ Public Class Form1
 
     Private Sub Button9_Click(sender As Object, e As EventArgs) Handles Button9.Click
         If Button9.Text = "隐藏词语列表" Then
-            CiYuListView.Visible = False
+            WordListView.Visible = False
             OpenButton.Visible = False
             SaveButton.Visible = False
             UpButton.Visible = False
@@ -297,7 +297,7 @@ Public Class Form1
             Label5.Visible = True
             Button9.Text = "显示词语列表"
         Else
-            CiYuListView.Visible = True
+            WordListView.Visible = True
             OpenButton.Visible = True
             SaveButton.Visible = True
             UpButton.Visible = True
@@ -312,86 +312,56 @@ Public Class Form1
         End If
     End Sub
 
-
-    Private Sub GroupBox3_Resize(sender As Object, e As EventArgs) Handles GroupBox3.Resize
-
-        Dim Temp As Integer
-
-        If GroupBox3.Height < 172 Then
-            Temp = Convert.ToInt32((GroupBox3.Height - 47) / 4)
-            Button3.Font = New System.Drawing.Font("微软雅黑", 9.0!)
-            Button3.Height = Temp
-        Else
-            Temp = Convert.ToInt32((GroupBox3.Height - 47) / 5)
-            Button3.Font = New System.Drawing.Font("微软雅黑", 18.0!)
-            Button3.Height = Temp * 2
-        End If
-
-        Button1.Height = Temp
-        Button2.Height = Temp
-
-        Button3.Top = Button1.Top + Button1.Height + 6
-
-        Button4.Height = Temp
-        Button5.Height = Temp
-        Button4.Top = Button3.Top + Button3.Height + 6
-        Button5.Top = Button3.Top + Button3.Height + 6
-        Button7.Height = Temp
-        Button8.Height = Temp
-        Button7.Top = Button4.Top + Button4.Height + 6
-        Button8.Top = Button4.Top + Button4.Height + 6
-    End Sub
-
     Private Sub 上移ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 上移ToolStripMenuItem.Click
-        UpButton_Click(上移ToolStripMenuItem, System.EventArgs.Empty)
+        UpButton_Click(上移ToolStripMenuItem, EventArgs.Empty)
     End Sub
 
     Private Sub 下移ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 下移ToolStripMenuItem.Click
-        DownButton_Click(下移ToolStripMenuItem, System.EventArgs.Empty)
+        DownButton_Click(下移ToolStripMenuItem, EventArgs.Empty)
     End Sub
 
     Private Sub 修改ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 修改ToolStripMenuItem.Click
-        EditButton_Click(修改ToolStripMenuItem, System.EventArgs.Empty)
+        EditButton_Click(修改ToolStripMenuItem, EventArgs.Empty)
     End Sub
 
     Private Sub 移除ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 移除ToolStripMenuItem.Click
-        DeleteButton_Click(移除ToolStripMenuItem, System.EventArgs.Empty)
+        DeleteButton_Click(移除ToolStripMenuItem, EventArgs.Empty)
     End Sub
 
     Private Sub 反向选择ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 反向选择ToolStripMenuItem.Click
-        反向选择ToolStripMenuItem1_Click(反向选择ToolStripMenuItem, System.EventArgs.Empty)
+        反向选择ToolStripMenuItem1_Click(反向选择ToolStripMenuItem, EventArgs.Empty)
     End Sub
 
     Private Sub 显示隐藏词语列表ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 显示隐藏词语列表ToolStripMenuItem.Click
-        Call Button9_Click(显示隐藏词语列表ToolStripMenuItem, System.EventArgs.Empty)
+        Call Button9_Click(显示隐藏词语列表ToolStripMenuItem, EventArgs.Empty)
     End Sub
 
     Private Sub 添加词语ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 添加词语ToolStripMenuItem.Click
-        Call AddButton_Click(添加词语ToolStripMenuItem, System.EventArgs.Empty)
+        Call AddButton_Click(添加词语ToolStripMenuItem, EventArgs.Empty)
     End Sub
 
     Private Sub 移除选中词语ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 移除选中词语ToolStripMenuItem.Click
-        Call DeleteButton_Click(移除选中词语ToolStripMenuItem, System.EventArgs.Empty)
+        Call DeleteButton_Click(移除选中词语ToolStripMenuItem, EventArgs.Empty)
     End Sub
 
     Private Sub 清空词语列表ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 清空词语列表ToolStripMenuItem.Click
-        Call ClearButton_Click(清空词语列表ToolStripMenuItem, System.EventArgs.Empty)
+        Call ClearButton_Click(清空词语列表ToolStripMenuItem, EventArgs.Empty)
     End Sub
 
     Private Sub 修改选中词语ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 修改选中词语ToolStripMenuItem.Click
-        Call EditButton_Click(修改选中词语ToolStripMenuItem, System.EventArgs.Empty)
+        Call EditButton_Click(修改选中词语ToolStripMenuItem, EventArgs.Empty)
     End Sub
 
     Private Sub 向上移动ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 向上移动ToolStripMenuItem.Click
-        Call UpButton_Click(向上移动ToolStripMenuItem, System.EventArgs.Empty)
+        Call UpButton_Click(向上移动ToolStripMenuItem, EventArgs.Empty)
     End Sub
 
     Private Sub 向下移动ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 向下移动ToolStripMenuItem.Click
-        Call DownButton_Click(向下移动ToolStripMenuItem, System.EventArgs.Empty)
+        Call DownButton_Click(向下移动ToolStripMenuItem, EventArgs.Empty)
     End Sub
 
     Private Sub 反向选择ToolStripMenuItem1_Click(sender As Object, e As EventArgs) Handles 反向选择ToolStripMenuItem1.Click
-        For Each ListItem As System.Windows.Forms.ListViewItem In CiYuListView.Items
+        For Each ListItem As ListViewItem In WordListView.Items
             ListItem.Selected = Not ListItem.Selected
         Next
     End Sub
@@ -413,12 +383,22 @@ Public Class Form1
     End Sub
 
     Private Sub ComboBox1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ComboBox1.SelectedIndexChanged
-        CurrectSpeakEngine = SpeakEngines(ComboBox1.SelectedIndex)
+
+        Dim Engine As ISpeakEngine = Nothing
+        If ComboBox1.SelectedIndex <> -1 Then
+            Engine = SpeakEngines(ComboBox1.SelectedIndex)
+        End If
+        If CiZuZengQiangMuLu IsNot Nothing AndAlso CiZuZengQiangMuLu.Trim() <> "" Then
+            Engine = New ImprovedSpeakEngine(Engine, CiZuZengQiangMuLu)
+        End If
+        CType(BoBao.Speaker, Speaker).Engine = Engine
         SaveSetting("自动默写", "TTS引擎", "引擎", ComboBox1.SelectedIndex.ToString)
     End Sub
 
     Private Sub 设置词组增强ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 设置词组增强ToolStripMenuItem.Click
-        Form2.ShowDialog()
+        If SetImprovedSpeakEngineDialog.ShowDialog() = DialogResult.OK Then
+            ComboBox1_SelectedIndexChanged(ComboBox1, EventArgs.Empty)
+        End If
     End Sub
 
     Private Sub 自动翻页ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 自动翻页ToolStripMenuItem.Click
@@ -440,31 +420,30 @@ Public Class Form1
     End Sub
 
     Private Sub 关于AToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 关于AToolStripMenuItem.Click
-        AboutBox1.ShowDialog()
+        AboutBox.ShowDialog()
     End Sub
 
     Private Sub TrackBar1_Scroll(sender As Object, e As EventArgs) Handles TrackBar1.Scroll
         For Each SpeakEngineObject In SpeakEngines
-            SpeakEngineObject.Volume = CByte(TrackBar1.Value)
+            CType(BoBao.Speaker, Speaker).Volume = CByte(TrackBar1.Value)
         Next
-        AudioFileStream?.SetVolume(TrackBar1.Value / 100.0F)
         SaveSetting("自动默写", "TTS引擎", "音量", CByte(TrackBar1.Value).ToString)
     End Sub
 
     Private Sub TrackBar2_Scroll(sender As Object, e As EventArgs) Handles TrackBar2.Scroll
         For Each SpeakEngineObject In SpeakEngines
-            SpeakEngineObject.Rate = CSByte(TrackBar2.Value)
+            CType(BoBao.Speaker, Speaker).Rate = CSByte(TrackBar2.Value)
         Next
         SaveSetting("自动默写", "TTS引擎", "语速", CSByte(TrackBar2.Value).ToString)
     End Sub
 
 
     Private Sub 全选ToolStripMenuItem1_Click(sender As Object, e As EventArgs) Handles 全选ToolStripMenuItem1.Click
-        全选ToolStripMenuItem_Click(全选ToolStripMenuItem1, System.EventArgs.Empty)
+        全选ToolStripMenuItem_Click(全选ToolStripMenuItem1, EventArgs.Empty)
     End Sub
 
     Private Sub 全选ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 全选ToolStripMenuItem.Click
-        For Each ListItem As System.Windows.Forms.ListViewItem In CiYuListView.Items
+        For Each ListItem As ListViewItem In WordListView.Items
             ListItem.Selected = True
         Next
     End Sub
@@ -475,16 +454,16 @@ Public Class Form1
             ZiDongBoBaoJianGeTextBox.Select(0, 1)
         End If
 
-        Dim BoBaoJianGeObject As BoBaoJianGe
+        Dim WaitingTimeCalculator As IWaitingTimeCalculator
         Try
-            BoBaoJianGeObject = New BoBaoJianGe_BiaoDaShi(ZiDongBoBaoJianGeTextBox.Text)
-            BoBaoJianGeObject.GetBoBoJianGe(New CiYuXinXi("测试 Test"))
+            WaitingTimeCalculator = New WaitingTimeAccordingToExpression(ZiDongBoBaoJianGeTextBox.Text)
+            WaitingTimeCalculator.CalculateWaitingTime("测试 Test")
             ErrorProvider1.SetError(ZiDongBoBaoJianGeTextBox, "")
         Catch ex As Exception
-            BoBaoJianGeObject = New BoBaoJianGe_GuDing(0)
+            WaitingTimeCalculator = New FixedWaitingTime(0)
             ErrorProvider1.SetError(ZiDongBoBaoJianGeTextBox, "表达式有误")
         End Try
-        BoBao.SetJianGe(BoBaoJianGeObject)
+        BoBao.CurrentWaitingTimeCalculator = WaitingTimeCalculator
     End Sub
 
     Private Sub ZiDongBoBaoCiShuTextBox_KeyPress(sender As Object, e As KeyPressEventArgs) Handles ZiDongBoBaoCiShuTextBox.KeyPress
@@ -499,61 +478,61 @@ Public Class Form1
             ZiDongBoBaoCiShuTextBox.Text = "1"
             ZiDongBoBaoCiShuTextBox.Select(0, 1)
         End If
-        BoBao.ZiDongBoBao_MeiCiBianShu = Convert.ToInt32(ZiDongBoBaoCiShuTextBox.Text)
+        BoBao.AutoMode_TimesPerWord = Convert.ToInt32(ZiDongBoBaoCiShuTextBox.Text)
     End Sub
 
     Private Sub 随机排序ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 随机排序ToolStripMenuItem.Click
-        CiYuListView.BeginUpdate()
+        WordListView.BeginUpdate()
 
         Dim rand = New Random()
-        For EndIndex As Integer = CiYuListView.Items.Count To 2 Step -1
+        For EndIndex As Integer = WordListView.Items.Count To 2 Step -1
             Dim ListItem As ListViewItem
             Dim xxczdsyh As Integer
             xxczdsyh = rand.Next(0, EndIndex)
-            ListItem = CiYuListView.Items.Item(xxczdsyh)
+            ListItem = WordListView.Items.Item(xxczdsyh)
             ListItem.Remove()
-            CiYuListView.Items.Add(ListItem)
+            WordListView.Items.Add(ListItem)
         Next
 
-        CiYuListView.EndUpdate()
+        WordListView.EndUpdate()
     End Sub
 
     Private Sub 随机选词ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 随机选词ToolStripMenuItem.Click
-        Form3.Show(Me)
+        RandomExtractionForm.Show(Me)
     End Sub
 
 
     Private Sub 字体FToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 字体FToolStripMenuItem.Click
         Dim FontReturnValue As DialogResult
 
-        FontDialog1.Font = CiYuListView.Font
-        FontDialog1.Color = CiYuListView.ForeColor
+        FontDialog1.Font = WordListView.Font
+        FontDialog1.Color = WordListView.ForeColor
 
         FontReturnValue = FontDialog1.ShowDialog
         If FontReturnValue = DialogResult.OK Then
-            CiYuListView.Font = FontDialog1.Font
-            CiYuListView.ForeColor = FontDialog1.Color
-            SaveSetting("自动默写", "字体", "名称", CiYuListView.Font.Name)
-            SaveSetting("自动默写", "字体", "大小", CiYuListView.Font.Size.ToString)
-            SaveSetting("自动默写", "字体", "样式", Convert.ToInt32(CiYuListView.Font.Style).ToString)
-            SaveSetting("自动默写", "字体", "垂直", CiYuListView.Font.GdiVerticalFont.ToString)
-            SaveSetting("自动默写", "字体", "字符集", CiYuListView.Font.GdiCharSet.ToString)
-            SaveSetting("自动默写", "字体", "颜色", CiYuListView.ForeColor.ToArgb.ToString)
+            WordListView.Font = FontDialog1.Font
+            WordListView.ForeColor = FontDialog1.Color
+            SaveSetting("自动默写", "字体", "名称", WordListView.Font.Name)
+            SaveSetting("自动默写", "字体", "大小", WordListView.Font.Size.ToString)
+            SaveSetting("自动默写", "字体", "样式", Convert.ToInt32(WordListView.Font.Style).ToString)
+            SaveSetting("自动默写", "字体", "垂直", WordListView.Font.GdiVerticalFont.ToString)
+            SaveSetting("自动默写", "字体", "字符集", WordListView.Font.GdiCharSet.ToString)
+            SaveSetting("自动默写", "字体", "颜色", WordListView.ForeColor.ToArgb.ToString)
         End If
     End Sub
 
     Private Sub 读选定词语ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 读选定词语ToolStripMenuItem.Click
         Dim SelectedIndex As Integer
-        If CiYuListView.SelectedIndices.Count > 0 Then
-            SelectedIndex = CiYuListView.SelectedIndices.Item(0)
+        If WordListView.SelectedIndices.Count > 0 Then
+            SelectedIndex = WordListView.SelectedIndices.Item(0)
             Button3.Text = "暂停自动播报(&P)"
-            BoBao.播报指定位置词语(SelectedIndex)
+            BoBao.Speak(SelectedIndex)
         End If
     End Sub
-    Private Sub CiYuListView_BeforeLabelEdit(sender As Object, e As LabelEditEventArgs) Handles CiYuListView.BeforeLabelEdit
+    Private Sub WordListView_BeforeLabelEdit(sender As Object, e As LabelEditEventArgs) Handles WordListView.BeforeLabelEdit
         移除ToolStripMenuItem.Enabled = False
     End Sub
-    Private Sub CiYuListView_AfterLabelEdit(sender As Object, e As LabelEditEventArgs) Handles CiYuListView.AfterLabelEdit
+    Private Sub WordListView_AfterLabelEdit(sender As Object, e As LabelEditEventArgs) Handles WordListView.AfterLabelEdit
         If e.Label IsNot Nothing Then
             If e.Label.Trim() = "" Then
                 e.CancelEdit = True
@@ -563,145 +542,80 @@ Public Class Form1
     End Sub
 
     Private Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
-        If BoBao.IsZddb() = False Then
+        If BoBao.IsAutoMode = False Then
             MessageBox.Show("当前不在自动播报！")
             Exit Sub
         End If
         If Button3.Text = "暂停自动播报(&P)" Then
-            BoBao.暂停自动播报()
+            BoBao.PauseAuto()
             Label4.Text = "自动播报已暂停"
             Button3.Text = "继续自动播报(&R)"
         Else
-            BoBao.继续自动播报()
+            BoBao.ResumeAuto()
             Button3.Text = "暂停自动播报(&P)"
         End If
     End Sub
 
-    Private Sub CurrentSpeakStateControler_EndSpeak() Handles CurrentSpeakStateControler.EndSpeak
-        CurrentSpeakStateControler = Nothing
-        BoBaoWanBi()
-    End Sub
-    Private Sub BoBaoWanBi()
-        BoBao.EndBoBao()
-        读选定词语ToolStripMenuItem.Enabled = True
-        If BoBao.IsZddb() = False Then
-            Label4.Text = "等待播报"
-        End If
-    End Sub
-    ''' <summary>
-    ''' 在单词增强目录中寻找音频文件
-    ''' </summary>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Private Function GetAudioFile(ciyu As String) As String
-        Dim File As String
-        File = ciyu
-        File = File.Replace("\", "")
-        File = File.Replace("/", "")
-        File = File.Replace(":", "")
-        File = File.Replace("*", "")
-        File = File.Replace("?", "")
-        File = File.Replace(Chr(34), "")
-        File = File.Replace("<", "")
-        File = File.Replace(">", "")
-        File = File.Replace("|", "")
-        File = CiZuZengQiangMuLu & File & "."
-        For Each temp In AudioFileExtension
-            If System.IO.File.Exists(File & temp) Then
-                Return File & temp
-            End If
-        Next
-        Return Nothing
-    End Function
-    Private Sub BoBao_BoBao(i As Integer) Handles BoBao.BoBao
-        Dim AudioFile As String = GetAudioFile(CiYuListView.Items(i).Text)
-
-        If AudioFile Is Nothing Then
-            CurrentSpeakStateControler = CurrectSpeakEngine.Speak(CiYuListView.Items(i).Text)
-        Else
-            Try
-                AudioFileStream = New BASS_Stream(AudioFile, TrackBar1.Value / 100.0F)
-            Catch ex As Exception
-                MessageBox.Show("无法识别文件：" & AudioFile)
-                CurrentSpeakStateControler = CurrectSpeakEngine.Speak(CiYuListView.Items(i).Text)
-            End Try
-        End If
-
-
-        Label4.Text = "正在播报第" & (i + 1).ToString() & "个"
-
-        If 自动翻页ToolStripMenuItem.Checked = True Then
-            CiYuListView.Items(i).EnsureVisible()
-        End If
-        If 字词跟随ToolStripMenuItem.Checked = True Then
-            For Each ListItem As ListViewItem In CiYuListView.SelectedItems
-                ListItem.Selected = False
-            Next
-            CiYuListView.Items(i).Selected = True
-        End If
-
-        Label1.Text = "本词语播报次数：" + CiYuListView.Items(i).SubItems.Item(1).Text
+    Private Sub BoBao_StoppedThis(i As Integer, Completed As Boolean) Handles BoBao.StoppedThis
+        WordListView.Invoke(Sub()
+                                读选定词语ToolStripMenuItem.Enabled = True
+                                If Not BoBao.IsAutoMode Then
+                                    Label4.Text = "等待播报"
+                                End If
+                                Try
+                                    Label1.Text = "本词语播报次数：" & BoBao.ElapsedTimes
+                                Catch ex As Exception
+                                    Label1.Text = "本词语播报次数：0"
+                                End Try
+                            End Sub)
     End Sub
 
-    ''' <summary>
-    ''' 播放完成
-    ''' </summary>
-    ''' <remarks>该事件不在UI线程触发！</remarks>
-    Private Sub AudioFileStream_EndStream() Handles AudioFileStream.EndStream
-        If AudioFileStream IsNot Nothing Then
-            AudioFileStream = Nothing
-        End If
-        Me.Invoke(New MethodInvoker(AddressOf BoBaoWanBi))
-    End Sub
-    Private Sub BoBao_XiaCiBoBaoJianGeBeiGaiBian(i As Integer, jiangge As Integer) Handles BoBao.XiaCiBoBaoJianGeBeiGaiBian
-        Label4.Text = jiangge.ToString() & "秒后自动播报第" & i.ToString() & "个"
-    End Sub
-    Private Sub BoBao_GetCiYu(i As Integer, ByRef retu As String) Handles BoBao.GetCiYu
-        retu = CiYuListView.Items(i).Text
-    End Sub
-    Private Sub BoBao_GetCiYuBoBaoCiShu(i As Integer, ByRef retu As Integer) Handles BoBao.GetCiYuBoBaoCiShu
-        retu = Convert.ToInt32(CiYuListView.Items(i).SubItems.Item(1).Text)
-    End Sub
-    Private Sub BoBao_GetCiYuShuLiang(ByRef retu As Integer) Handles BoBao.GetCiYuShuLiang
-        retu = CiYuListView.Items.Count
-    End Sub
-    Private Sub BoBao_SetCiYuBoBaoCiShu(i As Integer, newValue As Integer) Handles BoBao.SetCiYuBoBaoCiShu
-        CiYuListView.Items(i).SubItems.Item(1).Text = newValue.ToString()
-    End Sub
-    Private Sub BoBao_TingZhiDangQianBoBao() Handles BoBao.TingZhiDangQianBoBao
-        If CurrentSpeakStateControler IsNot Nothing Then
-            CurrentSpeakStateControler.StopSpeak()
-            CurrentSpeakStateControler = Nothing
-        End If
-        If AudioFileStream IsNot Nothing Then
-            AudioFileStream.StopPlay()
-            AudioFileStream = Nothing
-        End If
-    End Sub
-    Private Sub BoBao_ZiDongBoBaoWanCheng(YuanYin As Integer) Handles BoBao.ZiDongBoBaoWanCheng
-        Button1.Enabled = True
-        Button4.Enabled = True
-        Button8.Enabled = True
-        Button7.Enabled = True
-        读选定词语ToolStripMenuItem.Enabled = True
-        Label4.Text = "等待播报"
-        If YuanYin = 0 Then
-            MessageBox.Show("自动播报已完成！")
-        End If
-        Button3.Text = "暂停自动播报(&P)"
+    Private Sub BoBao_Speaking(i As Integer) Handles BoBao.Speaking
+        WordListView.Invoke(Sub()
+                                Label4.Text = "正在播报第" & (i + 1).ToString() & "个"
+                                Label1.Text = "本词语播报次数：" & BoBao.ElapsedTimes
+                                If 字词跟随ToolStripMenuItem.Checked = True Then
+                                    Dim BackColor = Color.FromArgb(&H33, &H66, &HFF)
+                                    If WordListView.Items(i).BackColor <> BackColor Then
+                                        For Each ListItem As ListViewItem In WordListView.Items
+                                            If ListItem.BackColor = BackColor Then
+                                                ListItem.BackColor = Color.Empty
+                                            End If
+                                        Next
+                                        WordListView.Items(i).BackColor = BackColor
+                                    End If
+                                End If
+                                If 自动翻页ToolStripMenuItem.Checked = True Then
+                                    WordListView.Items(i).EnsureVisible()
+                                End If
+                            End Sub)
     End Sub
 
-    Private Sub BoBao_IsZanTing(ByRef retu As Boolean) Handles BoBao.IsZanTing
-        retu = (Button3.Text = "继续自动播报(&R)")
+    Private Sub BoBao_UpdateWaitingTimeInfo(i As Integer, jiangge As Integer) Handles BoBao.UpdateWaitingTimeInfo
+        WordListView.Invoke(Sub() Label4.Text = jiangge.ToString() & "秒后自动播报第" & (i + 1).ToString() & "个")
     End Sub
 
-    Private Sub 在百度词典中查看ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 在百度词典中查看ToolStripMenuItem.Click
+    Private Sub BoBao_AutoSpeakingCompleted(Reason As Integer) Handles BoBao.AutoSpeakingCompleted
+        WordListView.Invoke(Sub()
+                                Button4.Enabled = True
+                                Button8.Enabled = True
+                                Button7.Enabled = True
+                                读选定词语ToolStripMenuItem.Enabled = True
+                                Label4.Text = "等待播报"
+                                If Reason = 0 Then
+                                    MessageBox.Show(Me, "自动播报已完成！")
+                                End If
+                                Button3.Text = "暂停自动播报(&P)"
+                            End Sub)
+    End Sub
+
+    Private Sub 在Bing词典中查看ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 在Bing词典中查看ToolStripMenuItem.Click
         Dim SelectedItemIndex As Integer
         Dim SelectedItemText As String
-        If CiYuListView.SelectedIndices.Count > 0 Then
-            SelectedItemIndex = CiYuListView.SelectedIndices.Item(0)
-            SelectedItemText = CiYuListView.Items.Item(SelectedItemIndex).Text
-            System.Diagnostics.Process.Start("http://dict.baidu.com/s?wd=" & UrlEncode_UTF8(SelectedItemText) & "&ptype=empty")
+        If WordListView.SelectedIndices.Count > 0 Then
+            SelectedItemIndex = WordListView.SelectedIndices.Item(0)
+            SelectedItemText = WordListView.Items.Item(SelectedItemIndex).Text
+            Process.Start("https://cn.bing.com/dict/search?q=" & UrlEncode_UTF8(SelectedItemText) & "&qs=n")
         End If
     End Sub
     Public Shared Function UrlEncode_UTF8(s As String) As String
@@ -713,14 +627,14 @@ Public Class Form1
         Return sb.ToString()
     End Function
 
-    Private Sub CiYuListView_DragDrop(sender As Object, e As DragEventArgs) Handles CiYuListView.DragDrop
+    Private Sub WordListView_DragDrop(sender As Object, e As DragEventArgs) Handles WordListView.DragDrop
         If e.Data.GetDataPresent(DataFormats.FileDrop) Then
             Dim files As String() = CType(e.Data.GetData(DataFormats.FileDrop), String())
             OpenFiles(files)
         End If
     End Sub
 
-    Private Sub CiYuListView_DragOver(sender As Object, e As DragEventArgs) Handles CiYuListView.DragOver
+    Private Sub WordListView_DragOver(sender As Object, e As DragEventArgs) Handles WordListView.DragOver
         If e.Data.GetDataPresent(DataFormats.FileDrop) Then
             e.Effect = DragDropEffects.Copy
         End If
@@ -751,4 +665,25 @@ Public Class Form1
         ZiDongBoBaoJianGeTextBox.SelectedText = "[WordCount]"
     End Sub
 
+    Private Sub 保存音频ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 保存音频ToolStripMenuItem.Click
+        SaveAudioDialog.ShowDialog(Me)
+    End Sub
+
+    Private Sub 插入ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 插入ToolStripMenuItem.Click
+        If WordListView.SelectedItems.Count > 0 Then
+            Dim item = WordListView.Items.Insert(WordListView.SelectedItems.Item(0).Index, "Please edit")
+            WordListView.SelectedItems.Item(0).Selected = False
+            item.BeginEdit()
+        End If
+    End Sub
+
+    Private Sub 从此处开始自动播报ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles 从此处开始自动播报ToolStripMenuItem.Click
+        If WordListView.SelectedItems.Count > 0 Then
+            If BoBao.IsAutoMode Then
+                BoBao.StopAuto()
+            End If
+            Button5_Click(Button1, EventArgs.Empty) '记录归零
+            BoBao.StartAuto(WordListView.SelectedItems.Item(0).Index)
+        End If
+    End Sub
 End Class

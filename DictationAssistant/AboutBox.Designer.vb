@@ -1,5 +1,5 @@
 ﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
-Partial Class AboutBox1
+Partial Class AboutBox
     Inherits System.Windows.Forms.Form
 
     'Form 重写 Dispose，以清理组件列表。
@@ -29,7 +29,7 @@ Partial Class AboutBox1
     '不要使用代码编辑器修改它。
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(AboutBox1))
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(AboutBox))
         Me.TableLayoutPanel = New System.Windows.Forms.TableLayoutPanel()
         Me.LogoPictureBox = New System.Windows.Forms.PictureBox()
         Me.LabelProductName = New System.Windows.Forms.Label()
@@ -126,7 +126,7 @@ Partial Class AboutBox1
         Me.OKButton.TabIndex = 0
         Me.OKButton.Text = "确定(&O)"
         '
-        'AboutBox1
+        'AboutBox
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0!, 17.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
@@ -138,7 +138,7 @@ Partial Class AboutBox1
         Me.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
         Me.MaximizeBox = False
         Me.MinimizeBox = False
-        Me.Name = "AboutBox1"
+        Me.Name = "AboutBox"
         Me.Padding = New System.Windows.Forms.Padding(10, 11, 10, 11)
         Me.ShowInTaskbar = False
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent

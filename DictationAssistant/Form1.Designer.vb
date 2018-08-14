@@ -34,13 +34,14 @@ Partial Class Form1
         Me.UpButton = New System.Windows.Forms.Button()
         Me.SaveButton = New System.Windows.Forms.Button()
         Me.OpenButton = New System.Windows.Forms.Button()
-        Me.CiYuListView = New System.Windows.Forms.ListView()
+        Me.WordListView = New System.Windows.Forms.ListView()
         Me.ColumnHeader1 = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
-        Me.ColumnHeader2 = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.CiYuListViewContextMenuStrip = New System.Windows.Forms.ContextMenuStrip(Me.components)
         Me.读选定词语ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.在百度词典中查看ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.在Bing词典中查看ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.从此处开始自动播报ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripMenuItem9 = New System.Windows.Forms.ToolStripSeparator()
+        Me.插入ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.修改ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.移除ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripMenuItem5 = New System.Windows.Forms.ToolStripSeparator()
@@ -79,6 +80,7 @@ Partial Class Form1
         Me.辅助ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.随机排序ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.随机选词ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.保存音频ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.帮助HToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.关于AToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.OpenFileDialog1 = New System.Windows.Forms.OpenFileDialog()
@@ -103,13 +105,14 @@ Partial Class Form1
         Me.Label2 = New System.Windows.Forms.Label()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.GroupBox3 = New System.Windows.Forms.GroupBox()
+        Me.TableLayoutPanel1 = New System.Windows.Forms.TableLayoutPanel()
         Me.Button8 = New System.Windows.Forms.Button()
         Me.Button7 = New System.Windows.Forms.Button()
+        Me.Button1 = New System.Windows.Forms.Button()
+        Me.Button2 = New System.Windows.Forms.Button()
+        Me.Button3 = New System.Windows.Forms.Button()
         Me.Button4 = New System.Windows.Forms.Button()
         Me.Button5 = New System.Windows.Forms.Button()
-        Me.Button3 = New System.Windows.Forms.Button()
-        Me.Button2 = New System.Windows.Forms.Button()
-        Me.Button1 = New System.Windows.Forms.Button()
         Me.Button9 = New System.Windows.Forms.Button()
         Me.GroupBox4 = New System.Windows.Forms.GroupBox()
         Me.Button11 = New System.Windows.Forms.Button()
@@ -128,6 +131,7 @@ Partial Class Form1
         Me.GroupBox2.SuspendLayout()
         Me.ZiDongBoBaoJianGeTextBoxContextMenuStrip.SuspendLayout()
         Me.GroupBox3.SuspendLayout()
+        Me.TableLayoutPanel1.SuspendLayout()
         Me.GroupBox4.SuspendLayout()
         CType(Me.TrackBar2, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.TrackBar1, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -148,7 +152,7 @@ Partial Class Form1
         Me.GroupBox1.Controls.Add(Me.UpButton)
         Me.GroupBox1.Controls.Add(Me.SaveButton)
         Me.GroupBox1.Controls.Add(Me.OpenButton)
-        Me.GroupBox1.Controls.Add(Me.CiYuListView)
+        Me.GroupBox1.Controls.Add(Me.WordListView)
         Me.GroupBox1.Controls.Add(Me.Label5)
         Me.GroupBox1.Font = New System.Drawing.Font("微软雅黑", 9.0!)
         Me.GroupBox1.Location = New System.Drawing.Point(12, 27)
@@ -163,12 +167,12 @@ Partial Class Form1
         Me.CountButton.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.CountButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center
         Me.CountButton.Font = New System.Drawing.Font("微软雅黑", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(134, Byte))
+        Me.CountButton.Image = CType(resources.GetObject("CountButton.Image"), System.Drawing.Image)
         Me.CountButton.Location = New System.Drawing.Point(388, 324)
         Me.CountButton.Name = "CountButton"
         Me.CountButton.Size = New System.Drawing.Size(32, 32)
         Me.CountButton.TabIndex = 9
-        Me.CountButton.Text = "计"
-        Me.CountButton.UseVisualStyleBackColor = True
+        Me.CountButton.UseCompatibleTextRendering = True
         '
         'ClearButton
         '
@@ -180,7 +184,6 @@ Partial Class Form1
         Me.ClearButton.Name = "ClearButton"
         Me.ClearButton.Size = New System.Drawing.Size(32, 32)
         Me.ClearButton.TabIndex = 8
-        Me.ClearButton.UseVisualStyleBackColor = True
         '
         'DeleteButton
         '
@@ -192,7 +195,6 @@ Partial Class Form1
         Me.DeleteButton.Name = "DeleteButton"
         Me.DeleteButton.Size = New System.Drawing.Size(32, 32)
         Me.DeleteButton.TabIndex = 7
-        Me.DeleteButton.UseVisualStyleBackColor = True
         '
         'EditButton
         '
@@ -204,7 +206,6 @@ Partial Class Form1
         Me.EditButton.Name = "EditButton"
         Me.EditButton.Size = New System.Drawing.Size(32, 32)
         Me.EditButton.TabIndex = 6
-        Me.EditButton.UseVisualStyleBackColor = True
         '
         'AddButton
         '
@@ -216,7 +217,6 @@ Partial Class Form1
         Me.AddButton.Name = "AddButton"
         Me.AddButton.Size = New System.Drawing.Size(32, 32)
         Me.AddButton.TabIndex = 5
-        Me.AddButton.UseVisualStyleBackColor = True
         '
         'DownButton
         '
@@ -228,7 +228,6 @@ Partial Class Form1
         Me.DownButton.Name = "DownButton"
         Me.DownButton.Size = New System.Drawing.Size(32, 32)
         Me.DownButton.TabIndex = 4
-        Me.DownButton.UseVisualStyleBackColor = True
         '
         'UpButton
         '
@@ -240,7 +239,6 @@ Partial Class Form1
         Me.UpButton.Name = "UpButton"
         Me.UpButton.Size = New System.Drawing.Size(32, 32)
         Me.UpButton.TabIndex = 3
-        Me.UpButton.UseVisualStyleBackColor = True
         '
         'SaveButton
         '
@@ -252,7 +250,6 @@ Partial Class Form1
         Me.SaveButton.Name = "SaveButton"
         Me.SaveButton.Size = New System.Drawing.Size(32, 32)
         Me.SaveButton.TabIndex = 2
-        Me.SaveButton.UseVisualStyleBackColor = True
         '
         'OpenButton
         '
@@ -264,109 +261,115 @@ Partial Class Form1
         Me.OpenButton.Name = "OpenButton"
         Me.OpenButton.Size = New System.Drawing.Size(32, 32)
         Me.OpenButton.TabIndex = 1
-        Me.OpenButton.UseVisualStyleBackColor = True
         '
         'CiYuListView
         '
-        Me.CiYuListView.AllowColumnReorder = True
-        Me.CiYuListView.AllowDrop = True
-        Me.CiYuListView.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+        Me.WordListView.AllowColumnReorder = True
+        Me.WordListView.AllowDrop = True
+        Me.WordListView.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.CiYuListView.Columns.AddRange(New System.Windows.Forms.ColumnHeader() {Me.ColumnHeader1, Me.ColumnHeader2})
-        Me.CiYuListView.ContextMenuStrip = Me.CiYuListViewContextMenuStrip
-        Me.CiYuListView.Font = New System.Drawing.Font("微软雅黑", 12.0!)
-        Me.CiYuListView.FullRowSelect = True
-        Me.CiYuListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable
-        Me.CiYuListView.HideSelection = False
-        Me.CiYuListView.LabelEdit = True
-        Me.CiYuListView.Location = New System.Drawing.Point(6, 20)
-        Me.CiYuListView.Name = "CiYuListView"
-        Me.CiYuListView.Size = New System.Drawing.Size(376, 632)
-        Me.CiYuListView.TabIndex = 0
-        Me.CiYuListView.UseCompatibleStateImageBehavior = False
-        Me.CiYuListView.View = System.Windows.Forms.View.Details
+        Me.WordListView.Columns.AddRange(New System.Windows.Forms.ColumnHeader() {Me.ColumnHeader1})
+        Me.WordListView.ContextMenuStrip = Me.CiYuListViewContextMenuStrip
+        Me.WordListView.Font = New System.Drawing.Font("微软雅黑", 12.0!)
+        Me.WordListView.FullRowSelect = True
+        Me.WordListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable
+        Me.WordListView.HideSelection = False
+        Me.WordListView.LabelEdit = True
+        Me.WordListView.Location = New System.Drawing.Point(6, 20)
+        Me.WordListView.Name = "CiYuListView"
+        Me.WordListView.Size = New System.Drawing.Size(376, 632)
+        Me.WordListView.TabIndex = 0
+        Me.WordListView.UseCompatibleStateImageBehavior = False
+        Me.WordListView.View = System.Windows.Forms.View.Details
         '
         'ColumnHeader1
         '
         Me.ColumnHeader1.Text = "词语"
-        Me.ColumnHeader1.Width = 140
-        '
-        'ColumnHeader2
-        '
-        Me.ColumnHeader2.Text = "播报次数"
-        Me.ColumnHeader2.Width = 120
+        Me.ColumnHeader1.Width = 300
         '
         'CiYuListViewContextMenuStrip
         '
-        Me.CiYuListViewContextMenuStrip.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.读选定词语ToolStripMenuItem, Me.在百度词典中查看ToolStripMenuItem, Me.ToolStripMenuItem9, Me.修改ToolStripMenuItem, Me.移除ToolStripMenuItem, Me.ToolStripMenuItem5, Me.上移ToolStripMenuItem, Me.下移ToolStripMenuItem, Me.ToolStripMenuItem6, Me.全选ToolStripMenuItem1, Me.反向选择ToolStripMenuItem})
+        Me.CiYuListViewContextMenuStrip.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.读选定词语ToolStripMenuItem, Me.在Bing词典中查看ToolStripMenuItem, Me.从此处开始自动播报ToolStripMenuItem, Me.ToolStripMenuItem9, Me.插入ToolStripMenuItem, Me.修改ToolStripMenuItem, Me.移除ToolStripMenuItem, Me.ToolStripMenuItem5, Me.上移ToolStripMenuItem, Me.下移ToolStripMenuItem, Me.ToolStripMenuItem6, Me.全选ToolStripMenuItem1, Me.反向选择ToolStripMenuItem})
         Me.CiYuListViewContextMenuStrip.Name = "ContextMenuStrip1"
-        Me.CiYuListViewContextMenuStrip.Size = New System.Drawing.Size(173, 198)
+        Me.CiYuListViewContextMenuStrip.Size = New System.Drawing.Size(185, 242)
         '
         '读选定词语ToolStripMenuItem
         '
         Me.读选定词语ToolStripMenuItem.Name = "读选定词语ToolStripMenuItem"
-        Me.读选定词语ToolStripMenuItem.Size = New System.Drawing.Size(172, 22)
+        Me.读选定词语ToolStripMenuItem.Size = New System.Drawing.Size(184, 22)
         Me.读选定词语ToolStripMenuItem.Text = "读选定词语"
         '
-        '在百度词典中查看ToolStripMenuItem
+        '在Bing词典中查看ToolStripMenuItem
         '
-        Me.在百度词典中查看ToolStripMenuItem.Name = "在百度词典中查看ToolStripMenuItem"
-        Me.在百度词典中查看ToolStripMenuItem.Size = New System.Drawing.Size(172, 22)
-        Me.在百度词典中查看ToolStripMenuItem.Text = "在百度词典中查看"
+        Me.在Bing词典中查看ToolStripMenuItem.Name = "在Bing词典中查看ToolStripMenuItem"
+        Me.在Bing词典中查看ToolStripMenuItem.Size = New System.Drawing.Size(184, 22)
+        Me.在Bing词典中查看ToolStripMenuItem.Text = "在Bing词典中查看"
+        '
+        '从此处开始自动播报ToolStripMenuItem
+        '
+        Me.从此处开始自动播报ToolStripMenuItem.Name = "从此处开始自动播报ToolStripMenuItem"
+        Me.从此处开始自动播报ToolStripMenuItem.Size = New System.Drawing.Size(184, 22)
+        Me.从此处开始自动播报ToolStripMenuItem.Text = "从此处开始自动播报"
         '
         'ToolStripMenuItem9
         '
         Me.ToolStripMenuItem9.Name = "ToolStripMenuItem9"
-        Me.ToolStripMenuItem9.Size = New System.Drawing.Size(169, 6)
+        Me.ToolStripMenuItem9.Size = New System.Drawing.Size(181, 6)
+        '
+        '插入ToolStripMenuItem
+        '
+        Me.插入ToolStripMenuItem.Name = "插入ToolStripMenuItem"
+        Me.插入ToolStripMenuItem.Size = New System.Drawing.Size(184, 22)
+        Me.插入ToolStripMenuItem.Text = "插入"
         '
         '修改ToolStripMenuItem
         '
         Me.修改ToolStripMenuItem.Name = "修改ToolStripMenuItem"
         Me.修改ToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F2
-        Me.修改ToolStripMenuItem.Size = New System.Drawing.Size(172, 22)
+        Me.修改ToolStripMenuItem.Size = New System.Drawing.Size(184, 22)
         Me.修改ToolStripMenuItem.Text = "修改(&M)"
         '
         '移除ToolStripMenuItem
         '
         Me.移除ToolStripMenuItem.Name = "移除ToolStripMenuItem"
         Me.移除ToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Delete
-        Me.移除ToolStripMenuItem.Size = New System.Drawing.Size(172, 22)
+        Me.移除ToolStripMenuItem.Size = New System.Drawing.Size(184, 22)
         Me.移除ToolStripMenuItem.Text = "移除(&R)"
         '
         'ToolStripMenuItem5
         '
         Me.ToolStripMenuItem5.Name = "ToolStripMenuItem5"
-        Me.ToolStripMenuItem5.Size = New System.Drawing.Size(169, 6)
+        Me.ToolStripMenuItem5.Size = New System.Drawing.Size(181, 6)
         '
         '上移ToolStripMenuItem
         '
         Me.上移ToolStripMenuItem.Name = "上移ToolStripMenuItem"
-        Me.上移ToolStripMenuItem.Size = New System.Drawing.Size(172, 22)
+        Me.上移ToolStripMenuItem.Size = New System.Drawing.Size(184, 22)
         Me.上移ToolStripMenuItem.Text = "上移"
         '
         '下移ToolStripMenuItem
         '
         Me.下移ToolStripMenuItem.Name = "下移ToolStripMenuItem"
-        Me.下移ToolStripMenuItem.Size = New System.Drawing.Size(172, 22)
+        Me.下移ToolStripMenuItem.Size = New System.Drawing.Size(184, 22)
         Me.下移ToolStripMenuItem.Text = "下移"
         '
         'ToolStripMenuItem6
         '
         Me.ToolStripMenuItem6.Name = "ToolStripMenuItem6"
-        Me.ToolStripMenuItem6.Size = New System.Drawing.Size(169, 6)
+        Me.ToolStripMenuItem6.Size = New System.Drawing.Size(181, 6)
         '
         '全选ToolStripMenuItem1
         '
         Me.全选ToolStripMenuItem1.Name = "全选ToolStripMenuItem1"
         Me.全选ToolStripMenuItem1.ShortcutKeys = CType((System.Windows.Forms.Keys.Control Or System.Windows.Forms.Keys.A), System.Windows.Forms.Keys)
-        Me.全选ToolStripMenuItem1.Size = New System.Drawing.Size(172, 22)
+        Me.全选ToolStripMenuItem1.Size = New System.Drawing.Size(184, 22)
         Me.全选ToolStripMenuItem1.Text = "全选(&A)"
         '
         '反向选择ToolStripMenuItem
         '
         Me.反向选择ToolStripMenuItem.Name = "反向选择ToolStripMenuItem"
-        Me.反向选择ToolStripMenuItem.Size = New System.Drawing.Size(172, 22)
+        Me.反向选择ToolStripMenuItem.Size = New System.Drawing.Size(184, 22)
         Me.反向选择ToolStripMenuItem.Text = "反向选择(&I)"
         '
         'Label5
@@ -563,7 +566,7 @@ Partial Class Form1
         '
         '辅助ToolStripMenuItem
         '
-        Me.辅助ToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.随机排序ToolStripMenuItem, Me.随机选词ToolStripMenuItem})
+        Me.辅助ToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.随机排序ToolStripMenuItem, Me.随机选词ToolStripMenuItem, Me.保存音频ToolStripMenuItem})
         Me.辅助ToolStripMenuItem.Name = "辅助ToolStripMenuItem"
         Me.辅助ToolStripMenuItem.Size = New System.Drawing.Size(60, 21)
         Me.辅助ToolStripMenuItem.Text = "辅助(&A)"
@@ -581,6 +584,12 @@ Partial Class Form1
         Me.随机选词ToolStripMenuItem.Size = New System.Drawing.Size(124, 22)
         Me.随机选词ToolStripMenuItem.Text = "随机选词"
         Me.随机选词ToolStripMenuItem.ToolTipText = "随机保留指定数量的词语"
+        '
+        '保存音频ToolStripMenuItem
+        '
+        Me.保存音频ToolStripMenuItem.Name = "保存音频ToolStripMenuItem"
+        Me.保存音频ToolStripMenuItem.Size = New System.Drawing.Size(124, 22)
+        Me.保存音频ToolStripMenuItem.Text = "保存音频"
         '
         '帮助HToolStripMenuItem
         '
@@ -630,6 +639,7 @@ Partial Class Form1
         '
         Me.ZiDongBoBaoJianGeTextBox.ContextMenuStrip = Me.ZiDongBoBaoJianGeTextBoxContextMenuStrip
         Me.ZiDongBoBaoJianGeTextBox.Font = New System.Drawing.Font("微软雅黑", 12.0!)
+        Me.ErrorProvider1.SetIconAlignment(Me.ZiDongBoBaoJianGeTextBox, System.Windows.Forms.ErrorIconAlignment.MiddleLeft)
         Me.ZiDongBoBaoJianGeTextBox.Location = New System.Drawing.Point(253, 68)
         Me.ZiDongBoBaoJianGeTextBox.Name = "ZiDongBoBaoJianGeTextBox"
         Me.ZiDongBoBaoJianGeTextBox.Size = New System.Drawing.Size(86, 29)
@@ -737,7 +747,7 @@ Partial Class Form1
         '
         'Label2
         '
-        Me.Label2.Cursor = System.Windows.Forms.Cursors.Hand
+        Me.Label2.Cursor = System.Windows.Forms.Cursors.Default
         Me.Label2.Font = New System.Drawing.Font("微软雅黑", 12.0!)
         Me.Label2.Location = New System.Drawing.Point(7, 68)
         Me.Label2.Name = "Label2"
@@ -760,13 +770,7 @@ Partial Class Form1
         '
         Me.GroupBox3.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.GroupBox3.Controls.Add(Me.Button8)
-        Me.GroupBox3.Controls.Add(Me.Button7)
-        Me.GroupBox3.Controls.Add(Me.Button4)
-        Me.GroupBox3.Controls.Add(Me.Button5)
-        Me.GroupBox3.Controls.Add(Me.Button3)
-        Me.GroupBox3.Controls.Add(Me.Button2)
-        Me.GroupBox3.Controls.Add(Me.Button1)
+        Me.GroupBox3.Controls.Add(Me.TableLayoutPanel1)
         Me.GroupBox3.Font = New System.Drawing.Font("微软雅黑", 9.0!)
         Me.GroupBox3.Location = New System.Drawing.Point(444, 226)
         Me.GroupBox3.Name = "GroupBox3"
@@ -775,75 +779,124 @@ Partial Class Form1
         Me.GroupBox3.TabStop = False
         Me.GroupBox3.Text = "播报控制"
         '
+        'TableLayoutPanel1
+        '
+        Me.TableLayoutPanel1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.TableLayoutPanel1.ColumnCount = 2
+        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
+        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
+        Me.TableLayoutPanel1.Controls.Add(Me.Button8, 0, 4)
+        Me.TableLayoutPanel1.Controls.Add(Me.Button7, 0, 4)
+        Me.TableLayoutPanel1.Controls.Add(Me.Button1, 0, 0)
+        Me.TableLayoutPanel1.Controls.Add(Me.Button2, 1, 0)
+        Me.TableLayoutPanel1.Controls.Add(Me.Button3, 0, 1)
+        Me.TableLayoutPanel1.Controls.Add(Me.Button4, 0, 3)
+        Me.TableLayoutPanel1.Controls.Add(Me.Button5, 1, 3)
+        Me.TableLayoutPanel1.Location = New System.Drawing.Point(13, 22)
+        Me.TableLayoutPanel1.Name = "TableLayoutPanel1"
+        Me.TableLayoutPanel1.RowCount = 5
+        Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20.0!))
+        Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20.0!))
+        Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20.0!))
+        Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20.0!))
+        Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20.0!))
+        Me.TableLayoutPanel1.Size = New System.Drawing.Size(326, 179)
+        Me.TableLayoutPanel1.TabIndex = 7
+        '
         'Button8
         '
+        Me.Button8.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.Button8.Font = New System.Drawing.Font("微软雅黑", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(134, Byte))
-        Me.Button8.Location = New System.Drawing.Point(175, 166)
+        Me.Button8.Location = New System.Drawing.Point(3, 143)
         Me.Button8.Name = "Button8"
-        Me.Button8.Size = New System.Drawing.Size(165, 32)
-        Me.Button8.TabIndex = 6
-        Me.Button8.Text = "再报一遍(&A)"
+        Me.Button8.Size = New System.Drawing.Size(157, 33)
+        Me.Button8.TabIndex = 8
+        Me.Button8.Text = "再报一遍(&M)"
         Me.Button8.UseVisualStyleBackColor = True
         '
         'Button7
         '
+        Me.Button7.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.Button7.Font = New System.Drawing.Font("微软雅黑", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(134, Byte))
-        Me.Button7.Location = New System.Drawing.Point(6, 166)
+        Me.Button7.Location = New System.Drawing.Point(166, 143)
         Me.Button7.Name = "Button7"
-        Me.Button7.Size = New System.Drawing.Size(165, 32)
-        Me.Button7.TabIndex = 5
+        Me.Button7.Size = New System.Drawing.Size(157, 33)
+        Me.Button7.TabIndex = 7
         Me.Button7.Text = "报上一个(&L)"
         Me.Button7.UseVisualStyleBackColor = True
         '
+        'Button1
+        '
+        Me.Button1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Button1.Font = New System.Drawing.Font("微软雅黑", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(134, Byte))
+        Me.Button1.Location = New System.Drawing.Point(3, 3)
+        Me.Button1.Name = "Button1"
+        Me.Button1.Size = New System.Drawing.Size(157, 29)
+        Me.Button1.TabIndex = 1
+        Me.Button1.Text = "自动播报(&S)"
+        Me.Button1.UseVisualStyleBackColor = True
+        '
+        'Button2
+        '
+        Me.Button2.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Button2.Font = New System.Drawing.Font("微软雅黑", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(134, Byte))
+        Me.Button2.Location = New System.Drawing.Point(166, 3)
+        Me.Button2.Name = "Button2"
+        Me.Button2.Size = New System.Drawing.Size(157, 29)
+        Me.Button2.TabIndex = 3
+        Me.Button2.Text = "停止播报(&D)"
+        Me.Button2.UseVisualStyleBackColor = True
+        '
+        'Button3
+        '
+        Me.Button3.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.TableLayoutPanel1.SetColumnSpan(Me.Button3, 2)
+        Me.Button3.Font = New System.Drawing.Font("微软雅黑", 18.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(134, Byte))
+        Me.Button3.Location = New System.Drawing.Point(3, 38)
+        Me.Button3.Name = "Button3"
+        Me.TableLayoutPanel1.SetRowSpan(Me.Button3, 2)
+        Me.Button3.Size = New System.Drawing.Size(320, 64)
+        Me.Button3.TabIndex = 4
+        Me.Button3.Text = "暂停自动播报(&P)"
+        Me.Button3.UseVisualStyleBackColor = True
+        '
         'Button4
         '
+        Me.Button4.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.Button4.Font = New System.Drawing.Font("微软雅黑", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(134, Byte))
-        Me.Button4.Location = New System.Drawing.Point(6, 128)
+        Me.Button4.Location = New System.Drawing.Point(3, 108)
         Me.Button4.Name = "Button4"
-        Me.Button4.Size = New System.Drawing.Size(165, 32)
-        Me.Button4.TabIndex = 4
+        Me.Button4.Size = New System.Drawing.Size(157, 29)
+        Me.Button4.TabIndex = 5
         Me.Button4.Text = "报下一个(&N)"
         Me.Button4.UseVisualStyleBackColor = True
         '
         'Button5
         '
+        Me.Button5.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.Button5.Font = New System.Drawing.Font("微软雅黑", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(134, Byte))
-        Me.Button5.Location = New System.Drawing.Point(175, 128)
+        Me.Button5.Location = New System.Drawing.Point(166, 108)
         Me.Button5.Name = "Button5"
-        Me.Button5.Size = New System.Drawing.Size(165, 32)
-        Me.Button5.TabIndex = 3
+        Me.Button5.Size = New System.Drawing.Size(157, 29)
+        Me.Button5.TabIndex = 6
         Me.Button5.Text = "记录归零(&C)"
         Me.Button5.UseVisualStyleBackColor = True
-        '
-        'Button3
-        '
-        Me.Button3.Font = New System.Drawing.Font("微软雅黑", 18.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(134, Byte))
-        Me.Button3.Location = New System.Drawing.Point(6, 58)
-        Me.Button3.Name = "Button3"
-        Me.Button3.Size = New System.Drawing.Size(334, 64)
-        Me.Button3.TabIndex = 2
-        Me.Button3.Text = "暂停自动播报(&P)"
-        Me.Button3.UseVisualStyleBackColor = True
-        '
-        'Button2
-        '
-        Me.Button2.Font = New System.Drawing.Font("微软雅黑", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(134, Byte))
-        Me.Button2.Location = New System.Drawing.Point(175, 20)
-        Me.Button2.Name = "Button2"
-        Me.Button2.Size = New System.Drawing.Size(165, 32)
-        Me.Button2.TabIndex = 1
-        Me.Button2.Text = "停止播报(&E)"
-        Me.Button2.UseVisualStyleBackColor = True
-        '
-        'Button1
-        '
-        Me.Button1.Font = New System.Drawing.Font("微软雅黑", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(134, Byte))
-        Me.Button1.Location = New System.Drawing.Point(6, 20)
-        Me.Button1.Name = "Button1"
-        Me.Button1.Size = New System.Drawing.Size(165, 32)
-        Me.Button1.TabIndex = 0
-        Me.Button1.Text = "自动播报(&S)"
-        Me.Button1.UseVisualStyleBackColor = True
         '
         'Button9
         '
@@ -980,10 +1033,10 @@ Partial Class Form1
         Me.Font = New System.Drawing.Font("微软雅黑", 9.0!)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.MainMenuStrip = Me.MenuStrip1
-        Me.MinimumSize = New System.Drawing.Size(551, 664)
+        Me.MinimumSize = New System.Drawing.Size(552, 680)
         Me.Name = "Form1"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
-        Me.Text = "自动默写"
+        Me.Text = "自动默写 V2β"
         Me.GroupBox1.ResumeLayout(False)
         Me.CiYuListViewContextMenuStrip.ResumeLayout(False)
         Me.MenuStrip1.ResumeLayout(False)
@@ -992,6 +1045,7 @@ Partial Class Form1
         Me.GroupBox2.PerformLayout()
         Me.ZiDongBoBaoJianGeTextBoxContextMenuStrip.ResumeLayout(False)
         Me.GroupBox3.ResumeLayout(False)
+        Me.TableLayoutPanel1.ResumeLayout(False)
         Me.GroupBox4.ResumeLayout(False)
         Me.GroupBox4.PerformLayout()
         CType(Me.TrackBar2, System.ComponentModel.ISupportInitialize).EndInit()
@@ -1002,7 +1056,7 @@ Partial Class Form1
 
     End Sub
     Friend WithEvents GroupBox1 As System.Windows.Forms.GroupBox
-    Friend WithEvents CiYuListView As System.Windows.Forms.ListView
+    Friend WithEvents WordListView As System.Windows.Forms.ListView
     Friend WithEvents OpenButton As System.Windows.Forms.Button
     Friend WithEvents SaveButton As System.Windows.Forms.Button
     Friend WithEvents UpButton As System.Windows.Forms.Button
@@ -1016,7 +1070,6 @@ Partial Class Form1
     Friend WithEvents FileToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents OpenFileDialog1 As System.Windows.Forms.OpenFileDialog
     Friend WithEvents ColumnHeader1 As System.Windows.Forms.ColumnHeader
-    Friend WithEvents ColumnHeader2 As System.Windows.Forms.ColumnHeader
     Friend WithEvents OpenToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents SaveFileDialog1 As System.Windows.Forms.SaveFileDialog
     Friend WithEvents GroupBox2 As System.Windows.Forms.GroupBox
@@ -1027,13 +1080,6 @@ Partial Class Form1
     Friend WithEvents Label2 As System.Windows.Forms.Label
     Friend WithEvents Label4 As System.Windows.Forms.Label
     Friend WithEvents GroupBox3 As System.Windows.Forms.GroupBox
-    Friend WithEvents Button8 As System.Windows.Forms.Button
-    Friend WithEvents Button7 As System.Windows.Forms.Button
-    Friend WithEvents Button4 As System.Windows.Forms.Button
-    Friend WithEvents Button5 As System.Windows.Forms.Button
-    Friend WithEvents Button3 As System.Windows.Forms.Button
-    Friend WithEvents Button2 As System.Windows.Forms.Button
-    Friend WithEvents Button1 As System.Windows.Forms.Button
     Friend WithEvents 保存SToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents ToolStripMenuItem1 As System.Windows.Forms.ToolStripSeparator
     Friend WithEvents 退出EToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
@@ -1085,7 +1131,7 @@ Partial Class Form1
     Friend WithEvents ToolStripMenuItem8 As System.Windows.Forms.ToolStripSeparator
     Friend WithEvents 读选定词语ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents ToolStripMenuItem9 As System.Windows.Forms.ToolStripSeparator
-    Friend WithEvents 在百度词典中查看ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents 在Bing词典中查看ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents ZiDongBoBaoJianGeTextBoxContextMenuStrip As ContextMenuStrip
     Friend WithEvents ZiDongBoBaoJianGeTextBox撤销ToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents ToolStripSeparator1 As ToolStripSeparator
@@ -1099,4 +1145,15 @@ Partial Class Form1
     Friend WithEvents ToolStripSeparator3 As ToolStripSeparator
     Friend WithEvents 插入LengthToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents 插入WordCountToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents 保存音频ToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents 插入ToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents 从此处开始自动播报ToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents TableLayoutPanel1 As TableLayoutPanel
+    Friend WithEvents Button8 As Button
+    Friend WithEvents Button7 As Button
+    Friend WithEvents Button1 As Button
+    Friend WithEvents Button2 As Button
+    Friend WithEvents Button3 As Button
+    Friend WithEvents Button4 As Button
+    Friend WithEvents Button5 As Button
 End Class

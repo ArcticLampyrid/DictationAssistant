@@ -1,16 +1,13 @@
 ﻿Imports System.Globalization
 
-Public Interface ISpeakEngine
-    Function Speak(Text As String) As ISpeakStateControler
-    ReadOnly Property Name As String
-    Property Volume As Byte
-    Property Rate As SByte
-    ReadOnly Property Culture As CultureInfo
-End Interface
-Public Interface ISpeakStateControler
-    Sub StopSpeak()
+Public Class SpeakParam
     ''' <summary>
-    ''' 注意，该事件可能并不在UI线程触发。
+    ''' 取值范围：-10 ~ 20
     ''' </summary>
-    Event EndSpeak()
+    Public Rate As SByte = 0
+End Class
+Public Interface ISpeakEngine
+    Function Speak(Text As String, Param As SpeakParam) As PcmStreamWithInfo
+    ReadOnly Property Name As String
+    ReadOnly Property Culture As CultureInfo
 End Interface
