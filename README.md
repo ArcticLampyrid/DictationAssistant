@@ -4,6 +4,10 @@
 ## 开发
 DictationAssistant 的 2.x 实现是用 C# + WinForm 编写的，请使用 [Visual Studio](https://visualstudio.microsoft.com/) 打开。
 
+注意：
+- 由于 2.x 使用 .NET Framework 4.0，而 Visual Studio 2022 已默认不支持 .NET Framework 4.0，因此建议使用 Visual Studio 2019。
+- 或者，您也可以参照 [在 VS2022 中编辑 .NET 4.0 项目](https://alampy.com/2024/02/16/develop-dotnet-v4-project-with-vs2022/) 的方法，使用 Visual Studio 2022 打开。
+
 ## 贡献
 不再接受 2.x 版本的贡献或问题报告。
 
