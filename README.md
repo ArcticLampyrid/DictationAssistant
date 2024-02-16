@@ -1,5 +1,16 @@
 # DictationAssistant (3.x)
+自动默写（DictationAssistant）是一个用于辅助学习的工具，它可以利用自动化手段帮助您默写单词、短语、句子等。软件通过语音合成技术以给定的间隔、重复次数朗读指定的文本，以帮助您在传统纸张或电子设备上默写。
+
 此分支包含 DictationAssistant 的 3.x 实现。
+
+## 历史版本
+
+| 版本   | 分支   | 技术方案         |
+| :----- | :----- | :--------------- |
+| 3.x    | 3.x    | C# + WPF         |
+| 2.x    | 2.x    | C# + WinForm     |
+| 1.x    | 2.x    | VB.NET + WinForm |
+| Legacy | legacy | VB6              |
 
 ## 开发
 DictationAssistant 的 3.x 实现是用 C# + WPF 编写的，请使用 [Visual Studio](https://visualstudio.microsoft.com/) 打开。
