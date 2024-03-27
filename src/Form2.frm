@@ -350,6 +350,7 @@ Private Sub cmdLeftAll_Click()
 End Sub
 
 Private Sub Command1_Click()
+Dim Temp As Integer
 Form1.List1.Clear
 For Temp = 0 To lstSelected.ListCount - 1
 Form1.List1.AddItem lstSelected.List(Temp)
@@ -359,6 +360,7 @@ Form1.SetListButtons
 End Sub
 
 Private Sub Command2_Click()
+Dim Temp As Integer
 If Val(Text1.Text) > Form1.List1.ListCount Then
 MsgBox "³¬³ö´ÊÓïÊıÁ¿£¡"
 Exit Sub
@@ -372,6 +374,7 @@ Next
 End Sub
 
 Private Sub Form_Load()
+Dim Temp As Integer
 For Temp = 0 To Form1.List1.ListCount - 1
 lstAll.AddItem Form1.List1.List(Temp)
 Next
