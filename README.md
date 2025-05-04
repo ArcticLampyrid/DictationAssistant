@@ -9,7 +9,7 @@
 | :----- | :----- | :--------------- |
 | 3.x    | 3.x    | C# + WPF         |
 | 2.x    | 2.x    | C# + WinForm     |
-| 1.x    | 2.x    | VB.NET + WinForm |
+| 1.x    | 1.x    | VB.NET + WinForm |
 | Legacy | legacy | VB6              |
 
 ## 开发
