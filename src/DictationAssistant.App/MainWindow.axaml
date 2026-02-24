@@ -31,11 +31,13 @@
         <MenuItem Header="全选" InputGesture="Ctrl+A" Click="SelectAll_Click" />
       </MenuItem>
       <MenuItem Header="选项(_O)">
+        <MenuItem Header="偏好设置(_P)..." Click="Preference_Click" />
+        <Separator />
         <MenuItem Header="自动翻页" ToggleType="CheckBox" IsChecked="{Binding AutoScrollCurrentLine}" />
         <MenuItem Header="高亮跟随" ToggleType="CheckBox" IsChecked="{Binding HighlightCurrentLine}" />
       </MenuItem>
       <MenuItem Header="辅助(_A)">
-        <MenuItem Header="保存音频" Command="{Binding SaveAudioCommand}" />
+        <MenuItem Header="保存音频" Click="SaveAudio_Click" />
       </MenuItem>
       <MenuItem Header="帮助(_H)">
         <MenuItem Header="关于(_A)" Click="About_Click" />

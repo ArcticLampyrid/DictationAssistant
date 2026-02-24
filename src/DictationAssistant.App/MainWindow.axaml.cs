@@ -216,14 +216,36 @@ public partial class MainWindow : Window
         Close();
     }
 
-    private void About_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void Preference_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         _ = sender;
         _ = e;
+        var dialog = new PreferenceWindow();
+        var result = await dialog.ShowDialog<bool?>(this);
+        if (result == true && GetViewModel() is { } vm)
+        {
+            vm.Status = "偏好设置暂未持久化";
+        }
+    }
+
+    private async void SaveAudio_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        _ = sender;
+        _ = e;
+        var dialog = new SaveAudioWindow();
+        var result = await dialog.ShowDialog<bool?>(this);
         if (GetViewModel() is { } vm)
         {
-            vm.Status = "DictationAssistant v4（Avalonia）";
+            vm.Status = result == true ? "v4 暂未实现" : "已取消保存音频";
         }
+    }
+
+    private async void About_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        _ = sender;
+        _ = e;
+        var dialog = new AboutWindow();
+        await dialog.ShowDialog(this);
     }
 
     private void Cut_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
