@@ -1,19 +1,45 @@
-# DictationAssistant (3.x)
+# DictationAssistant
 自动默写（DictationAssistant）是一个用于辅助学习的工具，它可以利用自动化手段帮助您默写单词、短语、句子等。软件通过语音合成技术以给定的间隔、重复次数朗读指定的文本，以帮助您在传统纸张或电子设备上默写。
 
-此分支包含 DictationAssistant 的 3.x 实现。
+本仓库目前同时保留：
+- **v3（旧版）**：C# + WPF + .NET Framework 4.0（Windows only）
+- **v4（新版）**：C# + Avalonia + .NET 8（Windows/macOS/Linux）
+
+> v3 代码保留在 `DictationAssistant/` 目录，未删除。
+> v4 代码位于 `src/DictationAssistant.App` 和 `src/DictationAssistant.Core`。
 
 ## 历史版本
 
-| 版本   | 分支   | 技术方案         |
-| :----- | :----- | :--------------- |
-| 3.x    | 3.x    | C# + WPF         |
-| 2.x    | 2.x    | C# + WinForm     |
-| 1.x    | 1.x    | VB.NET + WinForm |
-| Legacy | legacy | VB6              |
+| 版本   | 分支   | 技术方案                 |
+| :----- | :----- | :----------------------- |
+| 4.x    | 4.x    | C# + Avalonia + .NET 8   |
+| 3.x    | 3.x    | C# + WPF                 |
+| 2.x    | 2.x    | C# + WinForm             |
+| 1.x    | 1.x    | VB.NET + WinForm         |
+| Legacy | legacy | VB6                      |
 
 ## 开发
-DictationAssistant 的 3.x 实现是用 C# + WPF 编写的，请使用 [Visual Studio](https://visualstudio.microsoft.com/) 打开。
+### v4（跨平台）
+
+v4 使用 .NET 8 + Avalonia，推荐在 Linux/macOS/Windows 使用 `dotnet` CLI：
+
+```bash
+dotnet restore DictationAssistant.V4.slnx
+dotnet build DictationAssistant.V4.slnx
+dotnet run --project src/DictationAssistant.App/DictationAssistant.App.csproj
+```
+
+主要能力（v4）:
+- 文本词表编辑（带行号）、加载/保存 `.txt`
+- 手动播报：上一条 / 重播 / 下一条
+- 自动模式：每词间隔 + 每词重复次数，支持暂停/恢复
+- 进度显示，当前行高亮和自动滚动开关
+- 跨平台 TTS 引擎抽象（Windows/macOS/Linux + No-op fallback）
+- 预留“保存音频”API（当前为跨平台 TODO 脚手架）
+
+### v3（旧版 Windows WPF）
+
+DictationAssistant 的 3.x 实现使用 C# + WPF + .NET Framework 4.0，请使用 [Visual Studio](https://visualstudio.microsoft.com/) 打开。 
 
 注意：
 - 出于兼容性考虑我们仍然在使用 .NET Framework 4.0，而 Visual Studio 2022 已默认不支持 .NET Framework 4.0，因此建议使用 Visual Studio 2019。

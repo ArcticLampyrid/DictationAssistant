@@ -1,0 +1,72 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:DictationAssistant.App.ViewModels"
+        xmlns:controls="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
+        x:Class="DictationAssistant.App.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Width="1200"
+        Height="760"
+        MinWidth="900"
+        MinHeight="600"
+        Title="DictationAssistant v4"
+        mc:Ignorable="d">
+  <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="16">
+    <Border Grid.Row="0" Padding="12" CornerRadius="8" Background="#14293B">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel>
+          <TextBlock FontSize="22" FontWeight="Bold" Foreground="#FFF6D68F" Text="DictationAssistant v4" />
+          <TextBlock Margin="0,4,0,0" Foreground="#FFD0D8DE" Text="Cross-platform dictation workflow with editable word list + async auto mode." />
+          <TextBlock Margin="0,4,0,0" Foreground="#FF96B5CC" Text="TTS Engine: {Binding TtsEngineName}" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <Grid Grid.Row="1" Margin="0,12,0,0" ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
+      <TextBlock VerticalAlignment="Center" Text="Word List File" />
+      <TextBox Grid.Column="1" Text="{Binding FilePath, Mode=TwoWay}" Watermark="/path/to/words.txt" />
+      <Button Grid.Column="2" Command="{Binding LoadFromFileCommand}" Content="Load" />
+      <Button Grid.Column="3" Command="{Binding SaveToFileCommand}" Content="Save" />
+      <Button Grid.Column="4" Command="{Binding AddLineCommand}" Content="Add Line" />
+      <Button Grid.Column="5" Command="{Binding RemoveCurrentLineCommand}" Content="Remove Line" />
+    </Grid>
+
+    <Grid Grid.Row="2" Margin="0,12,0,12" ColumnDefinitions="Auto,80,Auto,80,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
+      <TextBlock VerticalAlignment="Center" Text="Interval(s)" />
+      <TextBox Grid.Column="1" Text="{Binding IntervalSeconds, Mode=TwoWay}" />
+      <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="Times/Word" />
+      <TextBox Grid.Column="3" Text="{Binding TimesPerWord, Mode=TwoWay}" />
+      <CheckBox Grid.Column="4" VerticalAlignment="Center" IsChecked="{Binding HighlightCurrentLine}" Content="Highlight current line" />
+      <CheckBox Grid.Column="5" VerticalAlignment="Center" IsChecked="{Binding AutoScrollCurrentLine}" Content="Auto scroll" />
+      <Button Grid.Column="6" Command="{Binding SpeakPreviousCommand}" Content="Previous" />
+      <Button Grid.Column="7" Command="{Binding SpeakAgainCommand}" Content="Again" />
+      <Button Grid.Column="8" Command="{Binding SpeakNextCommand}" Content="Next" />
+      <Button Grid.Column="9" Command="{Binding StartAutoCommand}" Content="Auto Start" />
+      <Button Grid.Column="10" Command="{Binding SaveAudioCommand}" Content="Save Audio (Stub)" />
+    </Grid>
+
+    <controls:DataGrid x:Name="WordGrid"
+                       Grid.Row="3"
+                       AutoGenerateColumns="False"
+                       GridLinesVisibility="All"
+                       HeadersVisibility="Column"
+                       IsReadOnly="False"
+                       ItemsSource="{Binding Lines}"
+                       SelectedIndex="{Binding CurrentLineIndex, Mode=TwoWay}">
+      <controls:DataGrid.Columns>
+        <controls:DataGridTextColumn Binding="{Binding LineNumber}" Header="#" IsReadOnly="True" Width="70" />
+        <controls:DataGridTextColumn Binding="{Binding Text, Mode=TwoWay}" Header="Word/Phrase/Sentence" Width="*" />
+      </controls:DataGrid.Columns>
+    </controls:DataGrid>
+
+    <Grid Grid.Row="4" Margin="0,12,0,0" ColumnDefinitions="Auto,Auto,Auto,Auto,*,120" ColumnSpacing="8">
+      <Button Command="{Binding PauseAutoCommand}" Content="Pause" />
+      <Button Grid.Column="1" Command="{Binding ResumeAutoCommand}" Content="Resume" />
+      <Button Grid.Column="2" Command="{Binding StopCommand}" Content="Stop" />
+      <TextBlock Grid.Column="3" VerticalAlignment="Center" Text="{Binding ProgressText}" />
+      <TextBlock Grid.Column="4" VerticalAlignment="Center" Text="{Binding Status}" TextTrimming="CharacterEllipsis" />
+      <ProgressBar Grid.Column="5" Value="{Binding ProgressPercent}" Maximum="1" Minimum="0" Height="16" VerticalAlignment="Center" />
+    </Grid>
+  </Grid>
+</Window>
