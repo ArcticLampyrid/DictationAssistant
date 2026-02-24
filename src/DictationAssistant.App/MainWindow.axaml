@@ -3,70 +3,132 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:DictationAssistant.App.ViewModels"
-        xmlns:controls="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
+        xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
         x:Class="DictationAssistant.App.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Width="1200"
-        Height="760"
-        MinWidth="900"
-        MinHeight="600"
-        Title="DictationAssistant v4"
+        Width="980"
+        Height="680"
+        MinWidth="860"
+        MinHeight="560"
+        Title="自动默写"
         mc:Ignorable="d">
-  <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="16">
-    <Border Grid.Row="0" Padding="12" CornerRadius="8" Background="#14293B">
-      <Grid ColumnDefinitions="*,Auto">
+  <DockPanel>
+    <Menu DockPanel.Dock="Top">
+      <MenuItem Header="文件(_F)">
+        <MenuItem Header="新建(_N)..." InputGesture="Ctrl+N" Click="NewWordList_Click" />
+        <MenuItem Header="打开(_O)..." InputGesture="Ctrl+O" Click="OpenFile_Click" />
+        <MenuItem Header="保存(_S)..." InputGesture="Ctrl+S" Click="SaveFile_Click" />
+        <Separator />
+        <MenuItem Header="退出(_E)" Click="Exit_Click" />
+      </MenuItem>
+      <MenuItem Header="编辑(_E)">
+        <MenuItem Header="{Binding ShowOrHideWordListText}" Command="{Binding ToggleWordListCommand}" />
+        <Separator />
+        <MenuItem Header="剪切" InputGesture="Ctrl+X" Click="Cut_Click" />
+        <MenuItem Header="复制" InputGesture="Ctrl+C" Click="Copy_Click" />
+        <MenuItem Header="粘贴" InputGesture="Ctrl+V" Click="Paste_Click" />
+        <Separator />
+        <MenuItem Header="全选" InputGesture="Ctrl+A" Click="SelectAll_Click" />
+      </MenuItem>
+      <MenuItem Header="选项(_O)">
+        <MenuItem Header="自动翻页" ToggleType="CheckBox" IsChecked="{Binding AutoScrollCurrentLine}" />
+        <MenuItem Header="高亮跟随" ToggleType="CheckBox" IsChecked="{Binding HighlightCurrentLine}" />
+      </MenuItem>
+      <MenuItem Header="辅助(_A)">
+        <MenuItem Header="保存音频" Command="{Binding SaveAudioCommand}" />
+      </MenuItem>
+      <MenuItem Header="帮助(_H)">
+        <MenuItem Header="关于(_A)" Click="About_Click" />
+      </MenuItem>
+    </Menu>
+
+    <DockPanel DockPanel.Dock="Right" Width="264" Margin="8,8,8,8" LastChildFill="True">
+      <Border DockPanel.Dock="Top" Margin="0,0,0,8" BorderBrush="#C8C8C8" BorderThickness="1" Padding="6">
         <StackPanel>
-          <TextBlock FontSize="22" FontWeight="Bold" Foreground="#FFF6D68F" Text="DictationAssistant v4" />
-          <TextBlock Margin="0,4,0,0" Foreground="#FFD0D8DE" Text="Cross-platform dictation workflow with editable word list + async auto mode." />
-          <TextBlock Margin="0,4,0,0" Foreground="#FF96B5CC" Text="TTS Engine: {Binding TtsEngineName}" />
+          <TextBlock Margin="0,0,0,6" FontWeight="Bold" Text="播报信息" />
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*">
+          <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" FontSize="20" FontWeight="Bold" Margin="4" Text="{Binding CurrentRepeat, StringFormat=本词语播报次数：{0}}" />
+          <TextBlock Grid.Row="1" Grid.Column="0" Margin="4" VerticalAlignment="Center" Text="自动播报间隔/秒：" />
+          <TextBox Grid.Row="1" Grid.Column="1" Margin="4" HorizontalContentAlignment="Right" Text="{Binding IntervalSeconds, Mode=TwoWay}" />
+          <TextBlock Grid.Row="2" Grid.Column="0" Margin="4" VerticalAlignment="Center" Text="自动播报次数/词：" />
+          <TextBox Grid.Row="2" Grid.Column="1" Margin="4" HorizontalContentAlignment="Right" Text="{Binding TimesPerWord, Mode=TwoWay}" />
+          <TextBlock Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="4" FontSize="20" FontWeight="Bold" Text="{Binding SpeakStateText}" />
+        </Grid>
         </StackPanel>
-      </Grid>
+      </Border>
+
+      <Button DockPanel.Dock="Top" Content="{Binding ShowOrHideWordListText}" Command="{Binding ToggleWordListCommand}" Margin="4" Padding="4" />
+
+      <Border DockPanel.Dock="Bottom" Margin="0,8,0,8" BorderBrush="#C8C8C8" BorderThickness="1" Padding="6">
+        <StackPanel>
+          <TextBlock Margin="0,0,0,6" FontWeight="Bold" Text="引擎设置" />
+        <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*">
+          <TextBlock Grid.Row="0" Grid.Column="0" Margin="4" VerticalAlignment="Center" Text="音量：" />
+          <Slider Grid.Row="0" Grid.Column="1" Margin="4" Minimum="0" Maximum="100" Value="{Binding Volume, Mode=TwoWay}" />
+          <TextBlock Grid.Row="1" Grid.Column="0" Margin="4" VerticalAlignment="Center" Text="语速：" />
+          <Slider Grid.Row="1" Grid.Column="1" Margin="4" Minimum="-10" Maximum="10" Value="{Binding Rate, Mode=TwoWay}" />
+          <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="4" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+            <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="引擎：" />
+            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding TtsEngineName}" />
+            <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="语音：" />
+            <ComboBox Grid.Row="1" Grid.Column="1" SelectedIndex="0">
+              <ComboBoxItem Content="默认语音（占位）" />
+            </ComboBox>
+          </Grid>
+        </Grid>
+        </StackPanel>
+      </Border>
+
+      <Border Margin="0,8,0,0" BorderBrush="#C8C8C8" BorderThickness="1" Padding="6">
+        <StackPanel>
+          <TextBlock Margin="0,0,0,6" FontWeight="Bold" Text="播报控制" />
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,*">
+          <Button Grid.Row="0" Grid.Column="0" Margin="4" Command="{Binding StartAutoCommand}" Content="开始播报(_S)" />
+          <Button Grid.Row="0" Grid.Column="1" Margin="4" Command="{Binding StopCommand}" Content="停止播报(_D)" />
+          <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="4" FontSize="22" FontWeight="Bold" Content="{Binding PauseOrResumeAutoText}" Command="{Binding PauseOrResumeAutoCommand}" />
+          <Button Grid.Row="2" Grid.Column="0" Margin="4" Command="{Binding SpeakNextCommand}" Content="报下一个(_N)" />
+          <Button Grid.Row="2" Grid.Column="1" Margin="4" Click="ResetRecord_Click" Content="记录归零(_C)" />
+          <Button Grid.Row="3" Grid.Column="0" Margin="4" Command="{Binding SpeakAgainCommand}" Content="再报一遍(_M)" />
+          <Button Grid.Row="3" Grid.Column="1" Margin="4" Command="{Binding SpeakPreviousCommand}" Content="报上一个(_L)" />
+        </Grid>
+        </StackPanel>
+      </Border>
+    </DockPanel>
+
+    <Border Margin="8" BorderBrush="#C8C8C8" BorderThickness="1" Padding="6" IsVisible="{Binding WordListVisible}">
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Top" Margin="0,0,0,6" FontWeight="Bold" Text="词语列表" />
+        <StackPanel DockPanel.Dock="Right" Margin="8,0,0,0" Spacing="4" Width="72">
+          <Button Content="打开" Click="OpenFile_Click" />
+          <Button Content="保存" Click="SaveFile_Click" />
+          <Button Content="剪切" Click="Cut_Click" />
+          <Button Content="复制" Click="Copy_Click" />
+          <Button Content="粘贴" Click="Paste_Click" />
+          <Button Content="删除" Click="Delete_Click" />
+          <Button Content="新建" Click="NewWordList_Click" />
+          <Button Content="计数" Click="Count_Click" />
+        </StackPanel>
+
+        <avaloniaEdit:TextEditor x:Name="WordlistEditor"
+                                 FontSize="28"
+                                 ShowLineNumbers="True"
+                                 HorizontalScrollBarVisibility="Auto"
+                                 VerticalScrollBarVisibility="Auto">
+          <avaloniaEdit:TextEditor.ContextMenu>
+            <ContextMenu>
+              <MenuItem Header="读选定词语" Click="SpeakSelection_Click" />
+              <MenuItem Header="在Bing词典中查看" Click="ViewSelectionInBingDictionary_Click" />
+              <MenuItem Header="从此处开始自动播报" Click="StartFromSelection_Click" />
+              <Separator />
+              <MenuItem Header="剪切" Click="Cut_Click" />
+              <MenuItem Header="复制" Click="Copy_Click" />
+              <MenuItem Header="粘贴" Click="Paste_Click" />
+              <Separator />
+              <MenuItem Header="全选" Click="SelectAll_Click" />
+            </ContextMenu>
+          </avaloniaEdit:TextEditor.ContextMenu>
+        </avaloniaEdit:TextEditor>
+      </DockPanel>
     </Border>
-
-    <Grid Grid.Row="1" Margin="0,12,0,0" ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
-      <TextBlock VerticalAlignment="Center" Text="Word List File" />
-      <TextBox Grid.Column="1" Text="{Binding FilePath, Mode=TwoWay}" Watermark="/path/to/words.txt" />
-      <Button Grid.Column="2" Command="{Binding LoadFromFileCommand}" Content="Load" />
-      <Button Grid.Column="3" Command="{Binding SaveToFileCommand}" Content="Save" />
-      <Button Grid.Column="4" Command="{Binding AddLineCommand}" Content="Add Line" />
-      <Button Grid.Column="5" Command="{Binding RemoveCurrentLineCommand}" Content="Remove Line" />
-    </Grid>
-
-    <Grid Grid.Row="2" Margin="0,12,0,12" ColumnDefinitions="Auto,80,Auto,80,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
-      <TextBlock VerticalAlignment="Center" Text="Interval(s)" />
-      <TextBox Grid.Column="1" Text="{Binding IntervalSeconds, Mode=TwoWay}" />
-      <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="Times/Word" />
-      <TextBox Grid.Column="3" Text="{Binding TimesPerWord, Mode=TwoWay}" />
-      <CheckBox Grid.Column="4" VerticalAlignment="Center" IsChecked="{Binding HighlightCurrentLine}" Content="Highlight current line" />
-      <CheckBox Grid.Column="5" VerticalAlignment="Center" IsChecked="{Binding AutoScrollCurrentLine}" Content="Auto scroll" />
-      <Button Grid.Column="6" Command="{Binding SpeakPreviousCommand}" Content="Previous" />
-      <Button Grid.Column="7" Command="{Binding SpeakAgainCommand}" Content="Again" />
-      <Button Grid.Column="8" Command="{Binding SpeakNextCommand}" Content="Next" />
-      <Button Grid.Column="9" Command="{Binding StartAutoCommand}" Content="Auto Start" />
-      <Button Grid.Column="10" Command="{Binding SaveAudioCommand}" Content="Save Audio (Stub)" />
-    </Grid>
-
-    <controls:DataGrid x:Name="WordGrid"
-                       Grid.Row="3"
-                       AutoGenerateColumns="False"
-                       GridLinesVisibility="All"
-                       HeadersVisibility="Column"
-                       IsReadOnly="False"
-                       ItemsSource="{Binding Lines}"
-                       SelectedIndex="{Binding CurrentLineIndex, Mode=TwoWay}">
-      <controls:DataGrid.Columns>
-        <controls:DataGridTextColumn Binding="{Binding LineNumber}" Header="#" IsReadOnly="True" Width="70" />
-        <controls:DataGridTextColumn Binding="{Binding Text, Mode=TwoWay}" Header="Word/Phrase/Sentence" Width="*" />
-      </controls:DataGrid.Columns>
-    </controls:DataGrid>
-
-    <Grid Grid.Row="4" Margin="0,12,0,0" ColumnDefinitions="Auto,Auto,Auto,Auto,*,120" ColumnSpacing="8">
-      <Button Command="{Binding PauseAutoCommand}" Content="Pause" />
-      <Button Grid.Column="1" Command="{Binding ResumeAutoCommand}" Content="Resume" />
-      <Button Grid.Column="2" Command="{Binding StopCommand}" Content="Stop" />
-      <TextBlock Grid.Column="3" VerticalAlignment="Center" Text="{Binding ProgressText}" />
-      <TextBlock Grid.Column="4" VerticalAlignment="Center" Text="{Binding Status}" TextTrimming="CharacterEllipsis" />
-      <ProgressBar Grid.Column="5" Value="{Binding ProgressPercent}" Maximum="1" Minimum="0" Height="16" VerticalAlignment="Center" />
-    </Grid>
-  </Grid>
+  </DockPanel>
 </Window>

@@ -20,7 +20,7 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var wordListSource = new EditableWordListSource();
+            var wordListSource = new EditorDocumentWordListSource();
             ITtsEngine ttsEngine = TtsEngineFactory.CreateDefault();
             IDictationPlayer player = new DictationPlayer(ttsEngine, wordListSource);
 

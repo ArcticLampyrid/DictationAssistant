@@ -9,12 +9,12 @@ namespace DictationAssistant.App.ViewModels;
 
 public partial class MainWindowViewModel : ObservableObject
 {
-    private readonly EditableWordListSource _wordListSource;
+    private readonly EditorDocumentWordListSource _wordListSource;
     private readonly IDictationPlayer _dictationPlayer;
     private readonly ITextFileService _textFileService;
 
     public MainWindowViewModel(
-        EditableWordListSource wordListSource,
+        EditorDocumentWordListSource wordListSource,
         IDictationPlayer dictationPlayer,
         ITextFileService textFileService,
         ITtsEngine ttsEngine)
@@ -24,21 +24,20 @@ public partial class MainWindowViewModel : ObservableObject
         _textFileService = textFileService;
 
         TtsEngineName = ttsEngine.Name;
-        _wordListSource.ReplaceLines([string.Empty]);
+        Status = "就绪";
 
         _dictationPlayer.ProgressChanged += (_, progress) =>
         {
             Dispatcher.UIThread.Post(() =>
             {
-                if (HighlightCurrentLine)
-                {
-                    CurrentLineIndex = progress.CurrentWordIndex;
-                }
+                CurrentLineIndex = progress.CurrentWordIndex;
+                CurrentRepeat = progress.CurrentRepeat;
 
                 ProgressText = progress.TotalWords <= 0
                     ? "0 / 0"
                     : $"{Math.Max(progress.CurrentWordIndex + 1, 0)} / {progress.TotalWords}";
                 ProgressPercent = progress.Percent;
+                OnPropertyChanged(nameof(SpeakStateText));
             });
         };
 
@@ -49,13 +48,16 @@ public partial class MainWindowViewModel : ObservableObject
                 CurrentState = state;
                 OnPropertyChanged(nameof(IsAutoRunning));
                 OnPropertyChanged(nameof(IsAutoPaused));
+                OnPropertyChanged(nameof(PauseOrResumeAutoText));
+                OnPropertyChanged(nameof(SpeakStateText));
             });
         };
 
         SyncSettingsFromCore();
+        OnPropertyChanged(nameof(SpeakStateText));
     }
 
-    public IReadOnlyList<WordLineViewModel> Lines => _wordListSource.Lines;
+    public EditorDocumentWordListSource WordListSource => _wordListSource;
 
     [ObservableProperty]
     private string _ttsEngineName = string.Empty;
@@ -64,10 +66,13 @@ public partial class MainWindowViewModel : ObservableObject
     private string _filePath = string.Empty;
 
     [ObservableProperty]
-    private string _status = "Ready";
+    private string _status = string.Empty;
 
     [ObservableProperty]
     private int _currentLineIndex = -1;
+
+    [ObservableProperty]
+    private int _currentRepeat;
 
     [ObservableProperty]
     private DictationState _currentState;
@@ -90,58 +95,92 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private double _progressPercent;
 
+    [ObservableProperty]
+    private bool _wordListVisible = true;
+
+    [ObservableProperty]
+    private int _volume = 100;
+
+    [ObservableProperty]
+    private int _rate;
+
     public bool IsAutoRunning => CurrentState == DictationState.AutoRunning;
 
     public bool IsAutoPaused => CurrentState == DictationState.AutoPaused;
 
-    [RelayCommand]
-    private void AddLine()
+    public string ShowOrHideWordListText => WordListVisible ? "隐藏词语列表(_W)" : "显示词语列表(_W)";
+
+    public string PauseOrResumeAutoText => IsAutoPaused ? "恢复自动播报(_R)" : "暂停自动播报(_P)";
+
+    public string SpeakStateText
     {
-        _wordListSource.Lines.Add(new WordLineViewModel { Text = string.Empty });
+        get
+        {
+            if (IsAutoPaused)
+            {
+                return "自动播报已暂停";
+            }
+
+            if (CurrentState == DictationState.ManualSpeaking)
+            {
+                var speakingIndex = Math.Max(CurrentLineIndex + 1, 1);
+                return $"正在播报第{speakingIndex}个";
+            }
+
+            if (CurrentState == DictationState.AutoRunning)
+            {
+                return $"即将播报第{GetNextAutoIndex()}个";
+            }
+
+            return "等待播报";
+        }
     }
 
     [RelayCommand]
-    private void RemoveCurrentLine()
+    private void ToggleWordList()
     {
-        if (CurrentLineIndex < 0 || CurrentLineIndex >= _wordListSource.Lines.Count)
-        {
-            return;
-        }
-
-        _wordListSource.Lines.RemoveAt(CurrentLineIndex);
-        if (_wordListSource.Lines.Count == 0)
-        {
-            _wordListSource.Lines.Add(new WordLineViewModel { Text = string.Empty });
-        }
+        WordListVisible = !WordListVisible;
+        OnPropertyChanged(nameof(ShowOrHideWordListText));
     }
 
     [RelayCommand]
-    private async Task LoadFromFileAsync()
+    private void PauseOrResumeAuto()
     {
-        if (string.IsNullOrWhiteSpace(FilePath))
+        if (IsAutoPaused)
         {
-            Status = "Please set a file path first.";
+            ResumeAuto();
             return;
         }
 
-        var content = await _textFileService.ReadAllTextAsync(FilePath).ConfigureAwait(false);
-        var lines = content.Replace("\r\n", "\n").Split('\n');
-        _wordListSource.ReplaceLines(lines);
-        Status = $"Loaded {lines.Length} lines from {FilePath}";
+        PauseAuto();
+    }
+
+    public async Task<string?> LoadTextFromFileAsync(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            Status = "请选择文件";
+            return null;
+        }
+
+        var content = await _textFileService.ReadAllTextAsync(path).ConfigureAwait(false);
+        FilePath = path;
+        Status = $"已加载：{path}";
         ResetProgressUi();
+        return content;
     }
 
-    [RelayCommand]
-    private async Task SaveToFileAsync()
+    public async Task SaveTextToFileAsync(string path, string text)
     {
-        if (string.IsNullOrWhiteSpace(FilePath))
+        if (string.IsNullOrWhiteSpace(path))
         {
-            Status = "Please set a file path first.";
+            Status = "请选择保存路径";
             return;
         }
 
-        await _textFileService.WriteAllTextAsync(FilePath, _wordListSource.ToText()).ConfigureAwait(false);
-        Status = $"Saved to {FilePath}";
+        await _textFileService.WriteAllTextAsync(path, text).ConfigureAwait(false);
+        FilePath = path;
+        Status = $"已保存：{path}";
     }
 
     [RelayCommand]
@@ -196,10 +235,24 @@ public partial class MainWindowViewModel : ObservableObject
     {
         var request = new SaveAudioRequest
         {
-            OutputPath = FilePath + ".wav"
+            OutputPath = string.IsNullOrWhiteSpace(FilePath) ? "dictation.wav" : FilePath + ".wav"
         };
         var result = await _dictationPlayer.SaveAudioAsync(request).ConfigureAwait(false);
         Status = result.Message;
+    }
+
+    public async Task SpeakLineAsync(int index)
+    {
+        CurrentLineIndex = index;
+        ApplySettingsToCore();
+        await _dictationPlayer.SpeakAtAsync(index).ConfigureAwait(false);
+    }
+
+    public async Task StartAutoFromLineAsync(int index)
+    {
+        CurrentLineIndex = index;
+        ApplySettingsToCore();
+        await _dictationPlayer.StartAutoAsync(index).ConfigureAwait(false);
     }
 
     private void ApplySettingsToCore()
@@ -221,7 +274,28 @@ public partial class MainWindowViewModel : ObservableObject
     private void ResetProgressUi()
     {
         CurrentLineIndex = -1;
+        CurrentRepeat = 0;
         ProgressText = "0 / 0";
         ProgressPercent = 0;
+        OnPropertyChanged(nameof(SpeakStateText));
+    }
+
+    partial void OnWordListVisibleChanged(bool value)
+    {
+        _ = value;
+        OnPropertyChanged(nameof(ShowOrHideWordListText));
+    }
+
+    private int GetNextAutoIndex()
+    {
+        var total = _wordListSource.Count;
+        if (total <= 0)
+        {
+            return 1;
+        }
+
+        var current = Math.Max(CurrentLineIndex, 0);
+        var next = CurrentRepeat >= TimesPerWord ? Math.Min(current + 1, total - 1) : current;
+        return next + 1;
     }
 }
