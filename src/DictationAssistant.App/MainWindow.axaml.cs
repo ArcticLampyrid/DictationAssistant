@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -13,8 +14,11 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using AvaloniaEdit;
+using AvaloniaEdit.Highlighting;
+using AvaloniaEdit.Highlighting.Xshd;
 using DictationAssistant.App.Services.Settings;
 using DictationAssistant.App.ViewModels;
+using XmlReader = System.Xml.XmlReader;
 
 namespace DictationAssistant.App;
 
@@ -83,7 +87,14 @@ public partial class MainWindow : Window
         }
 
         vm.WordListSource.AttachDocument(_wordlistEditor.Document);
-        _wordlistEditor.TextArea.Caret.PositionChanged += (_, _) => SyncCurrentLineFromCaret(vm);
+
+        var highlightingAssembly = Assembly.GetExecutingAssembly();
+        using var highlightingStream = highlightingAssembly.GetManifestResourceStream("DictationAssistant.App.Resources.WordlistHighlighting.xshd");
+        if (highlightingStream != null)
+        {
+            using var reader = XmlReader.Create(highlightingStream);
+            _wordlistEditor.SyntaxHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
+        }
 
         _highlightedLineRenderer = new HighlightedLineBackgroundRenderer(_wordlistEditor.TextArea.TextView)
         {
