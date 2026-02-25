@@ -57,6 +57,8 @@ public partial class MainWindow : Window
             }
         };
 
+        AddHandler(DragDrop.DropEvent, OnDrop);
+
         Closing += (_, _) =>
         {
             PersistWindowPlacement();
@@ -85,7 +87,7 @@ public partial class MainWindow : Window
 
         _highlightedLineRenderer = new HighlightedLineBackgroundRenderer(_wordlistEditor.TextArea.TextView)
         {
-            Background = new SolidColorBrush(Color.Parse("#40FFD700"))
+            Background = new SolidColorBrush(Colors.LightGreen)
         };
         _wordlistEditor.TextArea.TextView.BackgroundRenderers.Add(_highlightedLineRenderer);
     }
@@ -436,6 +438,20 @@ public partial class MainWindow : Window
         }
     }
 
+    private void Undo_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        _ = sender;
+        _ = e;
+        _wordlistEditor?.Undo();
+    }
+
+    private void Redo_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        _ = sender;
+        _ = e;
+        _wordlistEditor?.Redo();
+    }
+
     private void SelectAll_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         _ = sender;
@@ -537,5 +553,48 @@ public partial class MainWindow : Window
         vm.ProgressText = "0 / 0";
         vm.ProgressPercent = 0;
         vm.Status = "已归零";
+    }
+
+    private async void OnDrop(object? sender, DragEventArgs e)
+    {
+        if (_wordlistEditor is null)
+        {
+            return;
+        }
+
+#pragma warning disable CS0618 // Avalonia 11: DataTransfer does not support GetFiles yet
+        var files = e.Data.GetFiles()?.ToList();
+#pragma warning restore CS0618
+        if (files is null || files.Count == 0)
+        {
+            return;
+        }
+
+        var file = files[0];
+        var localPath = file.TryGetLocalPath();
+        if (localPath is null || !File.Exists(localPath))
+        {
+            return;
+        }
+
+        try
+        {
+            var text = await File.ReadAllTextAsync(localPath);
+            _wordlistEditor.Text = text;
+
+            if (GetViewModel() is { } vm)
+            {
+                vm.FilePath = localPath;
+                vm.Status = $"已加载：{localPath}";
+                vm.CurrentLineIndex = 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            if (GetViewModel() is { } vm)
+            {
+                vm.Status = $"无法打开文件：{ex.Message}";
+            }
+        }
     }
 }

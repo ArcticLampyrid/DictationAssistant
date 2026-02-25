@@ -14,6 +14,8 @@ public partial class SaveAudioWindowViewModel : ObservableObject
 
     public IReadOnlyList<string> FrequencyOptions { get; } =
     [
+        "6000",
+        "7333",
         "8000",
         "11025",
         "16000",
@@ -24,7 +26,7 @@ public partial class SaveAudioWindowViewModel : ObservableObject
         "48000"
     ];
 
-    public IReadOnlyList<string> OutputFormatOptions { get; } = ["wav", "mp3", "opus"];
+    public IReadOnlyList<string> OutputFormatOptions { get; } = ["wav"];
 
     public IReadOnlyList<string> LyricModeOptions { get; } = ["Dismiss", "Lrc File"];
 
