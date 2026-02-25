@@ -26,14 +26,34 @@ public sealed class ImprovedVoice : IVoice
         var filePath = FindFile(text);
         if (filePath is not null)
         {
-            var pcmAudio = BassAudioDecoder.DecodeFile(filePath);
-            if (pcmAudio is not null)
+            using var decodeStream = BassAudioDecoder.DecodeFile(filePath);
+            if (decodeStream is not null)
             {
-                return pcmAudio;
+                return ReadPcmFromStream(decodeStream);
             }
         }
 
         return await _inner.SynthesizePcmAsync(text, options, ct).ConfigureAwait(false);
+    }
+
+    private static PcmAudio? ReadPcmFromStream(BassDecodeStream decodeStream)
+    {
+        var format = decodeStream.Format;
+
+        using var memoryStream = new MemoryStream();
+        var buffer = new byte[8192];
+        int bytesRead;
+
+        while ((bytesRead = decodeStream.Read(buffer, 0, buffer.Length)) > 0)
+        {
+            memoryStream.Write(buffer, 0, bytesRead);
+        }
+
+        return new PcmAudio
+        {
+            Data = memoryStream.ToArray(),
+            Format = format
+        };
     }
 
     private string? FindFile(string text)

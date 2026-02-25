@@ -27,40 +27,14 @@ public static class BassAudioDecoder
         }
     }
 
-    public static PcmAudio? DecodeFile(string filePath)
+    public static BassDecodeStream? DecodeFile(string filePath)
     {
-        var stream = CreateDecodeStream(filePath);
-        if (stream == null)
-        {
-            return null;
-        }
-
-        try
-        {
-            return ReadPcmFromStream(stream);
-        }
-        finally
-        {
-            stream.Dispose();
-        }
+        return CreateDecodeStream(filePath);
     }
 
-    public static PcmAudio? DecodeStream(Stream inputStream)
+    public static BassDecodeStream? DecodeStream(Stream inputStream)
     {
-        var stream = CreateDecodeStream(inputStream);
-        if (stream == null)
-        {
-            return null;
-        }
-
-        try
-        {
-            return ReadPcmFromStream(stream);
-        }
-        finally
-        {
-            stream.Dispose();
-        }
+        return CreateDecodeStream(inputStream);
     }
 
     public static BassDecodeStream? CreateDecodeStream(string filePath)
@@ -92,25 +66,5 @@ public static class BassAudioDecoder
             Trace.WriteLine($"[BassAudioDecoder] Exception creating stream from Stream: {ex.Message}");
             return null;
         }
-    }
-
-    private static PcmAudio? ReadPcmFromStream(BassDecodeStream decodeStream)
-    {
-        var format = decodeStream.Format;
-
-        using var memoryStream = new MemoryStream();
-        var buffer = new byte[8192];
-        int bytesRead;
-
-        while ((bytesRead = decodeStream.Read(buffer, 0, buffer.Length)) > 0)
-        {
-            memoryStream.Write(buffer, 0, bytesRead);
-        }
-
-        return new PcmAudio
-        {
-            Data = memoryStream.ToArray(),
-            Format = format
-        };
     }
 }

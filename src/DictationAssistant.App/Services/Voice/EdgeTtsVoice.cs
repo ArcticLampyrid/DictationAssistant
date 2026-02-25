@@ -79,7 +79,28 @@ public sealed class EdgeTtsVoice : CachedVoice
         try
         {
             using var mp3Stream = new MemoryStream(mp3Bytes);
-            return BassAudioDecoder.DecodeStream(mp3Stream);
+            using var decodeStream = BassAudioDecoder.DecodeStream(mp3Stream);
+            if (decodeStream == null)
+            {
+                return null;
+            }
+
+            var format = decodeStream.Format;
+
+            using var pcmStream = new MemoryStream();
+            var buffer = new byte[8192];
+            int bytesRead;
+
+            while ((bytesRead = decodeStream.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                pcmStream.Write(buffer, 0, bytesRead);
+            }
+
+            return new PcmAudio
+            {
+                Data = pcmStream.ToArray(),
+                Format = format
+            };
         }
         catch (Exception ex)
         {
