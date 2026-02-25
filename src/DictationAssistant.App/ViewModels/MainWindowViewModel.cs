@@ -20,7 +20,7 @@ public partial class MainWindowViewModel : ObservableObject
         EditorDocumentWordListSource wordListSource,
         IDictationPlayer dictationPlayer,
         ITextFileService textFileService,
-        ITtsEngine ttsEngine,
+        IPcmTtsEngine ttsEngine,
         AppSettings appSettings)
     {
         _wordListSource = wordListSource;
@@ -299,17 +299,11 @@ public partial class MainWindowViewModel : ObservableObject
         _dictationPlayer.Settings.DefaultEnglishVoiceName = DefaultEnglishVoiceName;
     }
 
-    private async Task LoadVoiceOptionsAsync(ITtsEngine ttsEngine)
+    private async Task LoadVoiceOptionsAsync(IPcmTtsEngine ttsEngine)
     {
         try
         {
-            if (ttsEngine is not IConfigurableTtsEngine configurableTtsEngine)
-            {
-                VoiceOptions = [];
-                return;
-            }
-
-            var voices = await configurableTtsEngine.ListVoicesAsync(CancellationToken.None).ConfigureAwait(false);
+            var voices = await ttsEngine.ListVoicesAsync(CancellationToken.None).ConfigureAwait(false);
             var options = voices
                 .Select(voice => voice.Name)
                 .Where(name => !string.IsNullOrWhiteSpace(name))

@@ -4,16 +4,11 @@ namespace DictationAssistant.App.Services.Tts;
 
 public static class TtsEngineFactory
 {
-    public static ITtsEngine CreateDefault()
+    public static IPcmTtsEngine CreateDefaultPcmEngine()
     {
         if (OperatingSystem.IsWindows())
         {
-            if (ProcessRunner.FindOnPath("powershell") is not null)
-            {
-                return new WindowsSystemSpeechTtsEngine();
-            }
-
-            return new NullTtsEngine();
+            return new WindowsSapiComPcmTtsEngine();
         }
 
         if (OperatingSystem.IsMacOS())
@@ -23,7 +18,7 @@ public static class TtsEngineFactory
                 return new MacSayTtsEngine();
             }
 
-            return new NullTtsEngine();
+            return new NullPcmTtsEngine();
         }
 
         if (OperatingSystem.IsLinux())
@@ -35,21 +30,17 @@ public static class TtsEngineFactory
 
             if (ProcessRunner.FindOnPath("pico2wave") is not null)
             {
-                var playback = ProcessRunner.FindOnPath("aplay") is not null
-                    ? "aplay"
-                    : ProcessRunner.FindOnPath("paplay") is not null
-                        ? "paplay"
-                        : string.Empty;
-
-                if (!string.IsNullOrEmpty(playback))
-                {
-                    return new LinuxPico2WaveTtsEngine(playback);
-                }
+                return new LinuxPico2WaveTtsEngine();
             }
 
-            return new NullTtsEngine();
+            return new NullPcmTtsEngine();
         }
 
-        return new NullTtsEngine();
+        return new NullPcmTtsEngine();
+    }
+
+    public static ITtsEngine CreateDefault()
+    {
+        return CreateDefaultPcmEngine() as ITtsEngine ?? new NullTtsEngine();
     }
 }

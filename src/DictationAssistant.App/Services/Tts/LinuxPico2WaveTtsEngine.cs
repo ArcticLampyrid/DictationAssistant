@@ -1,42 +1,69 @@
 using DictationAssistant.Core.Abstractions;
+using DictationAssistant.Core.Audio;
+using DictationAssistant.Core.Models;
 
 namespace DictationAssistant.App.Services.Tts;
 
-public sealed class LinuxPico2WaveTtsEngine : ITtsEngine
+public sealed class LinuxPico2WaveTtsEngine : ITtsEngine, IConfigurableTtsEngine, IPcmTtsEngine
 {
-    private readonly string _playbackCommand;
-
-    public LinuxPico2WaveTtsEngine(string playbackCommand)
-    {
-        _playbackCommand = playbackCommand;
-    }
-
     public string Name => "Linux pico2wave";
 
-    public async Task SpeakAsync(string text, CancellationToken cancellationToken)
+    public Task SpeakAsync(string text, CancellationToken cancellationToken)
     {
-        var tempFile = Path.Combine(Path.GetTempPath(), $"dictationassistant-{Guid.NewGuid():N}.wav");
-        try
-        {
-            await ProcessRunner.RunAsync("pico2wave", ["-w", tempFile, text], null, cancellationToken).ConfigureAwait(false);
-            await ProcessRunner.RunAsync(_playbackCommand, [tempFile], null, cancellationToken).ConfigureAwait(false);
-        }
-        finally
-        {
-            if (File.Exists(tempFile))
-            {
-                File.Delete(tempFile);
-            }
-        }
+        _ = text;
+        _ = cancellationToken;
+        return Task.CompletedTask;
     }
 
-    public async Task<byte[]?> SynthesizeAudioAsync(string text, CancellationToken cancellationToken)
+    public Task SpeakAsync(string text, TtsSpeakOptions options, CancellationToken cancellationToken)
     {
-        var tempFile = Path.Combine(Path.GetTempPath(), $"dictationassistant-{Guid.NewGuid():N}.wav");
+        _ = text;
+        _ = options;
+        _ = cancellationToken;
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<TtsVoiceInfo>> ListVoicesAsync(CancellationToken cancellationToken)
+    {
+        _ = cancellationToken;
+        return Task.FromResult<IReadOnlyList<TtsVoiceInfo>>([]);
+    }
+
+    public async Task<PcmAudio?> SynthesizePcmAsync(string text, TtsSpeakOptions options, CancellationToken ct)
+    {
+        var wavBytes = await SynthesizeWavAsync(text, options, ct).ConfigureAwait(false);
+        if (wavBytes is null)
+        {
+            return null;
+        }
+
+        return WavReader.TryReadPcmAudio(wavBytes, out var pcmAudio, out _)
+            ? pcmAudio
+            : null;
+    }
+
+    public Task<byte[]?> SynthesizeAudioAsync(string text, CancellationToken cancellationToken)
+    {
+        return SynthesizeWavAsync(text, new TtsSpeakOptions(), cancellationToken);
+    }
+
+    public Task<byte[]?> SynthesizeAudioAsync(string text, TtsSpeakOptions options, CancellationToken cancellationToken)
+    {
+        return SynthesizeWavAsync(text, options, cancellationToken);
+    }
+
+    private static async Task<byte[]?> SynthesizeWavAsync(string text, TtsSpeakOptions options, CancellationToken cancellationToken)
+    {
+        var tempFile = Path.Combine(Path.GetTempPath(), $"dictationassistant-pico-{Guid.NewGuid():N}.wav");
         try
         {
-            await ProcessRunner.RunAsync("pico2wave", ["-w", tempFile, text], null, cancellationToken).ConfigureAwait(false);
+            var voice = string.IsNullOrWhiteSpace(options.VoiceName) ? "zh-CN" : options.VoiceName;
+            await ProcessRunner.RunAsync("pico2wave", ["-l", voice, "-w", tempFile, text], null, cancellationToken).ConfigureAwait(false);
             return await File.ReadAllBytesAsync(tempFile, cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            return null;
         }
         finally
         {

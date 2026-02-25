@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using DictationAssistant.App.Services;
+using DictationAssistant.App.Services.Audio;
 using DictationAssistant.App.Services.Settings;
 using DictationAssistant.App.Services.Tts;
 using DictationAssistant.App.ViewModels;
@@ -24,8 +25,9 @@ public partial class App : Application
             var settingsStore = new AppSettingsStore();
             var appSettings = settingsStore.Load();
             var wordListSource = new EditorDocumentWordListSource();
-            ITtsEngine ttsEngine = TtsEngineFactory.CreateDefault();
-            IDictationPlayer player = new DictationPlayer(ttsEngine, wordListSource);
+            var audioPlayer = new SdlPcmPlayer();
+            IPcmTtsEngine ttsEngine = TtsEngineFactory.CreateDefaultPcmEngine();
+            IDictationPlayer player = new DictationPlayer(ttsEngine, wordListSource, audioPlayer);
 
             desktop.MainWindow = new MainWindow(appSettings)
             {
@@ -34,7 +36,11 @@ public partial class App : Application
 
             desktop.MainWindow.Closing += (_, _) => settingsStore.Save(appSettings);
 
-            desktop.Exit += (_, _) => settingsStore.Save(appSettings);
+            desktop.Exit += (_, _) =>
+            {
+                settingsStore.Save(appSettings);
+                audioPlayer.Dispose();
+            };
         }
 
         base.OnFrameworkInitializationCompleted();

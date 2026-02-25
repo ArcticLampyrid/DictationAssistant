@@ -1,15 +1,26 @@
 using DictationAssistant.Core.Abstractions;
+using DictationAssistant.Core.Audio;
 using DictationAssistant.Core.Models;
 
 namespace DictationAssistant.App.Services.Tts;
 
-public sealed class MacSayTtsEngine : ITtsEngine, IConfigurableTtsEngine
+public sealed class MacSayTtsEngine : ITtsEngine, IConfigurableTtsEngine, IPcmTtsEngine
 {
     public string Name => "macOS say";
 
-    public async Task SpeakAsync(string text, CancellationToken cancellationToken)
+    public Task SpeakAsync(string text, CancellationToken cancellationToken)
     {
-        await SpeakAsync(text, new TtsSpeakOptions(), cancellationToken).ConfigureAwait(false);
+        _ = text;
+        _ = cancellationToken;
+        return Task.CompletedTask;
+    }
+
+    public Task SpeakAsync(string text, TtsSpeakOptions options, CancellationToken cancellationToken)
+    {
+        _ = text;
+        _ = options;
+        _ = cancellationToken;
+        return Task.CompletedTask;
     }
 
     public async Task<IReadOnlyList<TtsVoiceInfo>> ListVoicesAsync(CancellationToken cancellationToken)
@@ -34,11 +45,10 @@ public sealed class MacSayTtsEngine : ITtsEngine, IConfigurableTtsEngine
                     continue;
                 }
 
-                var locale = tokens.Length > 1 ? tokens[1] : null;
                 voices.Add(new TtsVoiceInfo
                 {
                     Name = tokens[0],
-                    LocaleOrLanguage = locale
+                    LocaleOrLanguage = tokens.Length > 1 ? tokens[1] : null
                 });
             }
 
@@ -50,35 +60,90 @@ public sealed class MacSayTtsEngine : ITtsEngine, IConfigurableTtsEngine
         }
     }
 
-    public Task SpeakAsync(string text, TtsSpeakOptions options, CancellationToken cancellationToken)
+    public async Task<PcmAudio?> SynthesizePcmAsync(string text, TtsSpeakOptions options, CancellationToken ct)
     {
-        var args = new List<string>();
-        if (!string.IsNullOrWhiteSpace(options.VoiceName))
+        var wavBytes = await SynthesizeWavAsync(text, options, ct).ConfigureAwait(false);
+        if (wavBytes is null)
         {
-            args.Add("-v");
-            args.Add(options.VoiceName);
+            return null;
         }
 
-        if (options.Rate is int rate)
-        {
-            args.Add("-r");
-            args.Add((120 + Math.Clamp(rate, -10, 10) * 20).ToString());
-        }
-
-        args.Add(text);
-        return ProcessRunner.RunAsync("say", args, null, cancellationToken);
+        return WavReader.TryReadPcmAudio(wavBytes, out var pcmAudio, out _)
+            ? pcmAudio
+            : null;
     }
 
     public Task<byte[]?> SynthesizeAudioAsync(string text, CancellationToken cancellationToken)
     {
-        _ = text;
-        _ = cancellationToken;
-        return Task.FromResult<byte[]?>(null);
+        return SynthesizeWavAsync(text, new TtsSpeakOptions(), cancellationToken);
     }
 
     public Task<byte[]?> SynthesizeAudioAsync(string text, TtsSpeakOptions options, CancellationToken cancellationToken)
     {
-        _ = options;
-        return SynthesizeAudioAsync(text, cancellationToken);
+        return SynthesizeWavAsync(text, options, cancellationToken);
+    }
+
+    private static async Task<byte[]?> SynthesizeWavAsync(string text, TtsSpeakOptions options, CancellationToken cancellationToken)
+    {
+        var tempFile = Path.Combine(Path.GetTempPath(), $"dictationassistant-say-{Guid.NewGuid():N}.wav");
+        try
+        {
+            var args = new List<string>();
+            if (!string.IsNullOrWhiteSpace(options.VoiceName))
+            {
+                args.Add("-v");
+                args.Add(options.VoiceName);
+            }
+
+            if (options.Rate is int rate)
+            {
+                args.Add("-r");
+                args.Add((120 + Math.Clamp(rate, -10, 10) * 20).ToString());
+            }
+
+            args.Add("-o");
+            args.Add(tempFile);
+            args.Add("--file-format=WAVE");
+            args.Add("--data-format=LEI16@44100");
+            args.Add(text);
+
+            try
+            {
+                await ProcessRunner.RunAsync("say", args, null, cancellationToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                var fallbackArgs = new List<string>();
+                if (!string.IsNullOrWhiteSpace(options.VoiceName))
+                {
+                    fallbackArgs.Add("-v");
+                    fallbackArgs.Add(options.VoiceName);
+                }
+
+                if (options.Rate is int fallbackRate)
+                {
+                    fallbackArgs.Add("-r");
+                    fallbackArgs.Add((120 + Math.Clamp(fallbackRate, -10, 10) * 20).ToString());
+                }
+
+                fallbackArgs.Add("-o");
+                fallbackArgs.Add(tempFile);
+                fallbackArgs.Add(text);
+                await ProcessRunner.RunAsync("say", fallbackArgs, null, cancellationToken).ConfigureAwait(false);
+            }
+
+            return await File.ReadAllBytesAsync(tempFile, cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            return null;
+        }
+        finally
+        {
+            if (File.Exists(tempFile))
+            {
+                File.Delete(tempFile);
+            }
+        }
     }
 }

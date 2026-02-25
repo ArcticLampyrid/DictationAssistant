@@ -44,12 +44,16 @@ v4 的核心定位：**跨平台（Avalonia + .NET）**。在不牺牲跨平台�
 
 - [x] `ITtsEngine` 支持枚举 voices + 选择 voice（供偏好设置窗口使用，采用可选接口 `IConfigurableTtsEngine`）
   - [x] 当前实现：macOS `say`、Linux `espeak-ng`、Windows `System.Speech`（PowerShell）
+- [x] v4 TTS/播放边界对齐 v3：TTS 仅负责合成 PCM，播放统一走 `PcmPlayer`（SDL2 NuGet 包装）
+- [x] Windows：切换为 COM SAPI（`SpVoice`/`SpMemoryStream`）路线，语音枚举与 PCM 合成与 v3 边界一致
+- [x] macOS/Linux：后端改为 synth-to-file（wav）再解码为 PCM 喂给播放层（后续可继续评估非 CLI 实现）
 - [ ] **预加载接口设计（仅下一条）**
   - [ ] 在 Core 抽象层引入可选的 preload 能力（例如 `IPreloadableTtsEngine`），允许引擎对“下一条文本”做 best-effort 预取
   - [ ] DictationPlayer 侧预留 hook：每次开始播报第 N 条时，后台触发预加载第 N+1 条（只保留 1 条预加载槽位）
   - [ ] 失败策略：预加载失败/在线 TTS 失败均静默，仅日志记录，不影响当前播报流程
 - [ ] Windows：**保留/迁移 v3 的“原生引擎体系”**
-  - [ ] SAPI/OneCore voices（v3 的 `SpeechLib` 路线：枚举 TokenId + 选择 voice + Rate）
+  - [x] SAPI voices（v3 的 `SpeechLib` 路线：COM 枚举 + 选择 voice + Rate）
+  - [ ] OneCore voices（补充与 SAPI 的统一枚举/选择）
   - [ ] ImprovedVoice（“音源增强目录”：命中则播文件，否则回落到系统 voice）
   - [ ] （可选）System.Speech（当前 v4 的 PowerShell `System.Speech.Synthesis` 回落方案）
 - [ ] macOS：NSSpeechSynthesizer / `say`（可枚举 voices + 选择）
