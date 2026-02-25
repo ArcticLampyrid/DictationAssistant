@@ -244,7 +244,15 @@ public sealed class DictationPlayer : IDictationPlayer
             };
 
             PcmAudio? pcmAudio;
-            if (_pcmTtsEngine is not null)
+            if (_pcmTtsEngine is IPreloadableTtsEngine preloadable)
+            {
+                pcmAudio = await preloadable.TryConsumePreloadedAsync(word, options, cancellationToken).ConfigureAwait(false);
+                if (pcmAudio is null)
+                {
+                    pcmAudio = await _pcmTtsEngine.SynthesizePcmAsync(word, options, cancellationToken).ConfigureAwait(false);
+                }
+            }
+            else if (_pcmTtsEngine is not null)
             {
                 pcmAudio = await _pcmTtsEngine.SynthesizePcmAsync(word, options, cancellationToken).ConfigureAwait(false);
             }
@@ -270,6 +278,28 @@ public sealed class DictationPlayer : IDictationPlayer
             }
 
             await _audioPlayer.PlayAsync(pcmAudio, Settings.Volume, cancellationToken).ConfigureAwait(false);
+
+            if (_pcmTtsEngine is IPreloadableTtsEngine preloadable2 && index + 1 < _wordListSource.Count)
+            {
+                var nextWord = _wordListSource.GetWordAt(index + 1);
+                var nextOptions = new TtsSpeakOptions
+                {
+                    Rate = Settings.Rate,
+                    VoiceName = ResolveVoiceName(nextWord)
+                };
+
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await preloadable2.PreloadAsync(nextWord, nextOptions, CancellationToken.None).ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.WriteLine($"Preload failed for '{nextWord}': {ex}");
+                    }
+                });
+            }
         }
         catch (OperationCanceledException)
         {
