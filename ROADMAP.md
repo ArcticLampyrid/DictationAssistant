@@ -92,6 +92,6 @@ v4 的核心定位：**跨平台（Avalonia + .NET 8）**。在不牺牲跨平�
 
 ### 可选增强
 
-- [ ] mp3/opus 导出（需外部编码器或 NuGet 库）
+- [x] mp3/opus 导出（使用 ffmpeg）
 - [ ] Linux piper 离线 TTS 支持
 - [ ] macOS NSSpeechSynthesizer（替代 CLI `say`）
