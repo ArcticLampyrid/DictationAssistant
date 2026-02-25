@@ -1,6 +1,7 @@
 namespace DictationAssistant.Core.Audio;
 
-public enum PcmSampleFormat
+public enum PcmSampleFormat : ushort
 {
-    S16LE
+    U8 = 0x8,
+    S16LE = 0x8010
 }
