@@ -90,7 +90,7 @@ public class DictationPlayerTests
         var ttsEngine = new FakePcmTtsEngine();
         var player = new DictationPlayer(ttsEngine, wordList, new FakeAudioPlayer())
         {
-            Settings = { IntervalSeconds = 0, TimesPerWord = 1 }
+            Settings = { IntervalExpression = "0", TimesPerWord = 1 }
         };
 
         var stateChanges = new List<DictationState>();
@@ -110,7 +110,7 @@ public class DictationPlayerTests
         var ttsEngine = new FakePcmTtsEngine();
         var player = new DictationPlayer(ttsEngine, wordList, new FakeAudioPlayer())
         {
-            Settings = { IntervalSeconds = 0, TimesPerWord = 1 }
+            Settings = { IntervalExpression = "0", TimesPerWord = 1 }
         };
 
         var stateChanges = new List<DictationState>();
@@ -139,7 +139,7 @@ public class DictationPlayerTests
         var ttsEngine = new FakePcmTtsEngine();
         var player = new DictationPlayer(ttsEngine, wordList, new FakeAudioPlayer())
         {
-            Settings = { IntervalSeconds = 0, TimesPerWord = 1 }
+            Settings = { IntervalExpression = "0", TimesPerWord = 1 }
         };
 
         await player.StartAutoAsync();
@@ -186,7 +186,7 @@ public class DictationPlayerTests
         var ttsEngine = new FakePcmTtsEngine();
         var player = new DictationPlayer(ttsEngine, wordList, new FakeAudioPlayer())
         {
-            Settings = { IntervalSeconds = 0, TimesPerWord = 1 }
+            Settings = { IntervalExpression = "0", TimesPerWord = 1 }
         };
 
         var progressEvents = new List<DictationProgress>();

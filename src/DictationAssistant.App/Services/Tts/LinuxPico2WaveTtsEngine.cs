@@ -4,24 +4,9 @@ using DictationAssistant.Core.Models;
 
 namespace DictationAssistant.App.Services.Tts;
 
-public sealed class LinuxPico2WaveTtsEngine : ITtsEngine, IConfigurableTtsEngine, IPcmTtsEngine
+public sealed class LinuxPico2WaveTtsEngine : IPcmTtsEngine
 {
     public string Name => "Linux pico2wave";
-
-    public Task SpeakAsync(string text, CancellationToken cancellationToken)
-    {
-        _ = text;
-        _ = cancellationToken;
-        return Task.CompletedTask;
-    }
-
-    public Task SpeakAsync(string text, TtsSpeakOptions options, CancellationToken cancellationToken)
-    {
-        _ = text;
-        _ = options;
-        _ = cancellationToken;
-        return Task.CompletedTask;
-    }
 
     public Task<IReadOnlyList<TtsVoiceInfo>> ListVoicesAsync(CancellationToken cancellationToken)
     {
@@ -40,16 +25,6 @@ public sealed class LinuxPico2WaveTtsEngine : ITtsEngine, IConfigurableTtsEngine
         return WavReader.TryReadPcmAudio(wavBytes, out var pcmAudio, out _)
             ? pcmAudio
             : null;
-    }
-
-    public Task<byte[]?> SynthesizeAudioAsync(string text, CancellationToken cancellationToken)
-    {
-        return SynthesizeWavAsync(text, new TtsSpeakOptions(), cancellationToken);
-    }
-
-    public Task<byte[]?> SynthesizeAudioAsync(string text, TtsSpeakOptions options, CancellationToken cancellationToken)
-    {
-        return SynthesizeWavAsync(text, options, cancellationToken);
     }
 
     private static async Task<byte[]?> SynthesizeWavAsync(string text, TtsSpeakOptions options, CancellationToken cancellationToken)

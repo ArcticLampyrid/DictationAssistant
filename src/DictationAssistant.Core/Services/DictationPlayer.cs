@@ -7,8 +7,7 @@ namespace DictationAssistant.Core.Services;
 
 public sealed class DictationPlayer : IDictationPlayer
 {
-    private readonly ITtsEngine? _ttsEngine;
-    private readonly IPcmTtsEngine? _pcmTtsEngine;
+    private readonly IPcmTtsEngine _ttsEngine;
     private readonly IAudioPlayer _audioPlayer;
     private readonly IWordListSource _wordListSource;
     private readonly object _stateLock = new();
@@ -20,26 +19,7 @@ public sealed class DictationPlayer : IDictationPlayer
 
     public DictationPlayer(IPcmTtsEngine ttsEngine, IWordListSource wordListSource, IAudioPlayer audioPlayer, DictationSettings? settings = null)
     {
-        _pcmTtsEngine = ttsEngine;
-        _audioPlayer = audioPlayer;
-        _wordListSource = wordListSource;
-        Settings = settings ?? new DictationSettings();
-        Progress = DictationProgress.Empty with { TotalWords = _wordListSource.Count };
-
-        _wordListSource.Changed += (_, _) =>
-        {
-            UpdateProgress(progress => progress with
-            {
-                TotalWords = _wordListSource.Count,
-                CurrentWordIndex = Math.Min(progress.CurrentWordIndex, _wordListSource.Count - 1)
-            });
-        };
-    }
-
-    public DictationPlayer(ITtsEngine ttsEngine, IWordListSource wordListSource, IAudioPlayer audioPlayer, DictationSettings? settings = null)
-    {
         _ttsEngine = ttsEngine;
-        _pcmTtsEngine = ttsEngine as IPcmTtsEngine;
         _audioPlayer = audioPlayer;
         _wordListSource = wordListSource;
         Settings = settings ?? new DictationSettings();
@@ -53,11 +33,6 @@ public sealed class DictationPlayer : IDictationPlayer
                 CurrentWordIndex = Math.Min(progress.CurrentWordIndex, _wordListSource.Count - 1)
             });
         };
-    }
-
-    public DictationPlayer(ITtsEngine ttsEngine, IWordListSource wordListSource, DictationSettings? settings = null)
-        : this(ttsEngine, wordListSource, new NoOpAudioPlayer(), settings)
-    {
     }
 
     public DictationState State { get; private set; } = DictationState.Stopped;
@@ -227,29 +202,19 @@ public sealed class DictationPlayer : IDictationPlayer
                         VoiceName = ResolveVoiceName(word)
                     };
 
-                    PcmAudio? pcmAudio = null;
+                    PcmAudio? pcmAudio;
 
-                    if (_pcmTtsEngine is IPreloadableTtsEngine preloadable)
+                    if (_ttsEngine is IPreloadableTtsEngine preloadable)
                     {
                         pcmAudio = await preloadable.TryConsumePreloadedAsync(word, options, cancellationToken).ConfigureAwait(false);
                         if (pcmAudio is null)
                         {
-                            pcmAudio = await _pcmTtsEngine.SynthesizePcmAsync(word, options, cancellationToken).ConfigureAwait(false);
+                            pcmAudio = await _ttsEngine.SynthesizePcmAsync(word, options, cancellationToken).ConfigureAwait(false);
                         }
                     }
-                    else if (_pcmTtsEngine is not null)
+                    else
                     {
-                        pcmAudio = await _pcmTtsEngine.SynthesizePcmAsync(word, options, cancellationToken).ConfigureAwait(false);
-                    }
-                    else if (_ttsEngine is IConfigurableTtsEngine configurableTtsEngine)
-                    {
-                        var wavBytes = await configurableTtsEngine.SynthesizeAudioAsync(word, options, cancellationToken).ConfigureAwait(false);
-                        pcmAudio = TryDecodeWav(wavBytes);
-                    }
-                    else if (_ttsEngine is not null)
-                    {
-                        var wavBytes = await _ttsEngine.SynthesizeAudioAsync(word, cancellationToken).ConfigureAwait(false);
-                        pcmAudio = TryDecodeWav(wavBytes);
+                        pcmAudio = await _ttsEngine.SynthesizePcmAsync(word, options, cancellationToken).ConfigureAwait(false);
                     }
 
                     if (pcmAudio is not null)
@@ -292,7 +257,7 @@ public sealed class DictationPlayer : IDictationPlayer
             var sampleRate = request.SampleRate;
             var channels = request.Channels;
 
-            if (pcmData.Length > 0 && _pcmTtsEngine is null && _ttsEngine is null)
+            if (pcmData.Length > 0 && _ttsEngine is null && _ttsEngine is null)
             {
                 sampleRate = 44100;
                 channels = 2;
@@ -430,31 +395,17 @@ public sealed class DictationPlayer : IDictationPlayer
             };
 
             PcmAudio? pcmAudio;
-            if (_pcmTtsEngine is IPreloadableTtsEngine preloadable)
+            if (_ttsEngine is IPreloadableTtsEngine preloadable)
             {
                 pcmAudio = await preloadable.TryConsumePreloadedAsync(word, options, cancellationToken).ConfigureAwait(false);
                 if (pcmAudio is null)
                 {
-                    pcmAudio = await _pcmTtsEngine.SynthesizePcmAsync(word, options, cancellationToken).ConfigureAwait(false);
+                    pcmAudio = await _ttsEngine.SynthesizePcmAsync(word, options, cancellationToken).ConfigureAwait(false);
                 }
-            }
-            else if (_pcmTtsEngine is not null)
-            {
-                pcmAudio = await _pcmTtsEngine.SynthesizePcmAsync(word, options, cancellationToken).ConfigureAwait(false);
-            }
-            else if (_ttsEngine is IConfigurableTtsEngine configurableTtsEngine)
-            {
-                var wavBytes = await configurableTtsEngine.SynthesizeAudioAsync(word, options, cancellationToken).ConfigureAwait(false);
-                pcmAudio = TryDecodeWav(wavBytes);
-            }
-            else if (_ttsEngine is not null)
-            {
-                var wavBytes = await _ttsEngine.SynthesizeAudioAsync(word, cancellationToken).ConfigureAwait(false);
-                pcmAudio = TryDecodeWav(wavBytes);
             }
             else
             {
-                pcmAudio = null;
+                pcmAudio = await _ttsEngine.SynthesizePcmAsync(word, options, cancellationToken).ConfigureAwait(false);
             }
 
             if (pcmAudio is null)
@@ -465,7 +416,7 @@ public sealed class DictationPlayer : IDictationPlayer
 
             await _audioPlayer.PlayAsync(pcmAudio, Settings.Volume, cancellationToken).ConfigureAwait(false);
 
-            if (_pcmTtsEngine is IPreloadableTtsEngine preloadable2 && index + 1 < _wordListSource.Count)
+            if (_ttsEngine is IPreloadableTtsEngine preloadable2 && index + 1 < _wordListSource.Count)
             {
                 var nextWord = _wordListSource.GetWordAt(index + 1);
                 var nextOptions = new TtsSpeakOptions
@@ -495,22 +446,6 @@ public sealed class DictationPlayer : IDictationPlayer
         {
             Trace.WriteLine($"TTS speak failed for word '{word}': {ex}");
         }
-    }
-
-    private static PcmAudio? TryDecodeWav(byte[]? wavBytes)
-    {
-        if (wavBytes is null || wavBytes.Length == 0)
-        {
-            return null;
-        }
-
-        if (!WavReader.TryReadPcmAudio(wavBytes, out var pcmAudio, out var error))
-        {
-            Trace.WriteLine($"Skipping non-WAV or unsupported audio payload: {error}");
-            return null;
-        }
-
-        return pcmAudio;
     }
 
     private string? ResolveVoiceName(string text)
