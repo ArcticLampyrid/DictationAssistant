@@ -131,7 +131,7 @@ public static class BassAudioDecoder
             memoryStream.Write(buffer, 0, bytesRead);
         }
 
-        if (bytesRead < 0)
+        if (bytesRead < 0 && Bass.LastError != Errors.Ended)
         {
             Trace.WriteLine($"[BassAudioDecoder] Error reading channel data: {Bass.LastError}");
             return null;
