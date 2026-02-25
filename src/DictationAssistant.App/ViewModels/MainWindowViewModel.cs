@@ -349,6 +349,36 @@ public partial class MainWindowViewModel : ObservableObject
         }
     }
 
+    [RelayCommand]
+    private void SwitchToChineseVoice()
+    {
+        var voice = VoiceOptions.FirstOrDefault(v => v.Name == DefaultChineseVoiceName)
+            ?? VoiceOptions.FirstOrDefault(v => v.LocaleOrLanguage?.StartsWith("zh", StringComparison.OrdinalIgnoreCase) == true);
+        if (voice is not null)
+        {
+            SelectedVoice = voice;
+        }
+        else
+        {
+            Status = "未能找到中文引擎";
+        }
+    }
+
+    [RelayCommand]
+    private void SwitchToEnglishVoice()
+    {
+        var voice = VoiceOptions.FirstOrDefault(v => v.Name == DefaultEnglishVoiceName)
+            ?? VoiceOptions.FirstOrDefault(v => v.LocaleOrLanguage?.StartsWith("en", StringComparison.OrdinalIgnoreCase) == true);
+        if (voice is not null)
+        {
+            SelectedVoice = voice;
+        }
+        else
+        {
+            Status = "未能找到英文引擎";
+        }
+    }
+
     public PreferenceSettings CreatePreferenceSnapshot()
     {
         return new PreferenceSettings
