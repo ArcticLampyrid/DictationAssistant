@@ -1,124 +1,91 @@
-# DictationAssistant v4.x - ROADMAP
+# DictationAssistant v4.x — ROADMAP
 
-v4 的核心定位：**跨平台（Avalonia + .NET）**。在不牺牲跨平台性的前提下，尽量把 v3.x 的交互与信息架构对齐，确保老用户"打开就会用"。
+v4 的核心定位：**跨平台（Avalonia + .NET 8）**。在不牺牲跨平台性的前提下，尽量把 v3.x 的交互与信息架构对齐，确保老用户"打开就会用"。
 
 ## 原则
 
 - **跨平台优先**：避免引入只能在 Windows 跑的依赖（除非有替代实现/可选后端）。
 - **UI 对齐是"体验对齐"**：布局、文案、分组、快捷键尽量 1:1；像素级细节放在后期打磨。
 - **Core 纯净**：`DictationAssistant.Core` 保持无 UI、无平台依赖；平台相关放到 `DictationAssistant.App` 的 `Services/`。
-- **全平台复用 v3 的关键体验**：
-  - **ImprovedVoice**（"音源增强目录"：命中则播文件，否则回落到 TTS）需要在 **Windows/macOS/Linux 全平台可用**。
-  - 音频播放/解码尽量使用跨平台 NuGet 库替换旧的手写 P/Invoke 包装，以便维护与打包。
-- **可迭代**：先把壳子对齐 + 功能闭环，再逐步补强（语音引擎、设置、导出、打包）。
+- **可迭代**：先把壳子对齐 + 功能闭环，再逐步补强（语音、设置、导出、打包）。
 
-## 里程碑 / TODO
+## 架构概览
 
-### M0（已完成）主窗口 UI 对齐（v3 → v4）
+### Voice 层
+- **`IVoice`**：核心接口，`text + VoiceSynthesisOptions → PcmAudio`
+- **`IPreloadableVoice`**：扩展接口，支持预加载
+- **`CachedVoice`**（抽象基类）：LRU 缓存 + 自动预加载，适合在线引擎
+- **`IVoiceFactory` / `IVoiceFactoryProvider`**：发现与创建 Voice
+- **`VoiceAggregator`**：聚合所有 Provider 的结果为扁平列表
 
-- [x] v4 主窗口整体布局对齐 v3（菜单 + 右侧控制栏 + 中间"词语列表"）
-- [x] 集成 AvaloniaEdit 作为词表编辑器
-- [x] 词表数据源改为"编辑器文档驱动"（编辑即生效）
-- [x] 文件打开/保存对话框（Avalonia StorageProvider）
-- [x] 自动滚动/当前行高亮（基础实现）
+### 各平台后端
 
-> 相关提交：`feat(app): align v4 main window with v3 layout`
+| 平台 | Voice 实现 | 基类 | 合成方式 |
+|------|-----------|------|---------|
+| Windows | `SapiVoice` | `IVoice` | COM SAPI（含 OneCore 注册表路径） |
+| macOS | `MacSayVoice` | `IVoice` | `say -o wav` → PCM |
+| Linux | `EspeakNgVoice` | `IVoice` | `espeak-ng --stdout` → PCM |
+| Linux | `Pico2WaveVoice` | `IVoice` | `pico2wave` → WAV → PCM |
+| 全平台 | `EdgeTtsVoice` | `CachedVoice` | Edge TTS WebSocket → MP3 → PCM（带 LRU 缓存 + 预加载） |
+| 装饰器 | `ImprovedVoice` | `IVoice` | 资源目录文件命中 → ManagedBass 解码；miss → 委托内部 Voice |
+| — | `NullVoice` | `IVoice` | 返回空（兜底） |
 
-### M1（进行中）补齐 v3 其它窗口入口（先对齐壳子）
+### 音频播放
+- **`IAudioPlayer` / `SdlPcmPlayer`**：SDL2 播放 S16LE PCM，音量在播放层统一控制
 
-- [x] **关于**窗口（v3 AboutWindow 对齐：标题/版本/版权）
-- [x] **偏好设置**窗口（v3 PreferenceWindow 对齐：编辑器字体/默认中英语音/资源目录等）
-- [x] **保存音频**窗口（v3 SaveAudioDialog 对齐：参数选择 + 输出路径）
-  - [x] v4 暂可先保留"未实现"提示，但 UI 与入口先到位
+## 已完成的里程碑
 
-### M2 设置持久化（跨平台）
+### M0 主窗口 UI 对齐 ✅
+- 主窗口布局对齐 v3（菜单 + 右侧控制栏 + 中间词表编辑器）
+- AvaloniaEdit 集成、文件打开/保存、自动滚动/高亮
 
-- [x] 引入 v4 `AppSettings`（json）并持久化到 OS 合适路径（Windows/macOS/Linux）
-- [x] 保存/恢复：主窗口大小（宽/高）
-- [x] 保存/恢复：主窗口位置（X/Y）与窗口状态（Normal/Maximized）
-- [x] 保存/恢复：隐藏词表开关、自动翻页/高亮跟随、间隔/次数
-- [x] 保存/恢复：编辑器字体设置（等价于 v3 FontInfo）
-- [x] 保存/恢复：默认语音（中文/英文）与音量/语速
+### M1 补齐窗口 ✅
+- 关于窗口、偏好设置窗口、保存音频窗口
 
-### M3 语音引擎（跨平台后端）
+### M2 设置持久化 ✅
+- JSON 持久化到 OS 合适路径
+- 窗口大小/位置/状态、词表开关、字体、语音、音量/语速
 
-- [x] `ITtsEngine` 支持枚举 voices + 选择 voice（供偏好设置窗口使用，采用可选接口 `IConfigurableTtsEngine`）
-  - [x] 当前实现：macOS `say`、Linux `espeak-ng`、Windows `System.Speech`（PowerShell）
-- [x] v4 TTS/播放边界对齐 v3：TTS 仅负责合成 PCM，播放统一走 `PcmPlayer`（SDL2 NuGet 包装）
-- [x] Windows：切换为 COM SAPI（`SpVoice`/`SpMemoryStream`）路线，语音枚举与 PCM 合成与 v3 边界一致
-- [x] macOS/Linux：后端改为 synth-to-file（wav）再解码为 PCM 喂给播放层（后续可继续评估非 CLI 实现）
-- [x] **预加载接口设计（仅下一条）**
-  - [x] 在 Core 抽象层引入可选的 preload 能力（例如 `IPreloadableTtsEngine`），允许引擎对"下一条文本"做 best-effort 预取
-  - [x] DictationPlayer 侧预留 hook：每次开始播报第 N 条时，后台触发预加载第 N+1 条（只保留 1 条预加载槽位）
-  - [x] 失败策略：预加载失败/在线 TTS 失败均静默，仅日志记录，不影响当前播报流程
-- [ ] Windows：**保留/迁移 v3 的"原生引擎体系"**
-  - [x] SAPI voices（v3 的 `SpeechLib` 路线：COM 枚举 + 选择 voice + Rate）
-  - [x] OneCore voices（通过 SpObjectTokenCategory 枚举 3 个注册表路径，含 Speech_OneCore）
-  - [x] ImprovedVoice（"音源增强目录"：命中则播文件，否则回落到系统 voice）
-  - [ ] （可选）System.Speech（当前 v4 的 PowerShell `System.Speech.Synthesis` 回落方案）
-- [ ] macOS：NSSpeechSynthesizer / `say`（可枚举 voices + 选择）
-- [ ] Linux：优先考虑 `espeak-ng` / `piper`（离线）
-- [x] **全平台：支持 Edge TTS（在线）**
-  - [x] 调研并选型 NuGet：选定 `EdgeTTS`（fysh711426）+ `MP3Sharp` 解码 MP3→PCM
-  - [x] 集成 Edge TTS engine：`EdgeTtsPcmEngine` 实现 `IPcmTtsEngine` + `IPreloadableTtsEngine`，可选 voice、可调语速/音量
-  - [x] **失败处理**：在线 TTS 失败时静默不打断流程，仅 `Trace.WriteLine` 日志记录，不自动回落到其它引擎
-- [x] 统一"音量/语速"的语义映射（各引擎内部各自映射 -10~10 → 引擎原生范围；音量在播放层统一处理）
+### M3 语音引擎 ✅
+- Voice/VoiceFactory/Provider 架构
+- 各平台后端：SAPI（含 OneCore）、macOS say、espeak-ng、pico2wave、Edge TTS
+- ImprovedVoice 装饰器（资源目录 → ManagedBass 解码）
+- CachedVoice LRU 缓存 + 预加载（在线引擎）
+- 表达式等待时间（NCalc，支持 `length * 0.5 + 1` 等动态表达式）
+- 中文/英文引擎快捷切换按钮
 
-### M4 词表编辑体验打磨（贴近 v3）
+### M4 词表编辑体验 ✅
+- 右侧工具栏、右键菜单（读选定/查词典/从此处播报）
+- 背景行高亮（LightGreen，不干扰选择）、平滑滚动
+- 撤销/重做（Ctrl+Z/Y）、拖拽打开文件
 
-- [x] 右侧工具栏补齐/强化：打开、保存、剪切/复制/粘贴、删除、新建、计数
-- [x] 右键菜单行为对齐：读选定词语、从此处开始自动播报、查词
-- [x] 高亮实现升级：从"选中当前行"改为更接近 v3 的"背景高亮"（不干扰选择）
-- [x] 自动翻页更稳：播报推进时滚动到可视区域（不要跳太猛）
-- [ ] 可选：语法高亮（如果词表里需要特殊格式）
+### M5 音频基础设施 ✅
+- SDL2 播放（`SdlPcmPlayer`，音量在播放层控制）
+- ManagedBass 音频解码（wav/flac/ape/m4a/opus/aac/mp3/ogg 等）
+- WAV 导出 pipeline（遍历词表 → 合成 → 拼接 + 静音间隔 → WAV + 可选 LRC 字幕）
 
-### M5 音频 / 播放 / 解码基础设施（跨平台复用 v3 逻辑）
+## 待完成
 
-目标：让 v4 能在 **全平台** 复用 v3 的"播文件/播 PCM/TTS"关键链路，把旧的 SDL2/BASS 手写 P/Invoke 换成更稳的 NuGet 库。
+### M6 打包与发布
 
-- [x] **音频播放：SDL2（跨平台）**
-  - [x] 选型并引入跨平台 SDL2 包装（NuGet：`SDL2-CS.NetCore`）
-  - [x] v4 新增 `SdlPcmPlayer`（`IAudioPlayer`）：用 SDL2 的 QueueAudio 播放 S16LE PCM，并在播放前应用音量
-  - [ ] （后续）确认打包时 SDL2 native 依赖在各平台的携带策略（M6）
+偏好：**self-contained 打包，随包携带 native 依赖**（SDL2、libbass 等）。
 
-- [ ] **音频解码：ManagedBass（跨平台）**
-  - [x] 选型并引入 `ManagedBass`（及需要的 codec 扩展包）
-  - [x] 用 ManagedBass 替换 v3 的 `bass.dll` P/Invoke（`AudioFileDecodeStream`）
-  - [x] 确保支持 v3 的常见扩展名（wav/flac/ape/m4a/opus/aac/mp3/ogg/wma/aif/mp4…）
-
-- [ ] **ImprovedVoice 全平台化**
-  - [x] 把 ImprovedVoice 的"命中音频文件则播放"能力迁到 v4（平台无关，全平台都支持）
-  - [x] 解码走 ManagedBass → 输出 PCM → 播放走 SDL2（NuGet 包装，替换手写 P/Invoke）
-  - [x] 未命中则回落到当前选择的 TTS engine
-
-- [ ] 在此基础上，再实现 **导出（SaveAudio）**
-  - [x] 明确 v4 导出的"最小可用"目标（WAV 先行）
-  - [x] 设计导出 pipeline：TTS/ImprovedVoice → PCM → 编码器（WAV/MP3/AAC…）
-  - [x] 进度条 + 可取消 + （可选）歌词/字幕输出
-
-### M6 打包与发布（跨平台分发）
-
-偏好：**self-contained 打包，并尽量携带依赖的 native 库**（SDL2 / 音频解码库等），降低用户安装负担。
-
-- [ ] Windows：MSIX / NSIS / zip（择一）
-- [ ] macOS：dmg / zip（签名后续）
-- [ ] Linux：AppImage / Flatpak（择一）
-- [ ] self-contained publish（按 RID：win-x64/osx-x64/osx-arm64/linux-x64/linux-arm64…）
-- [ ] 将所需 native 依赖随包携带（或用 NuGet 自带 runtimes/native 的方案）
+- [ ] Windows：MSIX / NSIS / zip
+- [ ] macOS：dmg / zip
+- [ ] Linux：AppImage / Flatpak
+- [ ] self-contained publish（按 RID：win-x64 / osx-x64 / osx-arm64 / linux-x64 / linux-arm64）
+- [ ] 确认 native 依赖携带策略（SDL2、libbass）
 - [ ] GitHub Actions：多平台 build + release artifacts
 
 ### M7 质量与维护
 
-- [ ] Core 单元测试（播放状态机/进度/暂停恢复/边界条件）
-- [ ] 最小 smoke test（启动、加载词表、单次播报、自动播报、暂停恢复）
-- [ ] 文档：v3→v4 差异说明、跨平台依赖说明（例如 Linux 需要安装哪个 TTS 后端）
+- [ ] Core 单元测试（播放状态机/进度/暂停恢复/边界条件）— 框架已搭建，部分测试有 timing issue 待修
+- [ ] 最小 smoke test
+- [ ] 文档：v3→v4 差异说明、跨平台依赖说明
 
-## 近期优先级（下一步建议）
+### 可选增强
 
-1) **M1：把关于/偏好/保存音频三个窗口先补齐入口与 UI**（功能可先 stub）
-2) **M2：做设置持久化**（否则用户每次都要重新调）
-3) **M3：语音引擎选择与 voices 枚举**（真正跨平台的关键）
-
----
-
-（小雪会定期回来看这个 ROADMAP，把完成项打勾并推进下一步。）
+- [ ] 语法高亮（词表特殊格式）
+- [ ] mp3/opus 导出（需外部编码器或 NuGet 库）
+- [ ] Linux piper 离线 TTS 支持
+- [ ] macOS NSSpeechSynthesizer（替代 CLI `say`）
