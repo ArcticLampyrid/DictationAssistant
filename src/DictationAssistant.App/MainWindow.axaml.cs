@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
@@ -18,10 +19,12 @@ namespace DictationAssistant.App;
 
 public partial class MainWindow : Window
 {
+    private const string NormalWindowStateName = "Normal";
     private readonly AppSettings _appSettings;
     private TextEditor? _wordlistEditor;
     private IStorageFile? _currentFile;
     private bool _isApplyingViewModelPosition;
+    private bool _windowPlacementRestored;
 
     public MainWindow()
         : this(new AppSettings())
@@ -35,6 +38,8 @@ public partial class MainWindow : Window
 
         Opened += (_, _) =>
         {
+            RestoreWindowPlacementIfNeeded();
+
             if (DataContext is MainWindowViewModel vm)
             {
                 HookEditor(vm);
@@ -52,8 +57,7 @@ public partial class MainWindow : Window
 
         Closing += (_, _) =>
         {
-            _appSettings.MainWindow.Width = Width;
-            _appSettings.MainWindow.Height = Height;
+            PersistWindowPlacement();
             if (GetViewModel() is { } vm)
             {
                 _appSettings.MainWindow.WordListVisible = vm.WordListVisible;
@@ -132,6 +136,119 @@ public partial class MainWindow : Window
         {
             _isApplyingViewModelPosition = false;
         }
+    }
+
+    private void RestoreWindowPlacementIfNeeded()
+    {
+        if (_windowPlacementRestored)
+        {
+            return;
+        }
+
+        _windowPlacementRestored = true;
+
+        var settings = _appSettings.MainWindow;
+        var minAllowedWidth = Math.Max(MinWidth, 1d);
+        var minAllowedHeight = Math.Max(MinHeight, 1d);
+
+        var width = NormalizeDimension(settings.Width, minAllowedWidth);
+        var height = NormalizeDimension(settings.Height, minAllowedHeight);
+
+        Width = width;
+        Height = height;
+
+        if (settings.X is { } x && settings.Y is { } y && IsValidPosition(x) && IsValidPosition(y) && IsRectOnAnyScreen(x, y, width, height))
+        {
+            Position = new PixelPoint((int)Math.Round(x), (int)Math.Round(y));
+        }
+
+        if (TryParseWindowState(settings.WindowState, out var windowState))
+        {
+            WindowState = windowState;
+        }
+
+        _appSettings.MainWindow.Width = Width;
+        _appSettings.MainWindow.Height = Height;
+        _appSettings.MainWindow.WindowState = WindowState.ToString();
+    }
+
+    private void PersistWindowPlacement()
+    {
+        var settings = _appSettings.MainWindow;
+        settings.WindowState = WindowState.ToString();
+
+        if (WindowState == WindowState.Normal)
+        {
+            settings.Width = Width;
+            settings.Height = Height;
+            settings.X = Position.X;
+            settings.Y = Position.Y;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(settings.WindowState))
+        {
+            settings.WindowState = NormalWindowStateName;
+        }
+    }
+
+    private bool IsRectOnAnyScreen(double x, double y, double width, double height)
+    {
+        var screens = Screens.All;
+        if (screens.Count == 0)
+        {
+            return true;
+        }
+
+        var rect = new PixelRect(
+            (int)Math.Round(x),
+            (int)Math.Round(y),
+            Math.Max((int)Math.Round(width), 1),
+            Math.Max((int)Math.Round(height), 1));
+
+        foreach (var screen in screens)
+        {
+            if (RectsOverlap(rect, screen.WorkingArea))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool RectsOverlap(PixelRect a, PixelRect b)
+    {
+        return a.X < b.X + b.Width
+            && a.X + a.Width > b.X
+            && a.Y < b.Y + b.Height
+            && a.Y + a.Height > b.Y;
+    }
+
+    private static bool TryParseWindowState(string? value, out WindowState windowState)
+    {
+        if (Enum.TryParse(value, ignoreCase: true, out windowState))
+        {
+            return true;
+        }
+
+        windowState = WindowState.Normal;
+        return false;
+    }
+
+    private static double NormalizeDimension(double value, double minimum)
+    {
+        if (double.IsNaN(value) || double.IsInfinity(value) || value < minimum)
+        {
+            return minimum;
+        }
+
+        return value;
+    }
+
+    private static bool IsValidPosition(double value)
+    {
+        return !double.IsNaN(value) && !double.IsInfinity(value) && value >= 0;
     }
 
     private MainWindowViewModel? GetViewModel() => DataContext as MainWindowViewModel;

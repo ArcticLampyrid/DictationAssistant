@@ -32,6 +32,8 @@ public partial class App : Application
                 DataContext = new MainWindowViewModel(wordListSource, player, new LocalTextFileService(), ttsEngine, appSettings)
             };
 
+            desktop.MainWindow.Closing += (_, _) => settingsStore.Save(appSettings);
+
             desktop.Exit += (_, _) => settingsStore.Save(appSettings);
         }
 

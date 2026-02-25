@@ -22,6 +22,12 @@ public sealed class MainWindowSettings
 
     public double Height { get; set; } = 680;
 
+    public double? X { get; set; }
+
+    public double? Y { get; set; }
+
+    public string WindowState { get; set; } = "Normal";
+
     public bool WordListVisible { get; set; } = true;
 }
 
