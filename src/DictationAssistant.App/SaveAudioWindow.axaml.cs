@@ -3,6 +3,8 @@ using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using DictationAssistant.App.ViewModels;
+using DictationAssistant.Core.Abstractions;
+using DictationAssistant.Core.Models;
 
 namespace DictationAssistant.App;
 
@@ -14,6 +16,14 @@ public partial class SaveAudioWindow : Window
     {
         InitializeComponent();
         DataContext = new SaveAudioWindowViewModel();
+    }
+
+    public SaveAudioWindow(IDictationPlayer dictationPlayer) : this()
+    {
+        if (DataContext is SaveAudioWindowViewModel vm)
+        {
+            vm.SetDictationPlayer(dictationPlayer);
+        }
     }
 
     private void InitializeComponent()
@@ -28,16 +38,18 @@ public partial class SaveAudioWindow : Window
         Close(false);
     }
 
-    private void OkButton_Click(object? sender, RoutedEventArgs e)
+    private async void OkButton_Click(object? sender, RoutedEventArgs e)
     {
         _ = sender;
         _ = e;
-        if (ViewModel is not null)
+        if (ViewModel is { } vm)
         {
-            ViewModel.Status = "v4 暂未实现";
+            var success = await vm.ExportAsync(CancellationToken.None);
+            Close(success);
+            return;
         }
 
-        Close(true);
+        Close(false);
     }
 
     private async void SetTargetPath_Click(object? sender, RoutedEventArgs e)

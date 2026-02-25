@@ -16,6 +16,8 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly ITextFileService _textFileService;
     private readonly AppSettings _appSettings;
 
+    public IDictationPlayer DictationPlayer => _dictationPlayer;
+
     public MainWindowViewModel(
         EditorDocumentWordListSource wordListSource,
         IDictationPlayer dictationPlayer,

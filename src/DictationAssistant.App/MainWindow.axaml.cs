@@ -378,11 +378,17 @@ public partial class MainWindow : Window
     {
         _ = sender;
         _ = e;
-        var dialog = new SaveAudioWindow();
-        var result = await dialog.ShowDialog<bool?>(this);
-        if (GetViewModel() is { } vm)
+        var vm = GetViewModel();
+        if (vm is null)
         {
-            vm.Status = result == true ? "v4 暂未实现" : "已取消保存音频";
+            return;
+        }
+
+        var dialog = new SaveAudioWindow(vm.DictationPlayer);
+        var result = await dialog.ShowDialog<bool?>(this);
+        if (GetViewModel() is { } currentVm)
+        {
+            currentVm.Status = result == true ? "导出完成" : "已取消保存音频";
         }
     }
 

@@ -163,12 +163,181 @@ public sealed class DictationPlayer : IDictationPlayer
         SetState(DictationState.Stopped);
     }
 
-    public Task<SaveAudioResult> SaveAudioAsync(SaveAudioRequest request, CancellationToken cancellationToken = default)
+    public async Task<SaveAudioResult> SaveAudioAsync(SaveAudioRequest request, CancellationToken cancellationToken = default)
     {
-        _ = request;
-        _ = cancellationToken;
-        return Task.FromResult(
-            SaveAudioResult.NotSupported("TODO: cross-platform audio export pipeline is scaffolded but not implemented in v4 yet."));
+        return await SaveAudioInternalAsync(request, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<SaveAudioResult> SaveAudioInternalAsync(SaveAudioRequest request, CancellationToken cancellationToken)
+    {
+        if (_wordListSource.Count <= 0)
+        {
+            return SaveAudioResult.Success("没有词语可导出");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.OutputPath))
+        {
+            return SaveAudioResult.NotSupported("请指定输出路径");
+        }
+
+        if (request.OutputFormat?.ToLowerInvariant() != "wav")
+        {
+            return SaveAudioResult.NotSupported("目前仅支持 WAV 格式导出");
+        }
+
+        var generateLrc = request.LyricMode == "Lrc File" && !string.IsNullOrWhiteSpace(request.LyricsOutputPath);
+        var progress = request.Progress;
+
+        try
+        {
+            await using var outputStream = new FileStream(request.OutputPath, FileMode.Create, FileAccess.Write);
+            await using var pcmStream = new MemoryStream();
+
+            var totalWords = _wordListSource.Count;
+            var totalSegments = totalWords * Settings.TimesPerWord;
+            var currentSegment = 0;
+            var lrcLines = new List<string>();
+            var accumulatedDuration = TimeSpan.Zero;
+
+            for (var index = 0; index < totalWords; index++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var word = _wordListSource.GetWordAt(index);
+
+                for (var repeat = 1; repeat <= Settings.TimesPerWord; repeat++)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    var options = new TtsSpeakOptions
+                    {
+                        Rate = Settings.Rate,
+                        VoiceName = ResolveVoiceName(word)
+                    };
+
+                    PcmAudio? pcmAudio = null;
+
+                    if (_pcmTtsEngine is IPreloadableTtsEngine preloadable)
+                    {
+                        pcmAudio = await preloadable.TryConsumePreloadedAsync(word, options, cancellationToken).ConfigureAwait(false);
+                        if (pcmAudio is null)
+                        {
+                            pcmAudio = await _pcmTtsEngine.SynthesizePcmAsync(word, options, cancellationToken).ConfigureAwait(false);
+                        }
+                    }
+                    else if (_pcmTtsEngine is not null)
+                    {
+                        pcmAudio = await _pcmTtsEngine.SynthesizePcmAsync(word, options, cancellationToken).ConfigureAwait(false);
+                    }
+                    else if (_ttsEngine is IConfigurableTtsEngine configurableTtsEngine)
+                    {
+                        var wavBytes = await configurableTtsEngine.SynthesizeAudioAsync(word, options, cancellationToken).ConfigureAwait(false);
+                        pcmAudio = TryDecodeWav(wavBytes);
+                    }
+                    else if (_ttsEngine is not null)
+                    {
+                        var wavBytes = await _ttsEngine.SynthesizeAudioAsync(word, cancellationToken).ConfigureAwait(false);
+                        pcmAudio = TryDecodeWav(wavBytes);
+                    }
+
+                    if (pcmAudio is not null)
+                    {
+                        if (generateLrc && repeat == 1)
+                        {
+                            var lrcTime = FormatLrcTime(accumulatedDuration);
+                            lrcLines.Add($"[{lrcTime}]{word}");
+                        }
+
+                        await pcmStream.WriteAsync(pcmAudio.Data, cancellationToken).ConfigureAwait(false);
+
+                        var audioDuration = TimeSpan.FromSeconds(
+                            (double)pcmAudio.Data.Length / (pcmAudio.Format.SampleRate * pcmAudio.Format.Channels * 2));
+                        accumulatedDuration += audioDuration;
+                    }
+
+                    if (repeat < Settings.TimesPerWord || index < totalWords - 1)
+                    {
+                        var silenceDuration = Settings.IntervalSeconds;
+                        if (silenceDuration > 0 && pcmAudio is not null)
+                        {
+                            var silenceBytes = CreateSilencePcm(silenceDuration, pcmAudio.Format.SampleRate, pcmAudio.Format.Channels);
+                            await pcmStream.WriteAsync(silenceBytes, cancellationToken).ConfigureAwait(false);
+                            accumulatedDuration += TimeSpan.FromSeconds(silenceDuration);
+                        }
+                    }
+
+                    currentSegment++;
+                    progress?.Report((double)currentSegment / totalSegments);
+                }
+            }
+
+            if (generateLrc && lrcLines.Count > 0)
+            {
+                await File.WriteAllTextAsync(request.LyricsOutputPath!, string.Join(Environment.NewLine, lrcLines), cancellationToken).ConfigureAwait(false);
+            }
+
+            var pcmData = pcmStream.ToArray();
+            var sampleRate = request.SampleRate;
+            var channels = request.Channels;
+
+            if (pcmData.Length > 0 && _pcmTtsEngine is null && _ttsEngine is null)
+            {
+                sampleRate = 44100;
+                channels = 2;
+            }
+
+            WavWriter.WriteHeader(outputStream, sampleRate, channels, pcmData.Length);
+            await outputStream.WriteAsync(pcmData, cancellationToken).ConfigureAwait(false);
+
+            progress?.Report(1.0);
+            return SaveAudioResult.Success($"已导出到: {request.OutputPath}");
+        }
+        catch (OperationCanceledException)
+        {
+            if (File.Exists(request.OutputPath))
+            {
+                try
+                {
+                    File.Delete(request.OutputPath);
+                }
+                catch
+                {
+                }
+            }
+
+            if (generateLrc && File.Exists(request.LyricsOutputPath))
+            {
+                try
+                {
+                    File.Delete(request.LyricsOutputPath);
+                }
+                catch
+                {
+                }
+            }
+
+            return SaveAudioResult.NotSupported("导出已取消");
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"SaveAudio failed: {ex}");
+            return SaveAudioResult.NotSupported($"导出失败: {ex.Message}");
+        }
+    }
+
+    private static byte[] CreateSilencePcm(double durationSeconds, int sampleRate, int channels)
+    {
+        var bytesPerSample = 2;
+        var totalBytes = (int)(sampleRate * channels * bytesPerSample * durationSeconds);
+        return new byte[totalBytes];
+    }
+
+    private static string FormatLrcTime(TimeSpan time)
+    {
+        var minutes = (int)time.TotalMinutes;
+        var seconds = time.Seconds;
+        var hundredths = time.Milliseconds / 10;
+        return $"{minutes:D2}:{seconds:D2}.{hundredths:D2}";
     }
 
     private async Task RunAutoAsync(int startIndex, CancellationToken cancellationToken)

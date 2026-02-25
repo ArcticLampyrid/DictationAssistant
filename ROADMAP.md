@@ -92,9 +92,9 @@ v4 的核心定位：**跨平台（Avalonia + .NET）**。在不牺牲跨平台�
   - [x] 未命中则回落到当前选择的 TTS engine
 
 - [ ] 在此基础上，再实现 **导出（SaveAudio）**
-  - [ ] 明确 v4 导出的"最小可用"目标（WAV 先行）
-  - [ ] 设计导出 pipeline：TTS/ImprovedVoice → PCM → 编码器（WAV/MP3/AAC…）
-  - [ ] 进度条 + 可取消 + （可选）歌词/字幕输出
+  - [x] 明确 v4 导出的"最小可用"目标（WAV 先行）
+  - [x] 设计导出 pipeline：TTS/ImprovedVoice → PCM → 编码器（WAV/MP3/AAC…）
+  - [x] 进度条 + 可取消 + （可选）歌词/字幕输出
 
 ### M6 打包与发布（跨平台分发）
 

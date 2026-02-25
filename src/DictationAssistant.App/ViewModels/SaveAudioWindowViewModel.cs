@@ -1,9 +1,13 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using DictationAssistant.Core.Abstractions;
+using DictationAssistant.Core.Models;
 
 namespace DictationAssistant.App.ViewModels;
 
 public partial class SaveAudioWindowViewModel : ObservableObject
 {
+    private IDictationPlayer? _dictationPlayer;
+
     public IReadOnlyList<string> ChannelOptions { get; } = ["Mono", "Stereo"];
 
     public IReadOnlyList<string> SampleFormatOptions { get; } = ["Unsigned 8bit", "Signed 16bit"];
@@ -44,6 +48,50 @@ public partial class SaveAudioWindowViewModel : ObservableObject
 
     [ObservableProperty]
     private string _status = string.Empty;
+
+    [ObservableProperty]
+    private bool _isExporting;
+
+    public void SetDictationPlayer(IDictationPlayer player)
+    {
+        _dictationPlayer = player;
+    }
+
+    public async Task<bool> ExportAsync(CancellationToken cancellationToken)
+    {
+        if (_dictationPlayer is null)
+        {
+            Status = "错误：未初始化播放器";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(TargetPath))
+        {
+            Status = "请指定输出路径";
+            return false;
+        }
+
+        IsExporting = true;
+        Status = "正在导出...";
+
+        var progress = new Progress<double>(p => Status = $"正在导出... {p:P0}");
+
+        var request = new SaveAudioRequest
+        {
+            OutputPath = TargetPath,
+            SampleRate = int.TryParse(Frequency, out var sr) ? sr : 44100,
+            Channels = Channel == "Mono" ? 1 : 2,
+            OutputFormat = OutputFormat,
+            LyricMode = LyricMode,
+            LyricsOutputPath = LyricMode == "Lrc File" ? Path.ChangeExtension(TargetPath, "lrc") : null,
+            Progress = progress
+        };
+
+        var result = await _dictationPlayer.SaveAudioAsync(request, cancellationToken).ConfigureAwait(false);
+        Status = result.Message;
+        IsExporting = false;
+        return result.Succeeded;
+    }
 
     partial void OnOutputFormatChanged(string value)
     {
