@@ -1,493 +1,512 @@
-# DictationAssistant v4 (Avalonia) - Comprehensive Audit
+# DictationAssistant v4 (Avalonia) 代码审计文档
 
-## Table of Contents
-1. [Window Inventory](#1-window-inventory)
-2. [Main Window Detailed Layout](#2-main-window-detailed-layout)
-3. [PreferenceWindow](#3-preferencewindow)
-4. [SaveAudioWindow](#4-saveaudiowindow)
-5. [Keyboard Shortcuts](#5-keyboard-shortcuts)
-6. [Core Features & Behavior](#6-core-features--behavior)
-7. [TTS / Audio Architecture](#7-tts--audio-architecture)
-8. [What's NOT Implemented Yet](#8-whats-not-implemented-yet)
+本文档详细记录了 DictationAssistant v4 的架构设计、核心接口、音频处理流程及与 v3 的主要差异。
 
 ---
 
-## 1. Window Inventory
+## 1. 项目架构
 
-### MainWindow
-- **Dimensions**: Default 980x680, Min 860x560
-- **Title**: "自动默写"
-- **Startup Location**: Persisted (saved/restored from settings)
-- **DataContext**: `MainWindowViewModel`
+### 1.1 整体架构
 
-### PreferenceWindow
-- **Dimensions**: Default 700x480, Min 580x380
-- **Title**: "偏好设置"
-- **Startup Location**: CenterOwner (centered on owner)
-- **DataContext**: `PreferenceWindowViewModel`
-
-### AboutWindow
-- **Dimensions**: Default 640x420, Min 520x320
-- **Title**: "关于"
-- **Resizable**: No (CanResize="False")
-- **Startup Location**: CenterOwner
-- **DataContext**: `AboutWindowViewModel`
-
-### SaveAudioWindow
-- **Dimensions**: Default 440x360, Min 380x300
-- **Title**: "保存音频"
-- **Startup Location**: CenterOwner
-- **DataContext**: `SaveAudioWindowViewModel`
-
----
-
-## 2. Main Window Detailed Layout
-
-### Menu Bar
-| Menu | Item | Shortcut | Handler |
-|------|------|----------|---------|
-| 文件(_F) | 新建(_N)... | Ctrl+N | `NewWordList_Click` |
-| | 打开(_O)... | Ctrl+O | `OpenFile_Click` |
-| | 保存(_S)... | Ctrl+S | `SaveFile_Click` |
-| | --- | | |
-| | 退出(_E) | | `Exit_Click` |
-| 编辑(_E) | 显示/隐藏词语列表 | | `ToggleWordListCommand` |
-| | --- | | |
-| | 剪切 | Ctrl+X | `Cut_Click` |
-| | 复制 | Ctrl+C | `Copy_Click` |
-| | 粘贴 | Ctrl+V | `Paste_Click` |
-| | --- | | |
-| | 全选 | Ctrl+A | `SelectAll_Click` |
-| 选项(_O) | 偏好设置(_P)... | | `Preference_Click` |
-| | --- | | |
-| | 自动翻页 | (toggle) | Bound to `AutoScrollCurrentLine` |
-| | 高亮跟随 | (toggle) | Bound to `HighlightCurrentLine` |
-| 辅助(_A) | 保存音频 | | `SaveAudio_Click` |
-| 帮助(_H) | 关于(_A) | | `About_Click` |
-
-### Right-Side Control Panel (Width: 264px)
-
-#### 播报信息 Section (Border with padding)
-| Control | Type | Purpose | Binding |
-|---------|------|---------|---------|
-| 本词语播报次数 | TextBlock | Display current repeat count | `{Binding CurrentRepeat, StringFormat=本词语播报次数：{0}}` |
-| 自动播报间隔/秒 | TextBox | Input interval between words | `{Binding IntervalSeconds, Mode=TwoWay}` |
-| 自动播报次数/词 | TextBox | Repeats per word | `{Binding TimesPerWord, Mode=TwoWay}` |
-| (State display) | TextBlock | Shows current state | `{Binding SpeakStateText}` |
-
-#### 引擎设置 Section (Border with padding)
-| Control | Type | Purpose | Binding |
-|---------|------|---------|---------|
-| 音量 | Slider | Volume 0-100 | `{Binding Volume, Mode=TwoWay}` |
-| 语速 | Slider | Rate -10 to 10 | `{Binding Rate, Mode=TwoWay}` |
-| 引擎 | TextBlock | Display engine name | `{Binding TtsEngineName}` |
-| 语音 | ComboBox | Voice selection | **TODO/Stub**: Only shows "默认语音（占位）" |
-
-#### 播报控制 Section (Border with padding)
-| Control | Purpose |
-|---------|---------|
-| 开始播报(_S) | `StartAutoCommand` |
-| 停止播报(_D) | `StopCommand` |
-| 暂停/恢复自动播报 | `PauseOrResumeAutoCommand` (Text changes based on state) |
-| 报下一个(_N) | `SpeakNextCommand` |
-| 记录归零(_C) | `ResetRecord_Click` handler |
-| 再报一遍(_M) | `SpeakAgainCommand` |
-| 报上一个(_L) | `SpeakPreviousCommand` |
-
-### Word List Area (AvaloniaEdit TextEditor)
-
-#### Toolbar Buttons (Right side, 72px width)
-| Button | Handler |
-|--------|---------|
-| 打开 | `OpenFile_Click` |
-| 保存 | `SaveFile_Click` |
-| 剪切 | `Cut_Click` |
-| 复制 | `Copy_Click` |
-| 粘贴 | `Paste_Click` |
-| 删除 | `Delete_Click` |
-| 新建 | `NewWordList_Click` |
-| 计数 | `Count_Click` |
-
-#### Context Menu Items
-| Item | Handler |
-|------|---------|
-| 读选定词语 | `SpeakSelection_Click` |
-| 在Bing词典中查看 | `ViewSelectionInBingDictionary_Click` |
-| 从此处开始自动播报 | `StartFromSelection_Click` |
-| --- | |
-| 剪切 | `Cut_Click` |
-| 复制 | `Copy_Click` |
-| 粘贴 | `Paste_Click` |
-| --- | |
-| 全选 | `SelectAll_Click` |
-
-#### Editor Properties
-- ShowLineNumbers: True
-- FontFamily: Bound to `{Binding EditorFontFamily, Mode=TwoWay}` (default: "Noto Sans CJK SC")
-- FontSize: Bound to `{Binding EditorFontSize, Mode=TwoWay}` (default: 28)
-
-### Status Display
-- Status bar shows: File load/save status, word count, current progress
-
----
-
-## 3. PreferenceWindow
-
-### UI Elements
-
-#### Editor Section
-| Control | Type | Binding | Persists To |
-|---------|------|---------|-------------|
-| 字体 | TextBox | `{Binding EditorFontFamily, Mode=TwoWay}` | `Preference.EditorFontFamily` |
-| 字号 | NumericUpDown (8-72) | `{Binding EditorFontSize, Mode=TwoWay}` | `Preference.EditorFontSize` |
-
-#### Engine Section
-| Control | Type | Binding | Persists To |
-|---------|------|---------|-------------|
-| 默认中文语音 | ComboBox | `{Binding DefaultChineseVoiceName, Mode=TwoWay}` | `Preference.DefaultChineseVoiceName` |
-| 默认英文语音 | ComboBox | `{Binding DefaultEnglishVoiceName, Mode=TwoWay}` | `Preference.DefaultEnglishVoiceName` |
-| 音源增强目录 | TextBox + Button | `{Binding ImprovedResourcePath, Mode=TwoWay}` | `Preference.ImprovedResourcePath` |
-
-### Buttons
-- **确定 (OK)**: `OkButton_Click` - Closes with result `true`
-- **取消 (Cancel)**: `CancelButton_Click` - Closes with result `false`
-
-### Preference Apply/Cancel Flow
-1. On OK click: `ViewModel.ToSettings()` creates `PreferenceSettings` object
-2. `ResultSettings` property is set and window closes with `true`
-3. MainWindow receives result and calls `vm.ApplyPreferenceSettings(dialog.ResultSettings)`
-4. Settings are automatically persisted via `partial void On*Changed` handlers in MainWindowViewModel
-
----
-
-## 4. SaveAudioWindow
-
-### UI Elements
-
-| Control | Type | Options | Default | Binding |
-|---------|------|---------|---------|---------|
-| 声道 | ComboBox | Mono, Stereo | Stereo | `{Binding Channel, Mode=TwoWay}` |
-| 位宽 | ComboBox | Unsigned 8bit, Signed 16bit | Signed 16bit | `{Binding SampleFormat, Mode=TwoWay}` |
-| 采样率 | ComboBox (editable) | 8000, 11025, 16000, 22050, 24000, 32000, 44100, 48000 | 44100 | `{Binding Frequency, Mode=TwoWay}` |
-| 输出格式 | ComboBox | wav, mp3, opus | wav | `{Binding OutputFormat, Mode=TwoWay}` |
-| 字幕模式 | ComboBox | Dismiss, Lrc File | Lrc File | `{Binding LyricMode, Mode=TwoWay}` |
-| 目标文件 | TextBox + Button | | dictation.wav | `{Binding TargetPath, Mode=TwoWay}` |
-
-### OK Click Flow
-1. `OkButton_Click` handler calls `vm.ExportAsync(CancellationToken.None)`
-2. ViewModel creates `SaveAudioRequest`:
-   - `OutputPath`: From `TargetPath`
-   - `SampleRate`: Parsed from `Frequency` (default 44100)
-   - `Channels`: 1 for Mono, 2 for Stereo
-   - `OutputFormat`: From selection
-   - `LyricMode`: From selection
-   - `LyricsOutputPath`: If "Lrc File", set to `.lrc` extension of target path
-3. Calls `DictationPlayer.SaveAudioAsync(request, cancellationToken)`
-4. In `DictationPlayer.SaveAudioInternalAsync`:
-   - Validates word count > 0
-   - Validates output path specified
-   - **Currently only WAV format is supported** (returns `SaveAudioResult.NotSupported` for others)
-   - Iterates through all words, synthesizing with TTS engine
-   - Writes PCM data with silence intervals between words
-   - Optionally generates LRC file with timestamps
-   - Writes WAV header and data to output file
-5. Returns result to window, closes with success/failure
-
-### Supported Export Formats
-- **WAV**: Fully implemented
-- **MP3/Opus**: UI exists but returns "目前仅支持 WAV 格式导出"
-
----
-
-## 5. Keyboard Shortcuts
-
-| Shortcut | Action | Location |
-|----------|--------|----------|
-| Ctrl+N | 新建 (New Word List) | Menu: 文件 |
-| Ctrl+O | 打开 (Open) | Menu: 文件 |
-| Ctrl+S | 保存 (Save) | Menu: 文件 |
-| Ctrl+X | 剪切 (Cut) | Menu: 编辑 |
-| Ctrl+C | 复制 (Copy) | Menu: 编辑 |
-| Ctrl+V | 粘贴 (Paste) | Menu: 编辑 |
-| Ctrl+A | 全选 (Select All) | Menu: 编辑 |
-
----
-
-## 6. Core Features & Behavior
-
-### DictationPlayer State Machine
-
-**States** (`DictationState` enum):
-- `Stopped`: Initial/idle state
-- `ManualSpeaking`: Single word is being spoken manually
-- `AutoRunning`: Automatic dictation in progress
-- `AutoPaused`: Automatic dictation paused
-
-**Methods**:
-| Method | Behavior |
-|--------|----------|
-| `SpeakPreviousAsync()` | Speak word at index-1 |
-| `SpeakAgainAsync()` | Re-speak current word |
-| `SpeakNextAsync()` | Speak word at index+1 |
-| `SpeakAtAsync(index)` | Speak specific word (stops auto first) |
-| `StartAutoAsync(startIndex)` | Begin automatic dictation from index |
-| `PauseAuto()` | Pause auto dictation (state -> AutoPaused) |
-| `ResumeAuto()` | Resume paused dictation (state -> AutoRunning) |
-| `StopAsync()` | Stop all playback |
-
-**Auto Playback Flow** (`RunAutoAsync`):
-1. Loop through words from startIndex to Count-1
-2. For each word, repeat TimesPerWord times:
-   - Wait if paused (checks `_pauseSignal`)
-   - Speak word with TTS
-   - If not last repeat, wait IntervalSeconds
-3. Update progress after each word
-4. On completion, set state to Stopped
-
-**Voice Resolution** (`ResolveVoiceName`):
-- If text contains ASCII letters (A-Z, a-z) AND `DefaultEnglishVoiceName` is set → use English voice
-- Else if `DefaultChineseVoiceName` is set → use Chinese voice
-- Otherwise → use engine default
-
-### ImprovedVoiceTtsEngine
-
-**File Lookup Logic** (`FindFile`):
-1. Sanitize text (remove \ / : * ? " < > |)
-2. Construct path: `{resourceDirectory}/{sanitized_text}`
-3. Try extensions in order: wav, flac, ape, m4a, opus, aac, mp3, mp2, mp1, ogg, wma, aif, mp4
-4. If found, decode with `BassAudioDecoder.DecodeFile`
-5. If decode succeeds, return PcmAudio
-6. Otherwise, fall back to TTS engine
-
-**Fallback Chain**: File lookup → Decode with BASS → Fallback TTS engine
-
-### Waiting Time / Interval Configuration
-
-**Settings in DictationSettings**:
-| Property | Default | Clamp Range |
-|----------|---------|-------------|
-| IntervalSeconds | 3 | 0-600 |
-| TimesPerWord | 2 | 1-20 |
-
-**UI Controls**:
-- IntervalSeconds: TextBox in "播报信息" section
-- TimesPerWord: TextBox in "播报信息" section
-- Volume: Slider 0-100
-- Rate: Slider -10 to 10
-
-### Settings Persistence
-
-**AppSettings Structure**:
-```
-AppSettings
-├── MainWindow
-│   ├── Width (default: 980)
-│   ├── Height (default: 680)
-│   ├── X (nullable)
-│   ├── Y (nullable)
-│   ├── WindowState (default: "Normal")
-│   └── WordListVisible (default: true)
-├── Dictation
-│   ├── IntervalSeconds (default: 3)
-│   ├── TimesPerWord (default: 2)
-│   ├── HighlightCurrentLine (default: true)
-│   ├── AutoScrollCurrentLine (default: true)
-│   ├── Volume (default: 100)
-│   └── Rate (default: 0)
-└── Preference
-    ├── EditorFontFamily (default: "Noto Sans CJK SC")
-    ├── EditorFontSize (default: 28)
-    ├── ImprovedResourcePath (default: "")
-    ├── DefaultChineseVoiceName (default: "")
-    └── DefaultEnglishVoiceName (default: "")
-```
-
-**Storage Location**: `%APPDATA%/DictationAssistant/settings.json` (Windows), similar paths on macOS/Linux
-
-**Persistence Flow**:
-1. On startup: `AppSettingsStore.Load()` reads JSON
-2. During runtime: `partial void On*Changed` handlers update AppSettings
-3. On window closing: `MainWindow.Closing` handler saves via `settingsStore.Save(appSettings)`
-4. On app exit: `desktop.Exit` handler also saves
-
-### Word List Source
-
-**EditorDocumentWordListSource**:
-- Attaches to AvaloniaEdit `TextDocument`
-- Listens to `DocumentChanged` event
-- Splits text by newlines (\n)
-- Exposes `Count`, `GetWordAt(index)`, `GetWords()`
-- Fires `Changed` event on any document modification
-
----
-
-## 7. TTS / Audio Architecture
-
-### TTS Engine Hierarchy
+v4 版本采用跨平台架构，使用 Avalonia UI 框架实现多平台支持：
 
 ```
-ITtsEngine (base interface)
-├── Name: string
-├── SpeakAsync(text, ct): Task
-└── SynthesizeAudioAsync(text, ct): Task<byte[]?>
-
-IConfigurableTtsEngine : ITtsEngine
-├── ListVoicesAsync(ct): Task<IReadOnlyList<TtsVoiceInfo>>
-├── SpeakAsync(text, options, ct): Task
-└── SynthesizeAudioAsync(text, options, ct): Task<byte[]?>
-
-IPcmTtsEngine (PCM synthesis interface)
-├── Name: string
-├── ListVoicesAsync(ct): Task<IReadOnlyList<TtsVoiceInfo>>
-└── SynthesizePcmAsync(text, options, ct): Task<PcmAudio?>
-
-IPreloadableTtsEngine (preloading interface)
-├── PreloadAsync(text, options, ct): Task
-└── TryConsumePreloadedAsync(text, options, ct): Task<PcmAudio?>
+DictationAssistant/
+├── DictationAssistant.Core/        # 核心业务逻辑（跨平台）
+│   ├── Abstractions/              # 接口定义
+│   ├── Audio/                     # 音频数据结构
+│   ├── Models/                    # 数据模型
+│   ├── Services/                  # 核心服务
+│   └── Helpers/                    # 辅助工具
+└── DictationAssistant.App/         # 平台特定实现
+    ├── Services/
+    │   ├── Audio/                  # 音频播放/解码
+    │   ├── Voice/                  # 语音合成实现
+    │   └── Settings/               # 设置管理
+    └── ViewModels/                 # MVVM ViewModels
 ```
 
-### Engine Implementations
+### 1.2 模块划分
 
-| Engine | Platform | Interfaces | Description |
-|--------|----------|------------|-------------|
-| `WindowsSapiComPcmTtsEngine` | Windows | IPcmTtsEngine | COM-based SAPI, enumerates voices via SpVoice, synthesizes to memory stream |
-| `MacSayTtsEngine` | macOS | ITtsEngine, IConfigurableTtsEngine, IPcmTtsEngine | Uses `say` CLI, synth to WAV then decode |
-| `LinuxEspeakNgTtsEngine` | Linux | ITtsEngine, IConfigurableTtsEngine, IPcmTtsEngine | Uses `espeak-ng` CLI |
-| `LinuxPico2WaveTtsEngine` | Linux | ITtsEngine, IConfigurableTtsEngine, IPcmTtsEngine | Uses `pico2wave` CLI |
-| `EdgeTtsPcmEngine` | Cross-platform | IPcmTtsEngine, IPreloadableTtsEngine | Online Edge TTS, supports preloading |
-| `ImprovedVoiceTtsEngine` | Cross-platform | IPcmTtsEngine | Wraps another engine, looks up audio files first |
-| `NullPcmTtsEngine` | Cross-platform | IPcmTtsEngine | No-op placeholder |
-| `NullTtsEngine` | Cross-platform | ITtsEngine | No-op placeholder |
-| `WindowsSystemSpeechTtsEngine` | Windows | ITtsEngine, IConfigurableTtsEngine | PowerShell-based System.Speech (not actively used) |
+| 模块 | 职责 |
+|------|------|
+| **Core.Abstractions** | 定义核心接口（IVoice, IAudioPlayer, IDictationPlayer 等） |
+| **Core.Audio** | PCM 音频数据结构（PcmAudio, PcmFormatInfo, PcmSampleFormat） |
+| **Core.Models** | 数据模型（DictationSettings, DictationState, VoiceInfo 等） |
+| **Core.Services** | 核心业务逻辑（DictationPlayer, CachedVoice, NullVoice） |
+| **App.Services.Audio** | 平台特定的音频实现（SDL 播放, BASS 解码） |
+| **App.Services.Voice** | 平台特定的语音实现（Edge TTS, SAPI, ImprovedVoice 等） |
+| **App.ViewModels** | MVVM 视图模型 |
 
-### TtsEngineFactory
+---
+
+## 2. 核心接口
+
+### 2.1 IVoice
+
+语音合成接口，负责将文本转换为 PCM 音频数据：
 
 ```csharp
-public static class TtsEngineFactory
+public interface IVoice
 {
-    // Creates default PCM engine based on OS
-    public static IPcmTtsEngine CreateDefaultPcmEngine()
-    {
-        if (Windows) → WindowsSapiComPcmTtsEngine
-        if (macOS)   → MacSayTtsEngine (if 'say' on PATH) else NullPcmTtsEngine
-        if (Linux)   → LinuxEspeakNgTtsEngine (if 'espeak-ng' on PATH)
-                       else LinuxPico2WaveTtsEngine (if 'pico2wave' on PATH)
-                       else NullPcmTtsEngine
-    }
-    
-    // Wraps engine with ImprovedVoice capability
-    public static IPcmTtsEngine CreateImprovedVoiceEngine(
-        IPcmTtsEngine fallback, 
-        string resourceDirectory)
-    {
-        return new ImprovedVoiceTtsEngine(fallback, resourceDirectory);
-    }
-    
-    // Creates Edge TTS engine
-    public static EdgeTtsPcmEngine CreateEdgeTtsEngine()
-    {
-        return new EdgeTtsPcmEngine();
-    }
+    string Name { get; }
+
+    Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct);
 }
 ```
 
-### Audio Pipeline
+**实现类：**
 
-**SdlPcmPlayer** (`IAudioPlayer`):
-- Uses SDL2 for cross-platform audio playback
-- Opens audio device with desired format
-- Queues PCM data via `SDL_QueueAudio`
-- Applies volume by scaling samples before queuing
-- Blocks until queue is empty
-- Only supports S16LE format
+| 类 | 描述 |
+|----|------|
+| EdgeTtsVoice | Microsoft Edge TTS 语音合成 |
+| SapiVoice | Windows SAPI 语音合成 |
+| MacSayVoice | macOS say 命令封装 |
+| Pico2WaveVoice | Pico TTS 封装（Linux） |
+| EspeakNgVoice | eSpeak NG 封装（Linux） |
+| ImprovedVoice | 增强语音（本地文件优先） |
+| NullVoice | 空实现，返回空音频 |
+| CachedVoice | 抽象基类，提供缓存功能 |
 
-**BassAudioDecoder**:
-- Uses ManagedBass library for decoding
-- Supports: wav, flac, ape, m4a, opus, aac, mp3, ogg, wma, aif, mp4
-- Creates decode stream with `Bass.CreateStream`
-- Reads all data into MemoryStream
-- Returns `PcmAudio` with S16LE format
+### 2.2 IAudioPlayer
 
-### Edge TTS Integration
+音频播放接口：
 
-**EdgeTtsPcmEngine**:
-- Uses `EdgeTTS` NuGet (fysh711426) for synthesis
-- Uses `MP3Sharp` for MP3→PCM decoding
-- Implements `IPreloadableTtsEngine` for performance
-- Maps rate: rate * 10 → Edge format (+X%/-X%)
-- Maps volume: clamp -10~10 → Edge format
-- Default voice: "zh-CN-XiaoyiNeural"
+```csharp
+public interface IAudioPlayer
+{
+    Task PlayAsync(PcmAudio audio, int volume, CancellationToken ct);
+}
+```
 
-**Preload Implementation**:
-- Stores one preloaded audio item (key: text+voice+rate)
-- When speaking word N, preloads word N+1 in background
-- On playback, checks cache first before synthesizing
+**实现类：**
+
+| 类 | 描述 |
+|----|------|
+| SdlPcmPlayer | 基于 SDL2 的音频播放实现 |
+
+### 2.3 IDictationPlayer
+
+听写播放器核心接口，管理自动/手动播报流程：
+
+```csharp
+public interface IDictationPlayer
+{
+    DictationState State { get; }
+    DictationSettings Settings { get; }
+    DictationProgress Progress { get; }
+    IVoice Voice { get; set; }
+    IWaitingTimeCalculator? WaitingTimeCalculator { get; set; }
+
+    event EventHandler<DictationProgress>? ProgressChanged;
+    event EventHandler<DictationState>? StateChanged;
+
+    Task SpeakPreviousAsync(CancellationToken cancellationToken = default);
+    Task SpeakAgainAsync(CancellationToken cancellationToken = default);
+    Task SpeakNextAsync(CancellationToken cancellationToken = default);
+    Task SpeakAtAsync(int index, CancellationToken cancellationToken = default);
+    Task StartAutoAsync(int startIndex = 0, CancellationToken cancellationToken = default);
+    void PauseAuto();
+    void ResumeAuto();
+    Task StopAsync();
+    Task<SaveAudioResult> SaveAudioAsync(SaveAudioRequest request, CancellationToken cancellationToken = default);
+}
+```
+
+### 2.4 IVoiceFactory / IVoiceFactoryProvider
+
+语音工厂接口，用于动态创建语音实例：
+
+```csharp
+public interface IVoiceFactory
+{
+    VoiceInfo Info { get; }
+    IVoice Create();
+}
+
+public interface IVoiceFactoryProvider
+{
+    Task<IReadOnlyList<IVoiceFactory>> GetFactoriesAsync(CancellationToken ct);
+}
+```
+
+### 2.5 IWaitingTimeCalculator
+
+等待时间计算器接口：
+
+```csharp
+public interface IWaitingTimeCalculator
+{
+    int CalculateWaitingTime(string word);
+}
+```
 
 ---
 
-## 8. What's NOT Implemented Yet
+## 3. 音频处理
 
-### UI/Feature Stubs
+### 3.1 PcmAudio
 
-1. **Voice Selection ComboBox** (MainWindow.axaml:76-78)
-   - Shows static text "默认语音（占位）"
-   - Not functional - no voice selection capability wired up
+v4 引入的全新流式音频数据结构：
 
-2. **Non-WAV Export** (DictationPlayer.cs:183-186)
-   - SaveAudioRequest accepts mp3/opus formats
-   - But `SaveAudioInternalAsync` returns `NotSupported` for anything except "wav"
+```csharp
+public sealed class PcmAudio : IDisposable
+{
+    public static PcmAudio Empty => new() 
+    { 
+        Data = Stream.Null, 
+        Format = new PcmFormatInfo(44100, 2, PcmSampleFormat.S16LE) 
+    };
 
-3. **Default Chinese/English Voice in Preference**
-   - UI exists but voice selection ComboBoxes are populated from engine's voice list
-   - If engine doesn't enumerate voices, shows placeholder text
+    public required Stream Data { get; init; }
+    public required PcmFormatInfo Format { get; init; }
 
-### ROADMAP.md Unchecked Items
+    public byte[] ToArray();
+    public void Dispose();
+}
+```
 
-| Milestone | Item | Status |
-|-----------|------|--------|
-| M3 | Windows: OneCore voices enumeration | Not implemented |
-| M3 | macOS: NSSpeechSynthesizer | Not implemented (uses say CLI only) |
-| M3 | Linux: piper | Not implemented |
-| M4 | Syntax highlighting for word list | Not implemented |
-| M5 | SDL2 native dependency packaging | Not fully resolved |
-| M5 | ManagedBass codec packaging | Not fully resolved |
-| M6 | Windows packaging (MSIX/NSIS) | Not implemented |
-| M6 | macOS packaging (dmg) | Not implemented |
-| M6 | Linux packaging (AppImage) | Not implemented |
-| M7 | Core unit tests | Partially implemented |
-| M7 | Smoke tests | Not implemented |
-| M7 | Documentation | Not implemented |
+**关键特性：**
+- 使用 `Stream` 替代 `byte[]`，支持流式处理
+- `PcmFormatInfo` 存储采样率、声道数、采样格式
+- `ToArray()` 方法支持按需转换为字节数组
 
-### Code with TODOs
+### 3.2 PcmFormatInfo / PcmSampleFormat
 
-The codebase does not contain explicit "TODO" markers in the C# code. The unimplemented features are documented in ROADMAP.md as unchecked items.
+```csharp
+public class PcmFormatInfo
+{
+    public int SampleRate;    // 采样率
+    public byte Channels;     // 声道数
+    public PcmSampleFormat SampleFormat; // 采样格式
+}
+
+public enum PcmSampleFormat : ushort
+{
+    S16LE = 0x8010  // Signed 16-bit Little Endian
+}
+```
+
+### 3.3 BassDecodeStream
+
+基于 ManagedBass 的流式解码器：
+
+```csharp
+public sealed class BassDecodeStream : Stream
+{
+    public PcmFormatInfo Format { get; }
+
+    public static BassDecodeStream? CreateFromFile(string filePath);
+    public static BassDecodeStream? CreateFromStream(Stream inputStream);
+}
+```
+
+**特点：**
+- 继承 `Stream`，支持流式读取
+- 按需解码，避免一次性加载整个文件到内存
+- 支持从文件或 `Stream` 创建解码流
+
+**支持的格式：**
+- wav, flac, ape, m4a, opus, aac, mp3, mp2, mp1, ogg, wma, aif, mp4
+
+### 3.4 SdlPcmPlayer
+
+基于 SDL2 的音频播放实现：
+
+```csharp
+public sealed class SdlPcmPlayer : IAudioPlayer, IDisposable
+{
+    public Task PlayAsync(PcmAudio audio, int volume, CancellationToken ct);
+}
+```
+
+**特性：**
+- 支持 16-bit 有符号 PCM（S16LE）
+- 内置音量控制（0-100）
+- 异步播放，任务取消支持
+- 使用 SDL2 的 `QueueAudio` 进行音频排队播放
+
+### 3.5 音频处理流程
+
+```
+文本输入
+    ↓
+IVoice.SynthesizePcmAsync()
+    ↓
+┌─────────────────────────────────────────┐
+│ EdgeTtsVoice / SapiVoice / ...         │
+│ (生成 MP3/其他格式)                      │
+└─────────────────────────────────────────┘
+    ↓
+BassAudioDecoder.DecodeStream()
+    ↓
+BassDecodeStream (流式解码为 PCM)
+    ↓
+PcmAudio (封装 Stream + Format)
+    ↓
+SdlPcmPlayer.PlayAsync()
+    ↓
+SDL2 音频设备播放
+```
 
 ---
 
-## Appendix: Key File Locations
+## 4. v3 → v4 迁移
 
-| Component | File Path |
-|-----------|-----------|
-| MainWindow XAML | `src/DictationAssistant.App/MainWindow.axaml` |
-| MainWindow Code-behind | `src/DictationAssistant.App/MainWindow.axaml.cs` |
-| MainWindowViewModel | `src/DictationAssistant.App/ViewModels/MainWindowViewModel.cs` |
-| PreferenceWindow | `src/DictationAssistant.App/PreferenceWindow.axaml` |
-| PreferenceWindowViewModel | `src/DictationAssistant.App/ViewModels/PreferenceWindowViewModel.cs` |
-| SaveAudioWindow | `src/DictationAssistant.App/SaveAudioWindow.axaml` |
-| SaveAudioWindowViewModel | `src/DictationAssistant.App/ViewModels/SaveAudioWindowViewModel.cs` |
-| AboutWindow | `src/DictationAssistant.App/AboutWindow.axaml` |
-| AboutWindowViewModel | `src/DictationAssistant.App/ViewModels/AboutWindowViewModel.cs` |
-| DictationPlayer | `src/DictationAssistant.Core/Services/DictationPlayer.cs` |
-| TtsEngineFactory | `src/DictationAssistant.App/Services/Tts/TtsEngineFactory.cs` |
-| ImprovedVoiceTtsEngine | `src/DictationAssistant.App/Services/Tts/ImprovedVoiceTtsEngine.cs` |
-| EdgeTtsPcmEngine | `src/DictationAssistant.App/Services/Tts/EdgeTtsPcmEngine.cs` |
-| SdlPcmPlayer | `src/DictationAssistant.App/Services/Audio/SdlPcmPlayer.cs` |
-| BassAudioDecoder | `src/DictationAssistant.App/Services/Audio/BassAudioDecoder.cs` |
-| AppSettings | `src/DictationAssistant.App/Services/Settings/AppSettings.cs` |
-| AppSettingsStore | `src/DictationAssistant.App/Services/Settings/AppSettingsStore.cs` |
-| EditorDocumentWordListSource | `src/DictationAssistant.App/Services/EditorDocumentWordListSource.cs` |
-| IPcmTtsEngine | `src/DictationAssistant.Core/Abstractions/IPcmTtsEngine.cs` |
-| IPreloadableTtsEngine | `src/DictationAssistant.Core/Abstractions/IPreloadableTtsEngine.cs` |
-| IDictationPlayer | `src/DictationAssistant.Core/Abstractions/IDictationPlayer.cs` |
-| DictationState | `src/DictationAssistant.Core/Models/DictationState.cs` |
-| ROADMAP | `ROADMAP.md` |
+### 4.1 主要 API 变化
+
+#### 4.1.1 语音合成接口
+
+**v3:**
+```csharp
+public interface IVoice
+{
+    PcmStreamWithInfo Speak(string text, SpeakParam param);
+    string Name { get; }
+    CultureInfo Culture { get; }
+}
+```
+
+**v4:**
+```csharp
+public interface IVoice
+{
+    string Name { get; }
+    Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct);
+}
+```
+
+**差异说明：**
+- 同步 → 异步：`Speak()` → `SynthesizePcmAsync()`
+- 返回 `Stream` → 返回 `PcmAudio`（封装 Stream + Format）
+- 新增 `CancellationToken` 支持取消操作
+
+#### 4.1.2 音频播放接口
+
+**v3:**
+```csharp
+public interface ISpeaker
+{
+    ISpeakStateControler Speak(string text);
+}
+```
+
+**v4:**
+```csharp
+public interface IAudioPlayer
+{
+    Task PlayAsync(PcmAudio audio, int volume, CancellationToken ct);
+}
+```
+
+**差异说明：**
+- 事件驱动 → 任务式：使用 `Task` 替代 `PlayCompleted` 事件
+- 新增 `CancellationToken` 支持取消操作
+
+#### 4.1.3 听写播放器
+
+**v3:** 依赖 WPF/SpeechLib
+
+**v4:** `IDictationPlayer` 接口，完全解耦 UI
+
+### 4.2 新增特性
+
+| 特性 | 描述 |
+|------|------|
+| **异步设计** | 所有 I/O 操作均支持异步和取消 |
+| **流式处理** | 使用 `Stream` 替代 `byte[]`，降低内存占用 |
+| **跨平台支持** | 基于 Avalonia + .NET 10.0 |
+| **多语音后端** | Edge TTS, SAPI, macOS say, Linux TTS |
+| **缓存机制** | `CachedVoice` 基类提供内存缓存 |
+| **预加载机制** | `IPreloadableVoice` 接口支持预加载下一个词 |
+| **表达式等待时间** | 支持复杂的等待时间计算公式 |
+
+### 4.3 待完成功能
+
+| 功能 | 状态 | 描述 |
+|------|------|------|
+| MP3/Opus 导出 | ❌ 待实现 | v4 当前仅支持 WAV 格式导出 |
+| 音频编码器集成 | ❌ 待实现 | lame.exe/opusenc.exe 集成 |
+| 歌词文件 (LRC) 生成 | ⚠️ 部分 | SaveAudio 支持 LRC，但需完善 |
+| SAPI 语音列表 | ⚠️ 待验证 | SapiVoice 需测试 |
+| Linux TTS 支持 | ⚠️ 待验证 | Pico2Wave/EspeakNg 需测试 |
+| macOS say 支持 | ⚠️ 待验证 | MacSayVoice 需测试 |
+
+---
+
+## 5. 技术栈
+
+### 5.1 框架与运行时
+
+| 技术 | 版本 | 用途 |
+|------|------|------|
+| .NET | 10.0 | 运行时 |
+| Avalonia | 11.3.12 | 跨平台 UI 框架 |
+| CommunityToolkit.Mvvm | 8.4.0 | MVVM 框架 |
+
+### 5.2 音频处理
+
+| 技术 | 用途 |
+|------|------|
+| ManagedBass | 音频解码（bass.dll 封装） |
+| Hexa.NET.SDL2 | 音频播放（SDL2 封装） |
+
+### 5.3 语音合成
+
+| 技术 | 平台 | 描述 |
+|------|------|------|
+| EdgeTTS.DotNet | 跨平台 | Microsoft Edge TTS |
+| SAPI (SpeechLib) | Windows | Windows 语音合成 |
+| say | macOS | macOS 系统语音 |
+| Pico2Wave | Linux | Pico TTS |
+| eSpeak NG | Linux | eSpeak NG |
+
+### 5.4 其他依赖
+
+| 技术 | 用途 |
+|------|------|
+| NCalcSync | 表达式求值（等待时间计算） |
+| Avalonia.AvaloniaEdit | 文本编辑器 |
+
+---
+
+## 6. 核心服务
+
+### 6.1 DictationPlayer
+
+v4 核心听写播放器实现，支持：
+
+- **手动模式**：报上一个、再报一遍、报下一个
+- **自动模式**：自动连续播报，支持暂停/恢复
+- **预加载**：通过 `IPreloadableVoice` 预加载下一个词
+- **音频导出**：保存为 WAV 格式
+
+### 6.2 CachedVoice
+
+抽象基类，提供 LRU 缓存功能：
+
+```csharp
+public abstract class CachedVoice : IPreloadableVoice
+{
+    protected CachedVoice(int cacheCapacity = 4);
+    public abstract string Name { get; }
+    protected abstract Task<PcmAudio?> SynthesizePcmDirectAsync(string text, VoiceSynthesisOptions options, CancellationToken ct);
+    public async Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct);
+    public async Task PreloadAsync(string text, VoiceSynthesisOptions options, CancellationToken ct);
+}
+```
+
+### 6.3 ImprovedVoice
+
+增强语音实现，优先使用本地音频文件：
+
+```csharp
+public sealed class ImprovedVoice : IVoice
+{
+    public ImprovedVoice(IVoice inner, string resourceDirectory);
+    public string Name { get; }
+    public Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct);
+}
+```
+
+**查找顺序：**
+1. 在资源目录中查找与文本同名的音频文件
+2. 遍历扩展名：`wav, flac, ape, m4a, opus, aac, mp3, mp2, mp1, ogg, wma, aif, mp4`
+3. 如未找到，回退到内部语音
+
+### 6.4 VoiceAggregator
+
+聚合多个语音提供者：
+
+```csharp
+public sealed class VoiceAggregator
+{
+    public VoiceAggregator(params IVoiceFactoryProvider[] providers);
+    public async Task<IReadOnlyList<IVoiceFactory>> GetAllFactoriesAsync(CancellationToken ct);
+}
+```
+
+---
+
+## 7. 数据模型
+
+### 7.1 DictationSettings
+
+```csharp
+public sealed class DictationSettings
+{
+    public string IntervalExpression { get; set; } = "3";    // 等待时间表达式
+    public int TimesPerWord { get; set; } = 2;               // 每词播报次数
+    public bool HighlightCurrentLine { get; set; } = true;
+    public bool AutoScrollToCurrentLine { get; set; } = true;
+    public int Volume { get; set; } = 100;                    // 0-100
+    public int Rate { get; set; } = 0;                       // -10 到 10
+    public string DefaultChineseVoiceName { get; set; } = "";
+    public string DefaultEnglishVoiceName { get; set; } = "";
+}
+```
+
+### 7.2 DictationState
+
+```csharp
+public enum DictationState
+{
+    Stopped,         // 停止
+    ManualSpeaking,  // 手动播报中
+    AutoRunning,     // 自动播报运行中
+    AutoPaused       // 自动播报暂停
+}
+```
+
+### 7.3 VoiceInfo
+
+```csharp
+public sealed class VoiceInfo
+{
+    public required string Id { get; init; }
+    public required string DisplayName { get; init; }
+    public string? LocaleOrLanguage { get; init; }
+    public string? ProviderName { get; init; }
+}
+```
+
+### 7.4 VoiceSynthesisOptions
+
+```csharp
+public sealed class VoiceSynthesisOptions
+{
+    public int? Rate { get; init; }  // 语速，-10 到 10
+}
+```
+
+---
+
+## 8. 待办事项
+
+### 8.1 音频导出
+
+- [ ] 实现 MP3 导出（集成 lame.exe）
+- [ ] 实现 Opus 导出（集成 opusenc.exe）
+- [ ] 完善 LRC 歌词文件生成
+
+### 8.2 语音支持
+
+- [ ] 测试并修复 SAPI 语音列表获取
+- [ ] 完善 macOS say 命令支持
+- [ ] 完善 Linux Pico2Wave/eSpeak NG 支持
+
+### 8.3 UI/UX
+
+- [ ] 实现字体选择器
+- [ ] 实现高亮跟随功能
+- [ ] 实现自动翻页功能
+
+### 8.4 已知问题
+
+- Edge TTS 依赖网络连接，离线不可用
+- BASS 库需加载对应的插件才能支持更多格式
+- 音频导出目前仅支持 WAV 格式
+
+---
+
+*本文档基于 DictationAssistant v4.x (Avalonia) 源代码审计生成。*
