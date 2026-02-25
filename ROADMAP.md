@@ -7,6 +7,9 @@ v4 的核心定位：**跨平台（Avalonia + .NET）**。在不牺牲跨平台�
 - **跨平台优先**：避免引入只能在 Windows 跑的依赖（除非有替代实现/可选后端）。
 - **UI 对齐是“体验对齐”**：布局、文案、分组、快捷键尽量 1:1；像素级细节放在后期打磨。
 - **Core 纯净**：`DictationAssistant.Core` 保持无 UI、无平台依赖；平台相关放到 `DictationAssistant.App` 的 `Services/`。
+- **全平台复用 v3 的关键体验**：
+  - **ImprovedVoice**（“音源增强目录”：命中则播文件，否则回落到 TTS）需要在 **Windows/macOS/Linux 全平台可用**。
+  - 音频播放/解码尽量使用跨平台 NuGet 库替换旧的手写 P/Invoke 包装，以便维护与打包。
 - **可迭代**：先把壳子对齐 + 功能闭环，再逐步补强（语音引擎、设置、导出、打包）。
 
 ## 里程碑 / TODO
@@ -37,10 +40,17 @@ v4 的核心定位：**跨平台（Avalonia + .NET）**。在不牺牲跨平台�
 
 ### M3 语音引擎（跨平台后端）
 
-- [ ] `ITtsEngine` 支持枚举 voices + 选择 voice
-- [ ] Windows：SAPI（或现有实现迁移/封装）
-- [ ] macOS：NSSpeechSynthesizer（或可替代方案）
-- [ ] Linux：优先考虑 `espeak-ng` / `piper` / `edge-tts`（可选）
+- [ ] `ITtsEngine` 支持枚举 voices + 选择 voice（供偏好设置窗口使用）
+- [ ] Windows：**保留/迁移 v3 的“原生引擎体系”**
+  - [ ] SAPI/OneCore voices（v3 的 `SpeechLib` 路线：枚举 TokenId + 选择 voice + Rate）
+  - [ ] ImprovedVoice（“音源增强目录”：命中则播文件，否则回落到系统 voice）
+  - [ ] （可选）System.Speech（当前 v4 的 PowerShell `System.Speech.Synthesis` 回落方案）
+- [ ] macOS：NSSpeechSynthesizer / `say`（可枚举 voices + 选择）
+- [ ] Linux：优先考虑 `espeak-ng` / `piper`（离线）
+- [ ] **全平台：支持 Edge TTS（在线）**
+  - [ ] 调研并选型 NuGet：`edge-tts-net` 或 `EdgeTTS`（二选一，优先维护更活跃/接口更稳定者）
+  - [ ] 集成 Edge TTS engine：可选 voice、可调语速/音量（按 Edge TTS 语义映射）
+  - [ ] 断网/失败时平滑回落到本地引擎
 - [ ] 统一“音量/语速”的语义映射（不同后端范围不同）
 
 ### M4 词表编辑体验打磨（贴近 v3）
@@ -51,13 +61,29 @@ v4 的核心定位：**跨平台（Avalonia + .NET）**。在不牺牲跨平台�
 - [ ] 自动翻页更稳：播报推进时滚动到可视区域（不要跳太猛）
 - [ ] 可选：语法高亮（如果词表里需要特殊格式）
 
-### M5 音频导出（跨平台实现）
+### M5 音频 / 播放 / 解码基础设施（跨平台复用 v3 逻辑）
 
-- [ ] 明确 v4 音频导出的“最小可用”目标（WAV 先行）
-- [ ] 设计导出 pipeline：TTS → PCM → 编码器（WAV/MP3/AAC…）
-- [ ] 选择跨平台方案：优先外部 `ffmpeg`（可选 bundled），或纯 .NET 方案
-- [ ] 导出进度条 + 可取消
-- [ ] （可选）字幕/歌词输出
+目标：让 v4 能在 **全平台** 复用 v3 的“播文件/播 PCM/TTS”关键链路，把旧的 SDL2/BASS 手写 P/Invoke 换成更稳的 NuGet 库。
+
+- [ ] **音频播放：SDL2（跨平台）**
+  - [ ] 选型并引入跨平台 SDL2 包装（NuGet）
+  - [ ] 用 NuGet 包替换 v3 的 `SDL2.dll` P/Invoke（`PcmPlayer`/`SdlAudio`）
+  - [ ] 保持现有 `PcmPlayer(PcmStreamWithInfo, volume)` 语义，尽量复用调用方逻辑
+
+- [ ] **音频解码：ManagedBass（跨平台）**
+  - [ ] 选型并引入 `ManagedBass`（及需要的 codec 扩展包）
+  - [ ] 用 ManagedBass 替换 v3 的 `bass.dll` P/Invoke（`AudioFileDecodeStream`）
+  - [ ] 确保支持 v3 的常见扩展名（wav/flac/ape/m4a/opus/aac/mp3/ogg/wma/aif/mp4…）
+
+- [ ] **ImprovedVoice 全平台化**
+  - [ ] 把 ImprovedVoice 的“命中音频文件则播放”能力迁到 v4（平台无关，全平台都支持）
+  - [ ] 解码走 ManagedBass → 输出 PCM → 播放走 SDL2（NuGet 包装，替换手写 P/Invoke）
+  - [ ] 未命中则回落到当前选择的 TTS engine
+
+- [ ] 在此基础上，再实现 **导出（SaveAudio）**
+  - [ ] 明确 v4 导出的“最小可用”目标（WAV 先行）
+  - [ ] 设计导出 pipeline：TTS/ImprovedVoice → PCM → 编码器（WAV/MP3/AAC…）
+  - [ ] 进度条 + 可取消 + （可选）歌词/字幕输出
 
 ### M6 打包与发布（跨平台分发）
 
