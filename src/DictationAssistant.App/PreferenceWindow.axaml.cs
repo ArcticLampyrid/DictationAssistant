@@ -9,19 +9,21 @@ namespace DictationAssistant.App;
 
 public partial class PreferenceWindow : Window
 {
+    private static readonly IReadOnlyList<string> EmptyVoiceOptions = [];
+
     private PreferenceWindowViewModel? ViewModel => DataContext as PreferenceWindowViewModel;
 
     public PreferenceSettings ResultSettings { get; private set; } = new();
 
     public PreferenceWindow()
-        : this(new PreferenceSettings())
+        : this(new PreferenceSettings(), EmptyVoiceOptions)
     {
     }
 
-    public PreferenceWindow(PreferenceSettings settings)
+    public PreferenceWindow(PreferenceSettings settings, IReadOnlyList<string> voiceOptions)
     {
         InitializeComponent();
-        DataContext = new PreferenceWindowViewModel(settings);
+        DataContext = new PreferenceWindowViewModel(settings, voiceOptions);
         ResultSettings = settings;
     }
 

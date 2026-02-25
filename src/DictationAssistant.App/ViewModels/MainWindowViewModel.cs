@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Avalonia.Threading;
+using System.Diagnostics;
 using DictationAssistant.App.Services;
 using DictationAssistant.App.Services.Settings;
 using DictationAssistant.Core.Abstractions;
@@ -60,6 +61,7 @@ public partial class MainWindowViewModel : ObservableObject
 
         LoadSettings();
         ApplySettingsToCore();
+        _ = LoadVoiceOptionsAsync(ttsEngine);
         OnPropertyChanged(nameof(SpeakStateText));
     }
 
@@ -130,6 +132,9 @@ public partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     private string _defaultEnglishVoiceName = string.Empty;
+
+    [ObservableProperty]
+    private List<string> _voiceOptions = [];
 
     public bool IsAutoRunning => CurrentState == DictationState.AutoRunning;
 
@@ -288,6 +293,36 @@ public partial class MainWindowViewModel : ObservableObject
         _dictationPlayer.Settings.TimesPerWord = TimesPerWord;
         _dictationPlayer.Settings.HighlightCurrentLine = HighlightCurrentLine;
         _dictationPlayer.Settings.AutoScrollToCurrentLine = AutoScrollCurrentLine;
+        _dictationPlayer.Settings.Volume = Volume;
+        _dictationPlayer.Settings.Rate = Rate;
+        _dictationPlayer.Settings.DefaultChineseVoiceName = DefaultChineseVoiceName;
+        _dictationPlayer.Settings.DefaultEnglishVoiceName = DefaultEnglishVoiceName;
+    }
+
+    private async Task LoadVoiceOptionsAsync(ITtsEngine ttsEngine)
+    {
+        try
+        {
+            if (ttsEngine is not IConfigurableTtsEngine configurableTtsEngine)
+            {
+                VoiceOptions = [];
+                return;
+            }
+
+            var voices = await configurableTtsEngine.ListVoicesAsync(CancellationToken.None).ConfigureAwait(false);
+            var options = voices
+                .Select(voice => voice.Name)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Distinct(StringComparer.Ordinal)
+                .ToList();
+
+            await Dispatcher.UIThread.InvokeAsync(() => VoiceOptions = options);
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"Failed to load TTS voices: {ex}");
+            await Dispatcher.UIThread.InvokeAsync(() => VoiceOptions = []);
+        }
     }
 
     public PreferenceSettings CreatePreferenceSnapshot()

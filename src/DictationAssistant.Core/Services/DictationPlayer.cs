@@ -1,5 +1,6 @@
 using DictationAssistant.Core.Abstractions;
 using DictationAssistant.Core.Models;
+using System.Diagnostics;
 
 namespace DictationAssistant.Core.Services;
 
@@ -206,7 +207,59 @@ public sealed class DictationPlayer : IDictationPlayer
     {
         var word = _wordListSource.GetWordAt(index);
         UpdateProgress(_ => new DictationProgress(index, repeat, _wordListSource.Count, false));
-        await _ttsEngine.SpeakAsync(word, cancellationToken).ConfigureAwait(false);
+
+        try
+        {
+            if (_ttsEngine is IConfigurableTtsEngine configurableTtsEngine)
+            {
+                var options = new TtsSpeakOptions
+                {
+                    Volume = Settings.Volume,
+                    Rate = Settings.Rate,
+                    VoiceName = ResolveVoiceName(word)
+                };
+                await configurableTtsEngine.SpeakAsync(word, options, cancellationToken).ConfigureAwait(false);
+                return;
+            }
+
+            await _ttsEngine.SpeakAsync(word, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"TTS speak failed for word '{word}': {ex}");
+        }
+    }
+
+    private string? ResolveVoiceName(string text)
+    {
+        if (ContainsAsciiLetter(text) && !string.IsNullOrWhiteSpace(Settings.DefaultEnglishVoiceName))
+        {
+            return Settings.DefaultEnglishVoiceName;
+        }
+
+        if (!string.IsNullOrWhiteSpace(Settings.DefaultChineseVoiceName))
+        {
+            return Settings.DefaultChineseVoiceName;
+        }
+
+        return null;
+    }
+
+    private static bool ContainsAsciiLetter(string text)
+    {
+        foreach (var ch in text)
+        {
+            if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private async Task StopAutoInternalAsync()

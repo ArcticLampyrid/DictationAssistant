@@ -360,7 +360,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var dialog = new PreferenceWindow(vm.CreatePreferenceSnapshot());
+        var dialog = new PreferenceWindow(vm.CreatePreferenceSnapshot(), vm.VoiceOptions);
         var result = await dialog.ShowDialog<bool?>(this);
         if (result == true)
         {

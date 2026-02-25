@@ -42,7 +42,8 @@ v4 的核心定位：**跨平台（Avalonia + .NET）**。在不牺牲跨平台�
 
 ### M3 语音引擎（跨平台后端）
 
-- [ ] `ITtsEngine` 支持枚举 voices + 选择 voice（供偏好设置窗口使用）
+- [x] `ITtsEngine` 支持枚举 voices + 选择 voice（供偏好设置窗口使用，采用可选接口 `IConfigurableTtsEngine`）
+  - [x] 当前实现：macOS `say`、Linux `espeak-ng`、Windows `System.Speech`（PowerShell）
 - [ ] **预加载接口设计（仅下一条）**
   - [ ] 在 Core 抽象层引入可选的 preload 能力（例如 `IPreloadableTtsEngine`），允许引擎对“下一条文本”做 best-effort 预取
   - [ ] DictationPlayer 侧预留 hook：每次开始播报第 N 条时，后台触发预加载第 N+1 条（只保留 1 条预加载槽位）
