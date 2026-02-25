@@ -29,9 +29,7 @@ public sealed class EdgeTtsVoice : CachedVoice
         try
         {
             var rate = MapRate(options.Rate);
-            var volume = MapVolume(options.Volume);
-
-            var communicate = new Communicate(text, _voiceName, rate, volume);
+            var communicate = new Communicate(text, _voiceName, rate);
 
             using var ms = new MemoryStream();
 
@@ -74,16 +72,7 @@ public sealed class EdgeTtsVoice : CachedVoice
         return edgeRate >= 0 ? $"+{edgeRate}%" : $"{edgeRate}%";
     }
 
-    private static string MapVolume(int? volume)
-    {
-        if (volume is null)
-        {
-            return "+0%";
-        }
 
-        var edgeVolume = Math.Clamp(volume.Value, -10, 10) * 10;
-        return edgeVolume >= 0 ? $"+{edgeVolume}%" : $"{edgeVolume}%";
-    }
 
     private static PcmAudio? DecodeMp3ToPcm(byte[] mp3Bytes)
     {
