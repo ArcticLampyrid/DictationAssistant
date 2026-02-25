@@ -76,10 +76,10 @@ v4 的核心定位：**跨平台（Avalonia + .NET）**。在不牺牲跨平台�
 
 目标：让 v4 能在 **全平台** 复用 v3 的“播文件/播 PCM/TTS”关键链路，把旧的 SDL2/BASS 手写 P/Invoke 换成更稳的 NuGet 库。
 
-- [ ] **音频播放：SDL2（跨平台）**
-  - [ ] 选型并引入跨平台 SDL2 包装（NuGet）
-  - [ ] 用 NuGet 包替换 v3 的 `SDL2.dll` P/Invoke（`PcmPlayer`/`SdlAudio`）
-  - [ ] 保持现有 `PcmPlayer(PcmStreamWithInfo, volume)` 语义，尽量复用调用方逻辑
+- [x] **音频播放：SDL2（跨平台）**
+  - [x] 选型并引入跨平台 SDL2 包装（NuGet：`SDL2-CS.NetCore`）
+  - [x] v4 新增 `SdlPcmPlayer`（`IAudioPlayer`）：用 SDL2 的 QueueAudio 播放 S16LE PCM，并在播放前应用音量
+  - [ ] （后续）确认打包时 SDL2 native 依赖在各平台的携带策略（M6）
 
 - [ ] **音频解码：ManagedBass（跨平台）**
   - [ ] 选型并引入 `ManagedBass`（及需要的 codec 扩展包）
