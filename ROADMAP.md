@@ -74,7 +74,8 @@ v4 的核心定位：**跨平台（Avalonia + .NET 8）**。在不牺牲跨平�
 - [ ] macOS：dmg / zip
 - [ ] Linux：AppImage / Flatpak
 - [ ] self-contained publish（按 RID：win-x64 / osx-x64 / osx-arm64 / linux-x64 / linux-arm64）
-- [ ] 确认 native 依赖携带策略（SDL2、libbass）
+- [x] SDL2 native 依赖：已通过 Hexa.NET.SDL2 NuGet 包自动携带（Windows/Linux/macOS）
+- [ ] libbass native 依赖携带策略
 - [ ] GitHub Actions：多平台 build + release artifacts
 
 ### M7 质量与维护
