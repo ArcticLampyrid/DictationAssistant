@@ -1,12 +1,15 @@
 using DictationAssistant.Core.Abstractions;
 using DictationAssistant.Core.Audio;
-using SDL2;
+using Hexa.NET.SDL2;
 using System.Runtime.InteropServices;
 
 namespace DictationAssistant.App.Services.Audio;
 
 public sealed class SdlPcmPlayer : IAudioPlayer, IDisposable
 {
+    private const uint SDL_INIT_AUDIO = 0x10;
+    private const ushort AUDIO_S16LSB = 0x8010;
+
     private static readonly object InitLock = new();
     private static int s_instanceCount;
     private bool _disposed;
@@ -17,10 +20,10 @@ public sealed class SdlPcmPlayer : IAudioPlayer, IDisposable
         {
             if (s_instanceCount == 0)
             {
-                var result = SDL.SDL_InitSubSystem(SDL.SDL_INIT_AUDIO);
+                var result = SDL.InitSubSystem(SDL_INIT_AUDIO);
                 if (result < 0)
                 {
-                    throw new InvalidOperationException($"SDL audio init failed: {SDL.SDL_GetError()}");
+                    throw new InvalidOperationException($"SDL audio init failed: {SDL.GetErrorS()}");
                 }
             }
 
@@ -37,48 +40,39 @@ public sealed class SdlPcmPlayer : IAudioPlayer, IDisposable
             throw new NotSupportedException($"Unsupported PCM format: {audio.Format.SampleFormat}");
         }
 
-        var desired = new SDL.SDL_AudioSpec
+        var desired = new SDLAudioSpec
         {
-            freq = audio.Format.SampleRate,
-            format = SDL.AUDIO_S16LSB,
-            channels = (byte)Math.Clamp(audio.Format.Channels, 1, byte.MaxValue),
-            samples = 4096,
-            callback = null,
-            userdata = IntPtr.Zero
+            Freq = audio.Format.SampleRate,
+            Format = AUDIO_S16LSB,
+            Channels = (byte)Math.Clamp(audio.Format.Channels, 1, byte.MaxValue),
+            Samples = 4096,
+            Callback = default,
+            Userdata = default
         };
 
-        var device = SDL.SDL_OpenAudioDevice(null, 0, ref desired, out var obtained, 0);
+        var device = OpenDevice(ref desired, out var obtained);
         if (device == 0)
         {
-            throw new InvalidOperationException($"SDL open audio device failed: {SDL.SDL_GetError()}");
+            throw new InvalidOperationException($"SDL open audio device failed: {SDL.GetErrorS()}");
         }
 
         try
         {
-            if (obtained.format != SDL.AUDIO_S16LSB)
+            if (obtained.Format != AUDIO_S16LSB)
             {
-                throw new NotSupportedException($"SDL device returned unsupported format: 0x{obtained.format:X}");
+                throw new NotSupportedException($"SDL device returned unsupported format: 0x{obtained.Format:X}");
             }
 
             var dataToPlay = ApplyVolume(audio.Data, Math.Clamp(volume, 0, 100));
-            var pinned = GCHandle.Alloc(dataToPlay, GCHandleType.Pinned);
-            int queueResult;
-            try
-            {
-                queueResult = SDL.SDL_QueueAudio(device, pinned.AddrOfPinnedObject(), (uint)dataToPlay.Length);
-            }
-            finally
-            {
-                pinned.Free();
-            }
+            var queueResult = QueuePcm(device, dataToPlay);
             if (queueResult < 0)
             {
-                throw new InvalidOperationException($"SDL queue audio failed: {SDL.SDL_GetError()}");
+                throw new InvalidOperationException($"SDL queue audio failed: {SDL.GetErrorS()}");
             }
 
-            SDL.SDL_PauseAudioDevice(device, 0);
+            SDL.PauseAudioDevice(device, 0);
 
-            while (SDL.SDL_GetQueuedAudioSize(device) > 0)
+            while (SDL.GetQueuedAudioSize(device) > 0)
             {
                 ct.ThrowIfCancellationRequested();
                 await Task.Delay(10, ct).ConfigureAwait(false);
@@ -86,12 +80,12 @@ public sealed class SdlPcmPlayer : IAudioPlayer, IDisposable
         }
         catch (OperationCanceledException)
         {
-            SDL.SDL_ClearQueuedAudio(device);
+            SDL.ClearQueuedAudio(device);
             throw;
         }
         finally
         {
-            SDL.SDL_CloseAudioDevice(device);
+            SDL.CloseAudioDevice(device);
         }
     }
 
@@ -109,12 +103,31 @@ public sealed class SdlPcmPlayer : IAudioPlayer, IDisposable
                 s_instanceCount--;
                 if (s_instanceCount == 0)
                 {
-                    SDL.SDL_QuitSubSystem(SDL.SDL_INIT_AUDIO);
+                    SDL.QuitSubSystem(SDL_INIT_AUDIO);
                 }
             }
         }
 
         _disposed = true;
+    }
+
+    private static unsafe uint OpenDevice(ref SDLAudioSpec desired, out SDLAudioSpec obtained)
+    {
+        fixed (SDLAudioSpec* desiredPtr = &desired)
+        {
+            SDLAudioSpec obtainedSpec;
+            var device = SDL.OpenAudioDevice((byte*)null, 0, desiredPtr, &obtainedSpec, 0);
+            obtained = obtainedSpec;
+            return device;
+        }
+    }
+
+    private static unsafe int QueuePcm(uint device, byte[] data)
+    {
+        fixed (byte* ptr = data)
+        {
+            return SDL.QueueAudio(device, ptr, (uint)data.Length);
+        }
     }
 
     private static byte[] ApplyVolume(byte[] source, int volume)
