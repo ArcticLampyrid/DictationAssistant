@@ -5,7 +5,7 @@ using DictationAssistant.Core.Services;
 
 namespace DictationAssistant.App.Services.Voice;
 
-public sealed class Pico2WaveVoice : CachedVoice
+public sealed class Pico2WaveVoice : IVoice
 {
     private readonly string _language;
 
@@ -14,9 +14,9 @@ public sealed class Pico2WaveVoice : CachedVoice
         _language = language;
     }
 
-    public override string Name => _language;
+    public string Name => _language;
 
-    protected override async Task<PcmAudio?> SynthesizePcmDirectAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
+    public async Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
         var wavBytes = await SynthesizeWavAsync(text, ct).ConfigureAwait(false);
         if (wavBytes is null)

@@ -22,7 +22,7 @@ public abstract class CachedVoice : IPreloadableVoice
 
     public async Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
-        var key = new CacheKey(text, options.Rate ?? 0);
+        var key = new CacheKey(text, options.Rate ?? 0, options.Volume ?? 100);
         lock (_lock)
         {
             if (TryGetFromCache(key, out var cached))
@@ -45,7 +45,7 @@ public abstract class CachedVoice : IPreloadableVoice
 
     public async Task PreloadAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
-        var key = new CacheKey(text, options.Rate ?? 0);
+        var key = new CacheKey(text, options.Rate ?? 0, options.Volume ?? 100);
         lock (_lock)
         {
             if (_cacheMap.ContainsKey(key))
@@ -101,7 +101,7 @@ public abstract class CachedVoice : IPreloadableVoice
         _cacheMap[key] = newNode;
     }
 
-    private readonly record struct CacheKey(string Text, int Rate);
+    private readonly record struct CacheKey(string Text, int Rate, int Volume);
 
     private sealed class CacheEntry
     {

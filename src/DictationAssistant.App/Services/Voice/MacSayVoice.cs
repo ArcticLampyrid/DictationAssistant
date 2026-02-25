@@ -5,7 +5,7 @@ using DictationAssistant.Core.Services;
 
 namespace DictationAssistant.App.Services.Voice;
 
-public sealed class MacSayVoice : CachedVoice
+public sealed class MacSayVoice : IVoice
 {
     private readonly string _voiceName;
 
@@ -14,9 +14,9 @@ public sealed class MacSayVoice : CachedVoice
         _voiceName = voiceName;
     }
 
-    public override string Name => _voiceName;
+    public string Name => _voiceName;
 
-    protected override async Task<PcmAudio?> SynthesizePcmDirectAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
+    public async Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
         var wavBytes = await SynthesizeWavAsync(text, options, ct).ConfigureAwait(false);
         if (wavBytes is null)

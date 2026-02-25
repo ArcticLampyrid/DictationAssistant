@@ -7,7 +7,7 @@ using System.Runtime.Versioning;
 
 namespace DictationAssistant.App.Services.Voice;
 
-public sealed class SapiVoice : CachedVoice
+public sealed class SapiVoice : IVoice
 {
     private const int Saft44Khz16BitStereo = 39;
     private readonly string _voiceName;
@@ -17,10 +17,10 @@ public sealed class SapiVoice : CachedVoice
         _voiceName = voiceName;
     }
 
-    public override string Name => _voiceName;
+    public string Name => _voiceName;
 
     [SupportedOSPlatform("windows")]
-    protected override Task<PcmAudio?> SynthesizePcmDirectAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
+    public Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
         return Task.Run(() => SynthesizeWindows(text, options, _voiceName), ct);
     }
