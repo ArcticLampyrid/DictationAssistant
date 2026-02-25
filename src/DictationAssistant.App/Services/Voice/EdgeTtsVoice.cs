@@ -3,9 +3,9 @@ using DictationAssistant.Core.Abstractions;
 using DictationAssistant.Core.Audio;
 using DictationAssistant.Core.Models;
 using DictationAssistant.Core.Services;
+using DictationAssistant.App.Services.Audio;
 using EdgeTTS.DotNet;
 using EdgeTTS.DotNet.Models;
-using MP3Sharp;
 
 namespace DictationAssistant.App.Services.Voice;
 
@@ -78,34 +78,12 @@ public sealed class EdgeTtsVoice : CachedVoice
     {
         try
         {
-            using var mp3Stream = new MP3Sharp.MP3Stream(new MemoryStream(mp3Bytes));
-            var sampleRate = mp3Stream.Frequency;
-            var channels = mp3Stream.ChannelCount;
-
-            using var pcmBuffer = new MemoryStream();
-            var buffer = new byte[4096];
-            int bytesRead;
-
-            while ((bytesRead = mp3Stream.Read(buffer, 0, buffer.Length)) > 0)
-            {
-                pcmBuffer.Write(buffer, 0, bytesRead);
-            }
-
-            if (pcmBuffer.Length == 0)
-            {
-                Trace.WriteLine("[EdgeTTS] No samples decoded from MP3");
-                return null;
-            }
-
-            return new PcmAudio
-            {
-                Data = pcmBuffer.ToArray(),
-                Format = new PcmFormatInfo(sampleRate, channels, PcmSampleFormat.S16LE)
-            };
+            using var mp3Stream = new MemoryStream(mp3Bytes);
+            return BassAudioDecoder.DecodeStream(mp3Stream);
         }
         catch (Exception ex)
         {
-            Trace.WriteLine($"[EdgeTTS] MP3 decode failed: {ex.Message}");
+            Trace.WriteLine($"[EdgeTTS] Audio decode failed: {ex.Message}");
             return null;
         }
     }
