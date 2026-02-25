@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Avalonia.Threading;
@@ -136,7 +137,10 @@ public partial class MainWindowViewModel : ObservableObject
     private string _defaultEnglishVoiceName = string.Empty;
 
     [ObservableProperty]
-    private List<string> _voiceOptions = [];
+    private ObservableCollection<TtsVoiceInfo> _voiceOptions = [];
+
+    [ObservableProperty]
+    private TtsVoiceInfo? _selectedVoice;
 
     public bool IsAutoRunning => CurrentState == DictationState.AutoRunning;
 
@@ -306,18 +310,38 @@ public partial class MainWindowViewModel : ObservableObject
         try
         {
             var voices = await ttsEngine.ListVoicesAsync(CancellationToken.None).ConfigureAwait(false);
-            var options = voices
-                .Select(voice => voice.Name)
-                .Where(name => !string.IsNullOrWhiteSpace(name))
-                .Distinct(StringComparer.Ordinal)
-                .ToList();
 
-            await Dispatcher.UIThread.InvokeAsync(() => VoiceOptions = options);
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                VoiceOptions.Clear();
+                foreach (var voice in voices)
+                {
+                    if (!string.IsNullOrWhiteSpace(voice.Name))
+                    {
+                        VoiceOptions.Add(voice);
+                    }
+                }
+
+                var targetVoice = DefaultChineseVoiceName ?? DefaultEnglishVoiceName;
+                if (!string.IsNullOrWhiteSpace(targetVoice))
+                {
+                    SelectedVoice = VoiceOptions.FirstOrDefault(v => v.Name == targetVoice);
+                }
+            });
         }
         catch (Exception ex)
         {
             Trace.WriteLine($"Failed to load TTS voices: {ex}");
-            await Dispatcher.UIThread.InvokeAsync(() => VoiceOptions = []);
+            await Dispatcher.UIThread.InvokeAsync(() => VoiceOptions.Clear());
+        }
+    }
+
+    partial void OnSelectedVoiceChanged(TtsVoiceInfo? value)
+    {
+        if (value != null)
+        {
+            DefaultChineseVoiceName = value.Name;
+            DefaultEnglishVoiceName = value.Name;
         }
     }
 
