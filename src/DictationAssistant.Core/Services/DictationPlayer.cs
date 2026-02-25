@@ -177,9 +177,10 @@ public sealed class DictationPlayer : IDictationPlayer
             return SaveAudioResult.NotSupported("请指定输出路径");
         }
 
-        if (request.OutputFormat?.ToLowerInvariant() != "wav")
+        var format = request.OutputFormat?.ToLowerInvariant() ?? "wav";
+        if (format != "wav" && format != "mp3" && format != "opus")
         {
-            return SaveAudioResult.NotSupported("目前仅支持 WAV 格式导出");
+            return SaveAudioResult.NotSupported($"不支持的格式: {format}");
         }
 
         var generateLrc = request.LyricMode == "Lrc File" && !string.IsNullOrWhiteSpace(request.LyricsOutputPath);
@@ -187,7 +188,6 @@ public sealed class DictationPlayer : IDictationPlayer
 
         try
         {
-            await using var outputStream = new FileStream(request.OutputPath, FileMode.Create, FileAccess.Write);
             await using var pcmStream = new MemoryStream();
 
             var totalWords = _wordListSource.Count;
@@ -259,8 +259,18 @@ public sealed class DictationPlayer : IDictationPlayer
                 channels = 2;
             }
 
-            WavWriter.WriteHeader(outputStream, sampleRate, channels, pcmData.Length);
-            await outputStream.WriteAsync(pcmData, cancellationToken).ConfigureAwait(false);
+            if (format == "wav")
+            {
+                await using var outputStream = new FileStream(request.OutputPath, FileMode.Create, FileAccess.Write);
+                WavWriter.WriteHeader(outputStream, sampleRate, channels, pcmData.Length);
+                await outputStream.WriteAsync(pcmData, cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                await using var encoder = new FFmpegAudioEncoder(request.OutputPath, sampleRate, channels, format);
+                await encoder.InputStream.WriteAsync(pcmData, cancellationToken).ConfigureAwait(false);
+                await encoder.FinishAsync(cancellationToken).ConfigureAwait(false);
+            }
 
             progress?.Report(1.0);
             return SaveAudioResult.Success($"已导出到: {request.OutputPath}");

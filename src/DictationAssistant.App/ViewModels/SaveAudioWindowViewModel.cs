@@ -26,7 +26,7 @@ public partial class SaveAudioWindowViewModel : ObservableObject
         "48000"
     ];
 
-    public IReadOnlyList<string> OutputFormatOptions { get; } = ["wav"];
+    public IReadOnlyList<string> OutputFormatOptions { get; } = ["wav", "mp3", "opus"];
 
     public IReadOnlyList<string> LyricModeOptions { get; } = ["Dismiss", "Lrc File"];
 
