@@ -41,6 +41,10 @@ v4 的核心定位：**跨平台（Avalonia + .NET）**。在不牺牲跨平台�
 ### M3 语音引擎（跨平台后端）
 
 - [ ] `ITtsEngine` 支持枚举 voices + 选择 voice（供偏好设置窗口使用）
+- [ ] **预加载接口设计（仅下一条）**
+  - [ ] 在 Core 抽象层引入可选的 preload 能力（例如 `IPreloadableTtsEngine`），允许引擎对“下一条文本”做 best-effort 预取
+  - [ ] DictationPlayer 侧预留 hook：每次开始播报第 N 条时，后台触发预加载第 N+1 条（只保留 1 条预加载槽位）
+  - [ ] 失败策略：预加载失败/在线 TTS 失败均静默，仅日志记录，不影响当前播报流程
 - [ ] Windows：**保留/迁移 v3 的“原生引擎体系”**
   - [ ] SAPI/OneCore voices（v3 的 `SpeechLib` 路线：枚举 TokenId + 选择 voice + Rate）
   - [ ] ImprovedVoice（“音源增强目录”：命中则播文件，否则回落到系统 voice）
