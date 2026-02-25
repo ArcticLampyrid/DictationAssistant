@@ -7,6 +7,7 @@ using DictationAssistant.App.Services;
 using DictationAssistant.App.Services.Settings;
 using DictationAssistant.Core.Abstractions;
 using DictationAssistant.Core.Models;
+using DictationAssistant.Core.Services;
 
 namespace DictationAssistant.App.ViewModels;
 
@@ -89,7 +90,10 @@ public partial class MainWindowViewModel : ObservableObject
     private DictationState _currentState;
 
     [ObservableProperty]
-    private int _intervalSeconds = 3;
+    private string _intervalExpression = "3";
+
+    [ObservableProperty]
+    private string _intervalValidationHint = string.Empty;
 
     [ObservableProperty]
     private int _timesPerWord = 2;
@@ -295,7 +299,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     private void ApplySettingsToCore()
     {
-        _dictationPlayer.Settings.IntervalSeconds = IntervalSeconds;
+        _dictationPlayer.Settings.IntervalExpression = IntervalExpression;
         _dictationPlayer.Settings.TimesPerWord = TimesPerWord;
         _dictationPlayer.Settings.HighlightCurrentLine = HighlightCurrentLine;
         _dictationPlayer.Settings.AutoScrollToCurrentLine = AutoScrollCurrentLine;
@@ -372,7 +376,7 @@ public partial class MainWindowViewModel : ObservableObject
         MainWindowHeight = _appSettings.MainWindow.Height;
         WordListVisible = _appSettings.MainWindow.WordListVisible;
 
-        IntervalSeconds = _appSettings.Dictation.IntervalSeconds;
+        IntervalExpression = _appSettings.Dictation.IntervalExpression;
         TimesPerWord = _appSettings.Dictation.TimesPerWord;
         HighlightCurrentLine = _appSettings.Dictation.HighlightCurrentLine;
         AutoScrollCurrentLine = _appSettings.Dictation.AutoScrollCurrentLine;
@@ -401,9 +405,32 @@ public partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(ShowOrHideWordListText));
     }
 
-    partial void OnIntervalSecondsChanged(int value)
+    partial void OnIntervalExpressionChanged(string value)
     {
-        _appSettings.Dictation.IntervalSeconds = value;
+        _appSettings.Dictation.IntervalExpression = value;
+        ValidateAndApplyWaitingTime(value);
+    }
+
+    private void ValidateAndApplyWaitingTime(string expression)
+    {
+        if (string.IsNullOrWhiteSpace(expression))
+        {
+            IntervalValidationHint = "表达式不能为空";
+            return;
+        }
+
+        if (WaitingTimeParser.TryParse(expression, out var calculator))
+        {
+            IntervalValidationHint = string.Empty;
+            if (_dictationPlayer is DictationPlayer player)
+            {
+                player.SetWaitingTimeCalculator(calculator);
+            }
+        }
+        else
+        {
+            IntervalValidationHint = "无效的表达式";
+        }
     }
 
     partial void OnTimesPerWordChanged(int value)

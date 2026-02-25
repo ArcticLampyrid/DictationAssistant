@@ -13,6 +13,7 @@
     <PackageReference Include="EdgeTTS" Version="1.0.3" />
     <PackageReference Include="ManagedBass" Version="3.0.0" />
     <PackageReference Include="MP3Sharp" Version="1.0.5" />
+    <PackageReference Include="NCalcSync" Version="5.12.0" />
     <PackageReference Include="SDL2-CS.NetCore" Version="2.0.8" />
   </ItemGroup>
 

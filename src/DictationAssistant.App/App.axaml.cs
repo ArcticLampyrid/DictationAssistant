@@ -27,7 +27,10 @@ public partial class App : Application
             var wordListSource = new EditorDocumentWordListSource();
             var audioPlayer = new SdlPcmPlayer();
             IPcmTtsEngine ttsEngine = TtsEngineFactory.CreateDefaultPcmEngine();
-            IDictationPlayer player = new DictationPlayer(ttsEngine, wordListSource, audioPlayer);
+            var player = new DictationPlayer(ttsEngine, wordListSource, audioPlayer);
+
+            if (WaitingTimeParser.TryParse(appSettings.Dictation.IntervalExpression, out var calc))
+                player.SetWaitingTimeCalculator(calc);
 
             desktop.MainWindow = new MainWindow(appSettings)
             {

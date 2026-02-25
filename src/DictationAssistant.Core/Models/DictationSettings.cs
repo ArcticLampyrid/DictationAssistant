@@ -2,15 +2,15 @@ namespace DictationAssistant.Core.Models;
 
 public sealed class DictationSettings
 {
-    private int _intervalSeconds = 3;
+    private string _intervalExpression = "3";
     private int _timesPerWord = 2;
     private int _volume = 100;
     private int _rate;
 
-    public int IntervalSeconds
+    public string IntervalExpression
     {
-        get => _intervalSeconds;
-        set => _intervalSeconds = Math.Clamp(value, 0, 600);
+        get => _intervalExpression;
+        set => _intervalExpression = string.IsNullOrWhiteSpace(value) ? "3" : value;
     }
 
     public int TimesPerWord

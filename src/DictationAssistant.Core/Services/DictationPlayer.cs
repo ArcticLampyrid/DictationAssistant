@@ -12,6 +12,7 @@ public sealed class DictationPlayer : IDictationPlayer
     private readonly IAudioPlayer _audioPlayer;
     private readonly IWordListSource _wordListSource;
     private readonly object _stateLock = new();
+    private IWaitingTimeCalculator? _waitingTimeCalculator;
 
     private CancellationTokenSource? _sessionCancellation;
     private Task? _autoTask;
@@ -62,6 +63,17 @@ public sealed class DictationPlayer : IDictationPlayer
     public DictationState State { get; private set; } = DictationState.Stopped;
 
     public DictationSettings Settings { get; }
+
+    public void SetWaitingTimeCalculator(IWaitingTimeCalculator? calculator) => _waitingTimeCalculator = calculator;
+
+    private int GetWaitingSeconds(string word)
+    {
+        if (_waitingTimeCalculator is not null)
+            return Math.Max(0, _waitingTimeCalculator.CalculateWaitingTime(word));
+        if (int.TryParse(Settings.IntervalExpression, out var secs))
+            return Math.Clamp(secs, 0, 600);
+        return 3;
+    }
 
     public DictationProgress Progress { get; private set; }
 
@@ -257,7 +269,7 @@ public sealed class DictationPlayer : IDictationPlayer
 
                     if (repeat < Settings.TimesPerWord || index < totalWords - 1)
                     {
-                        var silenceDuration = Settings.IntervalSeconds;
+                        var silenceDuration = GetWaitingSeconds(word);
                         if (silenceDuration > 0 && pcmAudio is not null)
                         {
                             var silenceBytes = CreateSilencePcm(silenceDuration, pcmAudio.Format.SampleRate, pcmAudio.Format.Channels);
@@ -352,10 +364,15 @@ public sealed class DictationPlayer : IDictationPlayer
                     await SpeakWordAsync(index, repeat, cancellationToken).ConfigureAwait(false);
 
                     var shouldDelay = repeat < Settings.TimesPerWord || index < _wordListSource.Count - 1;
-                    if (shouldDelay && Settings.IntervalSeconds > 0)
+                    if (shouldDelay)
                     {
-                        await WaitIfPausedAsync(cancellationToken).ConfigureAwait(false);
-                        await Task.Delay(TimeSpan.FromSeconds(Settings.IntervalSeconds), cancellationToken).ConfigureAwait(false);
+                        var word = _wordListSource.GetWordAt(index);
+                        var waitSeconds = GetWaitingSeconds(word);
+                        if (waitSeconds > 0)
+                        {
+                            await WaitIfPausedAsync(cancellationToken).ConfigureAwait(false);
+                            await Task.Delay(TimeSpan.FromSeconds(waitSeconds), cancellationToken).ConfigureAwait(false);
+                        }
                     }
                 }
             }

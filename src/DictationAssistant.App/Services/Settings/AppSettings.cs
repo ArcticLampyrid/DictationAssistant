@@ -33,7 +33,7 @@ public sealed class MainWindowSettings
 
 public sealed class DictationSettings
 {
-    public int IntervalSeconds { get; set; } = 3;
+    public string IntervalExpression { get; set; } = "3";
 
     public int TimesPerWord { get; set; } = 2;
 
