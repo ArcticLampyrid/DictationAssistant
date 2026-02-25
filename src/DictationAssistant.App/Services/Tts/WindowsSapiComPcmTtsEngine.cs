@@ -46,53 +46,64 @@ public sealed class WindowsSapiComPcmTtsEngine : IPcmTtsEngine
         return Task.Run(() => SynthesizeWindows(text, options), ct);
     }
 
+    private static readonly string[] VoiceCategoryIds =
+    [
+        @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices",
+        @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech Server\v11.0\Voices",
+        @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech_OneCore\Voices"
+    ];
+
     [SupportedOSPlatform("windows")]
     private static IReadOnlyList<TtsVoiceInfo> ListVoicesWindows()
     {
-        object? voiceObj = null;
-        object? voicesObj = null;
+        var results = new List<TtsVoiceInfo>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        try
+        foreach (var categoryId in VoiceCategoryIds)
         {
-            voiceObj = CreateComObject("SAPI.SpVoice");
-            if (voiceObj is null)
+            object? categoryObj = null;
+            try
             {
-                return [];
-            }
-
-            dynamic voice = voiceObj;
-            voicesObj = voice.GetVoices();
-            dynamic voices = voicesObj;
-
-            var count = (int)voices.Count;
-            var results = new List<TtsVoiceInfo>(count);
-            for (var i = 0; i < count; i++)
-            {
-                dynamic token = voices.Item(i);
-                var name = SafeToString(token.GetDescription());
-                var locale = ParseSapiLanguageHex(SafeToString(token.GetAttribute("Language")));
-                if (!string.IsNullOrWhiteSpace(name))
+                categoryObj = CreateComObject("SAPI.SpObjectTokenCategory");
+                if (categoryObj is null)
                 {
-                    results.Add(new TtsVoiceInfo
-                    {
-                        Name = name,
-                        LocaleOrLanguage = locale
-                    });
+                    continue;
                 }
-                ReleaseCom(token);
-            }
 
-            return results;
+                dynamic category = categoryObj;
+                category.SetId(categoryId, false);
+                dynamic tokens = category.EnumerateTokens();
+                var count = (int)tokens.Count;
+
+                for (var i = 0; i < count; i++)
+                {
+                    dynamic token = tokens.Item(i);
+                    var name = SafeToString(token.GetDescription());
+                    if (!string.IsNullOrWhiteSpace(name) && seen.Add(name))
+                    {
+                        var locale = ParseSapiLanguageHex(SafeToString(token.GetAttribute("Language")));
+                        results.Add(new TtsVoiceInfo
+                        {
+                            Name = name,
+                            LocaleOrLanguage = locale
+                        });
+                    }
+                    ReleaseCom(token);
+                }
+
+                ReleaseCom(tokens);
+            }
+            catch
+            {
+                // Category may not exist on this system — skip silently
+            }
+            finally
+            {
+                ReleaseCom(categoryObj);
+            }
         }
-        catch
-        {
-            return [];
-        }
-        finally
-        {
-            ReleaseCom(voicesObj);
-            ReleaseCom(voiceObj);
-        }
+
+        return results;
     }
 
     [SupportedOSPlatform("windows")]
@@ -125,21 +136,17 @@ public sealed class WindowsSapiComPcmTtsEngine : IPcmTtsEngine
 
             if (!string.IsNullOrWhiteSpace(options.VoiceName))
             {
-                voicesObj = voice.GetVoices();
-                dynamic voices = voicesObj;
-                var count = (int)voices.Count;
-                for (var i = 0; i < count; i++)
+                var selectedToken = FindVoiceToken(options.VoiceName);
+                if (selectedToken is not null)
                 {
-                    dynamic token = voices.Item(i);
-                    var name = SafeToString(token.GetDescription());
-                    if (string.Equals(name, options.VoiceName, StringComparison.OrdinalIgnoreCase))
+                    try
                     {
-                        voice.Voice = token;
-                        ReleaseCom(token);
-                        break;
+                        voice.Voice = selectedToken;
                     }
-
-                    ReleaseCom(token);
+                    finally
+                    {
+                        ReleaseCom(selectedToken);
+                    }
                 }
             }
 
@@ -168,6 +175,51 @@ public sealed class WindowsSapiComPcmTtsEngine : IPcmTtsEngine
             ReleaseCom(streamObj);
             ReleaseCom(voiceObj);
         }
+    }
+
+    [SupportedOSPlatform("windows")]
+    private static object? FindVoiceToken(string voiceName)
+    {
+        foreach (var categoryId in VoiceCategoryIds)
+        {
+            object? categoryObj = null;
+            try
+            {
+                categoryObj = CreateComObject("SAPI.SpObjectTokenCategory");
+                if (categoryObj is null)
+                {
+                    continue;
+                }
+
+                dynamic category = categoryObj;
+                category.SetId(categoryId, false);
+                dynamic tokens = category.EnumerateTokens();
+                var count = (int)tokens.Count;
+
+                for (var i = 0; i < count; i++)
+                {
+                    dynamic token = tokens.Item(i);
+                    var name = SafeToString(token.GetDescription());
+                    if (string.Equals(name, voiceName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        ReleaseCom(tokens);
+                        return token; // caller must ReleaseCom
+                    }
+                    ReleaseCom(token);
+                }
+
+                ReleaseCom(tokens);
+            }
+            catch
+            {
+            }
+            finally
+            {
+                ReleaseCom(categoryObj);
+            }
+        }
+
+        return null;
     }
 
     [SupportedOSPlatform("windows")]

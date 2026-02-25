@@ -53,7 +53,7 @@ v4 的核心定位：**跨平台（Avalonia + .NET）**。在不牺牲跨平台�
   - [x] 失败策略：预加载失败/在线 TTS 失败均静默，仅日志记录，不影响当前播报流程
 - [ ] Windows：**保留/迁移 v3 的"原生引擎体系"**
   - [x] SAPI voices（v3 的 `SpeechLib` 路线：COM 枚举 + 选择 voice + Rate）
-  - [ ] OneCore voices（补充与 SAPI 的统一枚举/选择）
+  - [x] OneCore voices（通过 SpObjectTokenCategory 枚举 3 个注册表路径，含 Speech_OneCore）
   - [x] ImprovedVoice（"音源增强目录"：命中则播文件，否则回落到系统 voice）
   - [ ] （可选）System.Speech（当前 v4 的 PowerShell `System.Speech.Synthesis` 回落方案）
 - [ ] macOS：NSSpeechSynthesizer / `say`（可枚举 voices + 选择）
