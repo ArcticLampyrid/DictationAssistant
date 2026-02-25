@@ -58,10 +58,14 @@ public class FFmpegAudioEncoderInfo : AudioEncoderInfo
         Format = format;
     }
 
-    public override PcmStreamWithInfo CreateEncoder(PcmFormatInfo format, string path, object? encodeSettings)
+    public override PcmAudio CreateEncoder(PcmFormatInfo format, string path, object? encodeSettings)
     {
         var encoder = new Core.Audio.FFmpegAudioEncoder(path, format.SampleRate, format.Channels, Format);
-        return new PcmStreamWithInfo(new FFmpegAudioEncoderStream(encoder), format);
+        return new PcmAudio
+        {
+            Data = new FFmpegAudioEncoderStream(encoder),
+            Format = format
+        };
     }
 
     private static string GetFormatName(string format)

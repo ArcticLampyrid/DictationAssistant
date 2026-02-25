@@ -13,9 +13,9 @@ public abstract class AudioEncoderInfo
     public string Name { get; }
     public string Extension { get; }
 
-    public abstract PcmStreamWithInfo CreateEncoder(PcmFormatInfo format, string path, object? encodeSettings);
+    public abstract PcmAudio CreateEncoder(PcmFormatInfo format, string path, object? encodeSettings);
 
-    public PcmStreamWithInfo CreateEncoder(PcmFormatInfo format, string path)
+    public PcmAudio CreateEncoder(PcmFormatInfo format, string path)
     {
         return CreateEncoder(format, path, null);
     }

@@ -12,9 +12,13 @@ public class WaveEncoder : Stream
         {
         }
 
-        public override PcmStreamWithInfo CreateEncoder(PcmFormatInfo format, string path, object? encodeSettings)
+        public override PcmAudio CreateEncoder(PcmFormatInfo format, string path, object? encodeSettings)
         {
-            return new PcmStreamWithInfo(new WaveEncoder(format, path), format);
+            return new PcmAudio
+            {
+                Data = new WaveEncoder(format, path),
+                Format = format
+            };
         }
     }
 
