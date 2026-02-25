@@ -9,6 +9,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using AvaloniaEdit;
@@ -25,6 +26,7 @@ public partial class MainWindow : Window
     private IStorageFile? _currentFile;
     private bool _isApplyingViewModelPosition;
     private bool _windowPlacementRestored;
+    private HighlightedLineBackgroundRenderer? _highlightedLineRenderer;
 
     public MainWindow()
         : this(new AppSettings())
@@ -80,6 +82,12 @@ public partial class MainWindow : Window
 
         vm.WordListSource.AttachDocument(_wordlistEditor.Document);
         _wordlistEditor.TextArea.Caret.PositionChanged += (_, _) => SyncCurrentLineFromCaret(vm);
+
+        _highlightedLineRenderer = new HighlightedLineBackgroundRenderer(_wordlistEditor.TextArea.TextView)
+        {
+            Background = new SolidColorBrush(Color.Parse("#40FFD700"))
+        };
+        _wordlistEditor.TextArea.TextView.BackgroundRenderers.Add(_highlightedLineRenderer);
     }
 
     private void SyncCurrentLineFromCaret(MainWindowViewModel vm)
@@ -103,9 +111,9 @@ public partial class MainWindow : Window
         var index = vm.CurrentLineIndex;
         if (index < 0)
         {
-            if (vm.HighlightCurrentLine)
+            if (_highlightedLineRenderer is { } renderer)
             {
-                _wordlistEditor.Select(0, 0);
+                renderer.LineNumber = 0;
             }
 
             return;
@@ -121,15 +129,12 @@ public partial class MainWindow : Window
             if (vm.AutoScrollCurrentLine)
             {
                 _wordlistEditor.ScrollToLine(lineNumber);
+                _wordlistEditor.TextArea.Caret.BringCaretToView();
             }
 
-            if (vm.HighlightCurrentLine)
+            if (_highlightedLineRenderer is { } renderer)
             {
-                _wordlistEditor.Select(line.Offset, Math.Max(line.Length, 0));
-            }
-            else
-            {
-                _wordlistEditor.Select(0, 0);
+                renderer.LineNumber = vm.HighlightCurrentLine ? lineNumber : 0;
             }
         }
         finally
