@@ -43,4 +43,9 @@ public static class TtsEngineFactory
     {
         return CreateDefaultPcmEngine() as ITtsEngine ?? new NullTtsEngine();
     }
+
+    public static EdgeTtsPcmEngine CreateEdgeTtsEngine()
+    {
+        return new EdgeTtsPcmEngine();
+    }
 }
