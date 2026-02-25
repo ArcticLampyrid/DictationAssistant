@@ -48,4 +48,9 @@ public static class TtsEngineFactory
     {
         return new EdgeTtsPcmEngine();
     }
+
+    public static IPcmTtsEngine CreateImprovedVoiceEngine(IPcmTtsEngine fallback, string resourceDirectory)
+    {
+        return new ImprovedVoiceTtsEngine(fallback, resourceDirectory);
+    }
 }

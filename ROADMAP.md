@@ -54,7 +54,7 @@ v4 的核心定位：**跨平台（Avalonia + .NET）**。在不牺牲跨平台�
 - [ ] Windows：**保留/迁移 v3 的"原生引擎体系"**
   - [x] SAPI voices（v3 的 `SpeechLib` 路线：COM 枚举 + 选择 voice + Rate）
   - [ ] OneCore voices（补充与 SAPI 的统一枚举/选择）
-  - [ ] ImprovedVoice（"音源增强目录"：命中则播文件，否则回落到系统 voice）
+  - [x] ImprovedVoice（"音源增强目录"：命中则播文件，否则回落到系统 voice）
   - [ ] （可选）System.Speech（当前 v4 的 PowerShell `System.Speech.Synthesis` 回落方案）
 - [ ] macOS：NSSpeechSynthesizer / `say`（可枚举 voices + 选择）
 - [ ] Linux：优先考虑 `espeak-ng` / `piper`（离线）
@@ -82,14 +82,14 @@ v4 的核心定位：**跨平台（Avalonia + .NET）**。在不牺牲跨平台�
   - [ ] （后续）确认打包时 SDL2 native 依赖在各平台的携带策略（M6）
 
 - [ ] **音频解码：ManagedBass（跨平台）**
-  - [ ] 选型并引入 `ManagedBass`（及需要的 codec 扩展包）
-  - [ ] 用 ManagedBass 替换 v3 的 `bass.dll` P/Invoke（`AudioFileDecodeStream`）
-  - [ ] 确保支持 v3 的常见扩展名（wav/flac/ape/m4a/opus/aac/mp3/ogg/wma/aif/mp4…）
+  - [x] 选型并引入 `ManagedBass`（及需要的 codec 扩展包）
+  - [x] 用 ManagedBass 替换 v3 的 `bass.dll` P/Invoke（`AudioFileDecodeStream`）
+  - [x] 确保支持 v3 的常见扩展名（wav/flac/ape/m4a/opus/aac/mp3/ogg/wma/aif/mp4…）
 
 - [ ] **ImprovedVoice 全平台化**
-  - [ ] 把 ImprovedVoice 的"命中音频文件则播放"能力迁到 v4（平台无关，全平台都支持）
-  - [ ] 解码走 ManagedBass → 输出 PCM → 播放走 SDL2（NuGet 包装，替换手写 P/Invoke）
-  - [ ] 未命中则回落到当前选择的 TTS engine
+  - [x] 把 ImprovedVoice 的"命中音频文件则播放"能力迁到 v4（平台无关，全平台都支持）
+  - [x] 解码走 ManagedBass → 输出 PCM → 播放走 SDL2（NuGet 包装，替换手写 P/Invoke）
+  - [x] 未命中则回落到当前选择的 TTS engine
 
 - [ ] 在此基础上，再实现 **导出（SaveAudio）**
   - [ ] 明确 v4 导出的"最小可用"目标（WAV 先行）
