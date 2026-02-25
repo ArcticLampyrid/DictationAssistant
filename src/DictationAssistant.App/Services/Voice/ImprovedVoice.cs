@@ -51,7 +51,7 @@ public sealed class ImprovedVoice : IVoice
 
         return new PcmAudio
         {
-            Data = memoryStream.ToArray(),
+            Data = memoryStream,
             Format = format
         };
     }

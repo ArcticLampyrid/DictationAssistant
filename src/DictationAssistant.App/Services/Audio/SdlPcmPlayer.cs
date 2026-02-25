@@ -63,7 +63,7 @@ public sealed class SdlPcmPlayer : IAudioPlayer, IDisposable
                 throw new NotSupportedException($"SDL device returned unsupported format: 0x{obtained.Format:X}");
             }
 
-            var dataToPlay = ApplyVolume(audio.Data, Math.Clamp(volume, 0, 100));
+            var dataToPlay = ApplyVolume(audio.ToArray(), Math.Clamp(volume, 0, 100));
             var queueResult = QueuePcm(device, dataToPlay);
             if (queueResult < 0)
             {

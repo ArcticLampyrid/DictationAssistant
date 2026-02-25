@@ -115,7 +115,7 @@ public static class WavReader
 
         audio = new PcmAudio
         {
-            Data = pcmPayload.ToArray(),
+            Data = new MemoryStream(pcmPayload.ToArray()),
             Format = new PcmFormatInfo(sampleRate, channels, PcmSampleFormat.S16LE)
         };
         return true;

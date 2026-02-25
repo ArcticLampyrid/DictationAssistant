@@ -98,7 +98,7 @@ public sealed class EdgeTtsVoice : CachedVoice
 
             return new PcmAudio
             {
-                Data = pcmStream.ToArray(),
+                Data = pcmStream,
                 Format = format
             };
         }

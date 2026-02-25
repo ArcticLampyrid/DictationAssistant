@@ -1,3 +1,4 @@
+using System.IO;
 using DictationAssistant.Core.Abstractions;
 using DictationAssistant.Core.Audio;
 using DictationAssistant.Core.Models;
@@ -75,7 +76,7 @@ public sealed class SapiVoice : IVoice
 
             return new PcmAudio
             {
-                Data = raw,
+                Data = new MemoryStream(raw),
                 Format = new PcmFormatInfo(44100, 2, PcmSampleFormat.S16LE)
             };
         }

@@ -4,8 +4,10 @@ public static class WavWriter
 {
     public static void Write(Stream output, PcmAudio audio)
     {
-        WriteHeader(output, audio.Format.SampleRate, audio.Format.Channels, audio.Data.Length);
-        output.Write(audio.Data);
+        var dataLength = (int)audio.Data.Length;
+        WriteHeader(output, audio.Format.SampleRate, audio.Format.Channels, dataLength);
+        audio.Data.Position = 0;
+        audio.Data.CopyTo(output);
     }
 
     public static void WriteHeader(Stream output, int sampleRate, int channels, int dataLength)

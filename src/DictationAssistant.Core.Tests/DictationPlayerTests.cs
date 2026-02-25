@@ -1,3 +1,4 @@
+using System.IO;
 using DictationAssistant.Core.Abstractions;
 using DictationAssistant.Core.Audio;
 using DictationAssistant.Core.Models;
@@ -31,7 +32,7 @@ public class DictationPlayerTests
             _ = ct;
             return Task.FromResult<PcmAudio?>(new PcmAudio
             {
-                Data = [0, 0],
+                Data = new MemoryStream([0, 0]),
                 Format = new PcmFormatInfo(16000, 1, PcmSampleFormat.S16LE)
             });
         }

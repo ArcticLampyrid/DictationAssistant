@@ -221,7 +221,7 @@ public sealed class DictationPlayer : IDictationPlayer
                             lrcLines.Add($"[{lrcTime}]{word}");
                         }
 
-                        await pcmStream.WriteAsync(pcmAudio.Data, cancellationToken).ConfigureAwait(false);
+                        await pcmStream.WriteAsync(pcmAudio.ToArray(), cancellationToken).ConfigureAwait(false);
 
                         var audioDuration = TimeSpan.FromSeconds(
                             (double)pcmAudio.Data.Length / (pcmAudio.Format.SampleRate * pcmAudio.Format.Channels * 2));
