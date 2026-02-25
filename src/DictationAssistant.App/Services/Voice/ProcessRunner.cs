@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace DictationAssistant.App.Services.Tts;
+namespace DictationAssistant.App.Services.Voice;
 
 internal static class ProcessRunner
 {

@@ -4,29 +4,24 @@ using DictationAssistant.Core.Audio;
 using DictationAssistant.Core.Models;
 using System.IO;
 
-namespace DictationAssistant.App.Services.Tts;
+namespace DictationAssistant.App.Services.Voice;
 
-public sealed class ImprovedVoiceTtsEngine : IPcmTtsEngine
+public sealed class ImprovedVoice : IVoice
 {
     private static readonly string[] AudioFileExtensions = ["wav", "flac", "ape", "m4a", "opus", "aac", "mp3", "mp2", "mp1", "ogg", "wma", "aif", "mp4"];
 
-    private readonly IPcmTtsEngine _fallbackEngine;
+    private readonly IVoice _inner;
     private readonly string _resourceDirectory;
 
-    public ImprovedVoiceTtsEngine(IPcmTtsEngine fallbackEngine, string resourceDirectory)
+    public ImprovedVoice(IVoice inner, string resourceDirectory)
     {
-        _fallbackEngine = fallbackEngine;
+        _inner = inner;
         _resourceDirectory = resourceDirectory;
     }
 
-    public string Name => $"[Improved] {_fallbackEngine.Name}";
+    public string Name => $"[Improved] {_inner.Name}";
 
-    public Task<IReadOnlyList<TtsVoiceInfo>> ListVoicesAsync(CancellationToken ct)
-    {
-        return _fallbackEngine.ListVoicesAsync(ct);
-    }
-
-    public async Task<PcmAudio?> SynthesizePcmAsync(string text, TtsSpeakOptions options, CancellationToken ct)
+    public async Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
         var filePath = FindFile(text);
         if (filePath is not null)
@@ -38,7 +33,7 @@ public sealed class ImprovedVoiceTtsEngine : IPcmTtsEngine
             }
         }
 
-        return await _fallbackEngine.SynthesizePcmAsync(text, options, ct).ConfigureAwait(false);
+        return await _inner.SynthesizePcmAsync(text, options, ct).ConfigureAwait(false);
     }
 
     private string? FindFile(string text)

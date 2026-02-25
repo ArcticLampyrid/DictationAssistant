@@ -5,6 +5,7 @@ using Avalonia.Threading;
 using System.Diagnostics;
 using DictationAssistant.App.Services;
 using DictationAssistant.App.Services.Settings;
+using DictationAssistant.App.Services.Voice;
 using DictationAssistant.Core.Abstractions;
 using DictationAssistant.Core.Models;
 using DictationAssistant.Core.Services;
@@ -17,23 +18,40 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly IDictationPlayer _dictationPlayer;
     private readonly ITextFileService _textFileService;
     private readonly AppSettings _appSettings;
+    private readonly VoiceAggregator _aggregator;
+    private IVoice _currentVoice;
 
     public IDictationPlayer DictationPlayer => _dictationPlayer;
 
     public MainWindowViewModel(
         EditorDocumentWordListSource wordListSource,
-        IDictationPlayer dictationPlayer,
+        IAudioPlayer audioPlayer,
         ITextFileService textFileService,
-        IPcmTtsEngine ttsEngine,
+        VoiceAggregator aggregator,
+        IVoice initialVoice,
         AppSettings appSettings)
     {
         _wordListSource = wordListSource;
-        _dictationPlayer = dictationPlayer;
         _textFileService = textFileService;
         _appSettings = appSettings;
+        _aggregator = aggregator;
+        _currentVoice = initialVoice;
         _appSettings.EnsureDefaults();
 
-        TtsEngineName = ttsEngine.Name;
+        var dictationSettings = new DictationSettings
+        {
+            IntervalExpression = appSettings.Dictation.IntervalExpression,
+            TimesPerWord = appSettings.Dictation.TimesPerWord,
+            HighlightCurrentLine = appSettings.Dictation.HighlightCurrentLine,
+            AutoScrollToCurrentLine = appSettings.Dictation.AutoScrollToCurrentLine,
+            Volume = appSettings.Dictation.Volume,
+            Rate = appSettings.Dictation.Rate,
+            DefaultChineseVoiceName = appSettings.Preference.DefaultChineseVoiceName,
+            DefaultEnglishVoiceName = appSettings.Preference.DefaultEnglishVoiceName
+        };
+
+        _dictationPlayer = new DictationPlayer(_currentVoice, wordListSource, audioPlayer, dictationSettings);
+        VoiceProviderName = _currentVoice.Name;
         Status = "就绪";
 
         _dictationPlayer.ProgressChanged += (_, progress) =>
@@ -65,14 +83,14 @@ public partial class MainWindowViewModel : ObservableObject
 
         LoadSettings();
         ApplySettingsToCore();
-        _ = LoadVoiceOptionsAsync(ttsEngine);
+        _ = LoadVoiceOptionsAsync();
         OnPropertyChanged(nameof(SpeakStateText));
     }
 
     public EditorDocumentWordListSource WordListSource => _wordListSource;
 
     [ObservableProperty]
-    private string _ttsEngineName = string.Empty;
+    private string _voiceProviderName = string.Empty;
 
     [ObservableProperty]
     private string _filePath = string.Empty;
@@ -141,10 +159,10 @@ public partial class MainWindowViewModel : ObservableObject
     private string _defaultEnglishVoiceName = string.Empty;
 
     [ObservableProperty]
-    private ObservableCollection<TtsVoiceInfo> _voiceOptions = [];
+    private ObservableCollection<IVoiceFactory> _voiceOptions = [];
 
     [ObservableProperty]
-    private TtsVoiceInfo? _selectedVoice;
+    private IVoiceFactory? _selectedVoiceFactory;
 
     public bool IsAutoRunning => CurrentState == DictationState.AutoRunning;
 
@@ -309,54 +327,71 @@ public partial class MainWindowViewModel : ObservableObject
         _dictationPlayer.Settings.DefaultEnglishVoiceName = DefaultEnglishVoiceName;
     }
 
-    private async Task LoadVoiceOptionsAsync(IPcmTtsEngine ttsEngine)
+    private async Task LoadVoiceOptionsAsync()
     {
         try
         {
-            var voices = await ttsEngine.ListVoicesAsync(CancellationToken.None).ConfigureAwait(false);
+            var factories = await _aggregator.GetAllFactoriesAsync(CancellationToken.None).ConfigureAwait(false);
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 VoiceOptions.Clear();
-                foreach (var voice in voices)
+                foreach (var factory in factories)
                 {
-                    if (!string.IsNullOrWhiteSpace(voice.Name))
-                    {
-                        VoiceOptions.Add(voice);
-                    }
+                    VoiceOptions.Add(factory);
                 }
 
-                var targetVoice = DefaultChineseVoiceName ?? DefaultEnglishVoiceName;
-                if (!string.IsNullOrWhiteSpace(targetVoice))
+                var targetVoiceId = DefaultChineseVoiceName ?? DefaultEnglishVoiceName;
+                if (!string.IsNullOrWhiteSpace(targetVoiceId))
                 {
-                    SelectedVoice = VoiceOptions.FirstOrDefault(v => v.Name == targetVoice);
+                    SelectedVoiceFactory = VoiceOptions.FirstOrDefault(f => f.Info.Id == targetVoiceId || f.Info.DisplayName == targetVoiceId);
+                }
+
+                if (SelectedVoiceFactory is null && VoiceOptions.Count > 0)
+                {
+                    SelectedVoiceFactory = VoiceOptions[0];
                 }
             });
         }
         catch (Exception ex)
         {
-            Trace.WriteLine($"Failed to load TTS voices: {ex}");
+            Trace.WriteLine($"Failed to load voice factories: {ex}");
             await Dispatcher.UIThread.InvokeAsync(() => VoiceOptions.Clear());
         }
     }
 
-    partial void OnSelectedVoiceChanged(TtsVoiceInfo? value)
+    partial void OnSelectedVoiceFactoryChanged(IVoiceFactory? value)
     {
-        if (value != null)
+        if (value is not null)
         {
-            DefaultChineseVoiceName = value.Name;
-            DefaultEnglishVoiceName = value.Name;
+            DefaultChineseVoiceName = value.Info.Id;
+            DefaultEnglishVoiceName = value.Info.Id;
+
+            var newVoice = value.Create();
+
+            if (!string.IsNullOrWhiteSpace(ImprovedResourcePath))
+            {
+                newVoice = new ImprovedVoice(newVoice, ImprovedResourcePath);
+            }
+
+            _currentVoice = newVoice;
+
+            if (_dictationPlayer is DictationPlayer player)
+            {
+                player.Voice = _currentVoice;
+            }
+
+            VoiceProviderName = _currentVoice.Name;
         }
     }
 
     [RelayCommand]
     private void SwitchToChineseVoice()
     {
-        var voice = VoiceOptions.FirstOrDefault(v => v.Name == DefaultChineseVoiceName)
-            ?? VoiceOptions.FirstOrDefault(v => v.LocaleOrLanguage?.StartsWith("zh", StringComparison.OrdinalIgnoreCase) == true);
-        if (voice is not null)
+        var factory = VoiceOptions.FirstOrDefault(f => f.Info.LocaleOrLanguage?.StartsWith("zh", StringComparison.OrdinalIgnoreCase) == true);
+        if (factory is not null)
         {
-            SelectedVoice = voice;
+            SelectedVoiceFactory = factory;
         }
         else
         {
@@ -367,11 +402,10 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void SwitchToEnglishVoice()
     {
-        var voice = VoiceOptions.FirstOrDefault(v => v.Name == DefaultEnglishVoiceName)
-            ?? VoiceOptions.FirstOrDefault(v => v.LocaleOrLanguage?.StartsWith("en", StringComparison.OrdinalIgnoreCase) == true);
-        if (voice is not null)
+        var factory = VoiceOptions.FirstOrDefault(f => f.Info.LocaleOrLanguage?.StartsWith("en", StringComparison.OrdinalIgnoreCase) == true);
+        if (factory is not null)
         {
-            SelectedVoice = voice;
+            SelectedVoiceFactory = factory;
         }
         else
         {
@@ -409,7 +443,7 @@ public partial class MainWindowViewModel : ObservableObject
         IntervalExpression = _appSettings.Dictation.IntervalExpression;
         TimesPerWord = _appSettings.Dictation.TimesPerWord;
         HighlightCurrentLine = _appSettings.Dictation.HighlightCurrentLine;
-        AutoScrollCurrentLine = _appSettings.Dictation.AutoScrollCurrentLine;
+        AutoScrollCurrentLine = _appSettings.Dictation.AutoScrollToCurrentLine;
         Volume = _appSettings.Dictation.Volume;
         Rate = _appSettings.Dictation.Rate;
 
@@ -454,7 +488,7 @@ public partial class MainWindowViewModel : ObservableObject
             IntervalValidationHint = string.Empty;
             if (_dictationPlayer is DictationPlayer player)
             {
-                player.SetWaitingTimeCalculator(calculator);
+                player.WaitingTimeCalculator = calculator;
             }
         }
         else
@@ -475,7 +509,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     partial void OnAutoScrollCurrentLineChanged(bool value)
     {
-        _appSettings.Dictation.AutoScrollCurrentLine = value;
+        _appSettings.Dictation.AutoScrollToCurrentLine = value;
     }
 
     partial void OnVolumeChanged(int value)

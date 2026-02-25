@@ -367,7 +367,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var voiceNames = vm.VoiceOptions.Select(v => v.Name).ToList();
+        var voiceNames = vm.VoiceOptions.Select(v => v.Info.DisplayName).ToList();
         var dialog = new PreferenceWindow(vm.CreatePreferenceSnapshot(), voiceNames);
         var result = await dialog.ShowDialog<bool?>(this);
         if (result == true)

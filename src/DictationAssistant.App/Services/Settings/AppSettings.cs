@@ -4,14 +4,14 @@ public sealed class AppSettings
 {
     public MainWindowSettings MainWindow { get; set; } = new();
 
-    public DictationSettings Dictation { get; set; } = new();
+    public Core.Models.DictationSettings Dictation { get; set; } = new();
 
     public PreferenceSettings Preference { get; set; } = new();
 
     public void EnsureDefaults()
     {
         MainWindow ??= new MainWindowSettings();
-        Dictation ??= new DictationSettings();
+        Dictation ??= new Core.Models.DictationSettings();
         Preference ??= new PreferenceSettings();
     }
 }
@@ -31,20 +31,8 @@ public sealed class MainWindowSettings
     public bool WordListVisible { get; set; } = true;
 }
 
-public sealed class DictationSettings
-{
-    public string IntervalExpression { get; set; } = "3";
-
-    public int TimesPerWord { get; set; } = 2;
-
-    public bool HighlightCurrentLine { get; set; } = true;
-
-    public bool AutoScrollCurrentLine { get; set; } = true;
-
-    public int Volume { get; set; } = 100;
-
-    public int Rate { get; set; }
-}
+// App uses Core.Models.DictationSettings directly via using alias
+// No separate App-layer DictationSettings needed
 
 public sealed class PreferenceSettings
 {

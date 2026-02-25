@@ -10,6 +10,10 @@ public interface IDictationPlayer
 
     DictationProgress Progress { get; }
 
+    IVoice Voice { get; set; }
+
+    IWaitingTimeCalculator? WaitingTimeCalculator { get; set; }
+
     event EventHandler<DictationProgress>? ProgressChanged;
 
     event EventHandler<DictationState>? StateChanged;

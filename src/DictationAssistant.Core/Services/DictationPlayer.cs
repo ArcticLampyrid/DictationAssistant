@@ -7,7 +7,7 @@ namespace DictationAssistant.Core.Services;
 
 public sealed class DictationPlayer : IDictationPlayer
 {
-    private readonly IPcmTtsEngine _ttsEngine;
+    private IVoice _voice;
     private readonly IAudioPlayer _audioPlayer;
     private readonly IWordListSource _wordListSource;
     private readonly object _stateLock = new();
@@ -17,9 +17,9 @@ public sealed class DictationPlayer : IDictationPlayer
     private Task? _autoTask;
     private TaskCompletionSource<bool>? _pauseSignal;
 
-    public DictationPlayer(IPcmTtsEngine ttsEngine, IWordListSource wordListSource, IAudioPlayer audioPlayer, DictationSettings? settings = null)
+    public DictationPlayer(IVoice voice, IWordListSource wordListSource, IAudioPlayer audioPlayer, DictationSettings? settings = null)
     {
-        _ttsEngine = ttsEngine;
+        _voice = voice;
         _audioPlayer = audioPlayer;
         _wordListSource = wordListSource;
         Settings = settings ?? new DictationSettings();
@@ -39,7 +39,17 @@ public sealed class DictationPlayer : IDictationPlayer
 
     public DictationSettings Settings { get; }
 
-    public void SetWaitingTimeCalculator(IWaitingTimeCalculator? calculator) => _waitingTimeCalculator = calculator;
+    public IWaitingTimeCalculator? WaitingTimeCalculator
+    {
+        get => _waitingTimeCalculator;
+        set => _waitingTimeCalculator = value;
+    }
+
+    public IVoice Voice
+    {
+        get => _voice;
+        set => _voice = value;
+    }
 
     private int GetWaitingSeconds(string word)
     {
@@ -196,26 +206,12 @@ public sealed class DictationPlayer : IDictationPlayer
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    var options = new TtsSpeakOptions
+                    var options = new VoiceSynthesisOptions
                     {
-                        Rate = Settings.Rate,
-                        VoiceName = ResolveVoiceName(word)
+                        Rate = Settings.Rate
                     };
 
-                    PcmAudio? pcmAudio;
-
-                    if (_ttsEngine is IPreloadableTtsEngine preloadable)
-                    {
-                        pcmAudio = await preloadable.TryConsumePreloadedAsync(word, options, cancellationToken).ConfigureAwait(false);
-                        if (pcmAudio is null)
-                        {
-                            pcmAudio = await _ttsEngine.SynthesizePcmAsync(word, options, cancellationToken).ConfigureAwait(false);
-                        }
-                    }
-                    else
-                    {
-                        pcmAudio = await _ttsEngine.SynthesizePcmAsync(word, options, cancellationToken).ConfigureAwait(false);
-                    }
+                    var pcmAudio = await _voice.SynthesizePcmAsync(word, options, cancellationToken).ConfigureAwait(false);
 
                     if (pcmAudio is not null)
                     {
@@ -257,7 +253,7 @@ public sealed class DictationPlayer : IDictationPlayer
             var sampleRate = request.SampleRate;
             var channels = request.Channels;
 
-            if (pcmData.Length > 0 && _ttsEngine is null && _ttsEngine is null)
+            if (pcmData.Length > 0)
             {
                 sampleRate = 44100;
                 channels = 2;
@@ -388,25 +384,12 @@ public sealed class DictationPlayer : IDictationPlayer
 
         try
         {
-            var options = new TtsSpeakOptions
+            var options = new VoiceSynthesisOptions
             {
-                Rate = Settings.Rate,
-                VoiceName = ResolveVoiceName(word)
+                Rate = Settings.Rate
             };
 
-            PcmAudio? pcmAudio;
-            if (_ttsEngine is IPreloadableTtsEngine preloadable)
-            {
-                pcmAudio = await preloadable.TryConsumePreloadedAsync(word, options, cancellationToken).ConfigureAwait(false);
-                if (pcmAudio is null)
-                {
-                    pcmAudio = await _ttsEngine.SynthesizePcmAsync(word, options, cancellationToken).ConfigureAwait(false);
-                }
-            }
-            else
-            {
-                pcmAudio = await _ttsEngine.SynthesizePcmAsync(word, options, cancellationToken).ConfigureAwait(false);
-            }
+            var pcmAudio = await _voice.SynthesizePcmAsync(word, options, cancellationToken).ConfigureAwait(false);
 
             if (pcmAudio is null)
             {
@@ -416,20 +399,19 @@ public sealed class DictationPlayer : IDictationPlayer
 
             await _audioPlayer.PlayAsync(pcmAudio, Settings.Volume, cancellationToken).ConfigureAwait(false);
 
-            if (_ttsEngine is IPreloadableTtsEngine preloadable2 && index + 1 < _wordListSource.Count)
+            if (_voice is IPreloadableVoice preloadable && index + 1 < _wordListSource.Count)
             {
                 var nextWord = _wordListSource.GetWordAt(index + 1);
-                var nextOptions = new TtsSpeakOptions
+                var nextOptions = new VoiceSynthesisOptions
                 {
-                    Rate = Settings.Rate,
-                    VoiceName = ResolveVoiceName(nextWord)
+                    Rate = Settings.Rate
                 };
 
                 _ = Task.Run(async () =>
                 {
                     try
                     {
-                        await preloadable2.PreloadAsync(nextWord, nextOptions, CancellationToken.None).ConfigureAwait(false);
+                        await preloadable.PreloadAsync(nextWord, nextOptions, CancellationToken.None).ConfigureAwait(false);
                     }
                     catch (Exception ex)
                     {
@@ -446,34 +428,6 @@ public sealed class DictationPlayer : IDictationPlayer
         {
             Trace.WriteLine($"TTS speak failed for word '{word}': {ex}");
         }
-    }
-
-    private string? ResolveVoiceName(string text)
-    {
-        if (ContainsAsciiLetter(text) && !string.IsNullOrWhiteSpace(Settings.DefaultEnglishVoiceName))
-        {
-            return Settings.DefaultEnglishVoiceName;
-        }
-
-        if (!string.IsNullOrWhiteSpace(Settings.DefaultChineseVoiceName))
-        {
-            return Settings.DefaultChineseVoiceName;
-        }
-
-        return null;
-    }
-
-    private static bool ContainsAsciiLetter(string text)
-    {
-        foreach (var ch in text)
-        {
-            if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'))
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private async Task StopAutoInternalAsync()

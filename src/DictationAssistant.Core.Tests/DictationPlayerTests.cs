@@ -20,17 +20,11 @@ public static class TaskExtensions
 
 public class DictationPlayerTests
 {
-    private sealed class FakePcmTtsEngine : IPcmTtsEngine
+    private sealed class FakeVoice : IVoice
     {
         public string Name => "Fake";
 
-        public Task<IReadOnlyList<TtsVoiceInfo>> ListVoicesAsync(CancellationToken ct)
-        {
-            _ = ct;
-            return Task.FromResult<IReadOnlyList<TtsVoiceInfo>>([]);
-        }
-
-        public Task<PcmAudio?> SynthesizePcmAsync(string text, TtsSpeakOptions options, CancellationToken ct)
+        public Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
         {
             _ = text;
             _ = options;
@@ -58,8 +52,8 @@ public class DictationPlayerTests
     public void InitialState_IsStopped_ProgressEmpty()
     {
         var wordList = new WordListDocument("apple\nbanana\ncherry");
-        var ttsEngine = new FakePcmTtsEngine();
-        var player = new DictationPlayer(ttsEngine, wordList, new FakeAudioPlayer());
+        var voice = new FakeVoice();
+        var player = new DictationPlayer(voice, wordList, new FakeAudioPlayer());
 
         Assert.Equal(DictationState.Stopped, player.State);
         Assert.Equal(-1, player.Progress.CurrentWordIndex);
@@ -71,8 +65,8 @@ public class DictationPlayerTests
     public async Task SpeakAtAsync_StateTransitions_StoppedToManualSpeakingToStopped()
     {
         var wordList = new WordListDocument("apple\nbanana\ncherry");
-        var ttsEngine = new FakePcmTtsEngine();
-        var player = new DictationPlayer(ttsEngine, wordList, new FakeAudioPlayer());
+        var voice = new FakeVoice();
+        var player = new DictationPlayer(voice, wordList, new FakeAudioPlayer());
 
         var stateChanges = new List<DictationState>();
         player.StateChanged += (_, state) => stateChanges.Add(state);
@@ -87,8 +81,8 @@ public class DictationPlayerTests
     public async Task StartAutoAsync_RunAutoAsync_StateStoppedToAutoRunningToStopped()
     {
         var wordList = new WordListDocument("a\nb");
-        var ttsEngine = new FakePcmTtsEngine();
-        var player = new DictationPlayer(ttsEngine, wordList, new FakeAudioPlayer())
+        var voice = new FakeVoice();
+        var player = new DictationPlayer(voice, wordList, new FakeAudioPlayer())
         {
             Settings = { IntervalExpression = "0", TimesPerWord = 1 }
         };
@@ -107,8 +101,8 @@ public class DictationPlayerTests
     public async Task PauseAuto_ResumeAuto_StateAutoRunningToAutoPausedToAutoRunning()
     {
         var wordList = new WordListDocument("a\nb\nc\nd\ne\nf\ng\nh\ni\nj");
-        var ttsEngine = new FakePcmTtsEngine();
-        var player = new DictationPlayer(ttsEngine, wordList, new FakeAudioPlayer())
+        var voice = new FakeVoice();
+        var player = new DictationPlayer(voice, wordList, new FakeAudioPlayer())
         {
             Settings = { IntervalExpression = "0", TimesPerWord = 1 }
         };
@@ -136,8 +130,8 @@ public class DictationPlayerTests
     public async Task StopAsync_DuringAuto_StateAutoRunningToStopped()
     {
         var wordList = new WordListDocument("a\nb\nc\nd\ne");
-        var ttsEngine = new FakePcmTtsEngine();
-        var player = new DictationPlayer(ttsEngine, wordList, new FakeAudioPlayer())
+        var voice = new FakeVoice();
+        var player = new DictationPlayer(voice, wordList, new FakeAudioPlayer())
         {
             Settings = { IntervalExpression = "0", TimesPerWord = 1 }
         };
@@ -153,8 +147,8 @@ public class DictationPlayerTests
     public async Task SpeakAtAsync_EmptyWordList_ReturnsImmediately()
     {
         var wordList = new WordListDocument("");
-        var ttsEngine = new FakePcmTtsEngine();
-        var player = new DictationPlayer(ttsEngine, wordList, new FakeAudioPlayer());
+        var voice = new FakeVoice();
+        var player = new DictationPlayer(voice, wordList, new FakeAudioPlayer());
 
         var before = DateTime.UtcNow;
         await player.SpeakAtAsync(0);
@@ -168,8 +162,8 @@ public class DictationPlayerTests
     public async Task StartAutoAsync_EmptyWordList_ReturnsImmediately()
     {
         var wordList = new WordListDocument("");
-        var ttsEngine = new FakePcmTtsEngine();
-        var player = new DictationPlayer(ttsEngine, wordList, new FakeAudioPlayer());
+        var voice = new FakeVoice();
+        var player = new DictationPlayer(voice, wordList, new FakeAudioPlayer());
 
         var before = DateTime.UtcNow;
         await player.StartAutoAsync();
@@ -183,8 +177,8 @@ public class DictationPlayerTests
     public async Task ProgressChanged_FiresWithCorrectIndices()
     {
         var wordList = new WordListDocument("a\nb\nc");
-        var ttsEngine = new FakePcmTtsEngine();
-        var player = new DictationPlayer(ttsEngine, wordList, new FakeAudioPlayer())
+        var voice = new FakeVoice();
+        var player = new DictationPlayer(voice, wordList, new FakeAudioPlayer())
         {
             Settings = { IntervalExpression = "0", TimesPerWord = 1 }
         };
@@ -204,8 +198,8 @@ public class DictationPlayerTests
     public async Task SpeakAtAsync_ClampsOutOfRangeIndices()
     {
         var wordList = new WordListDocument("apple\nbanana");
-        var ttsEngine = new FakePcmTtsEngine();
-        var player = new DictationPlayer(ttsEngine, wordList, new FakeAudioPlayer());
+        var voice = new FakeVoice();
+        var player = new DictationPlayer(voice, wordList, new FakeAudioPlayer());
 
         await player.SpeakAtAsync(100);
         Assert.Equal(1, player.Progress.CurrentWordIndex);

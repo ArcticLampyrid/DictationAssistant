@@ -2,38 +2,24 @@ using System.Diagnostics;
 using DictationAssistant.Core.Abstractions;
 using DictationAssistant.Core.Audio;
 using DictationAssistant.Core.Models;
+using DictationAssistant.Core.Services;
 using EdgeTTS;
 using MP3Sharp;
 
-namespace DictationAssistant.App.Services.Tts;
+namespace DictationAssistant.App.Services.Voice;
 
-public sealed class EdgeTtsPcmEngine : IPcmTtsEngine, IPreloadableTtsEngine
+public sealed class EdgeTtsVoice : CachedVoice
 {
-    private (string Text, string VoiceName, int Rate)? _preloadedKey;
-    private PcmAudio? _preloadedValue;
-    private readonly object _lock = new();
+    private readonly string _voiceName;
 
-    public string Name => "Edge TTS";
-
-    public async Task<IReadOnlyList<TtsVoiceInfo>> ListVoicesAsync(CancellationToken ct)
+    public EdgeTtsVoice(string voiceName)
     {
-        try
-        {
-            var voices = await VoicesManager.ListVoices(null, ct).ConfigureAwait(false);
-            return voices.Select(v => new TtsVoiceInfo
-            {
-                Name = v.Name,
-                LocaleOrLanguage = v.Locale
-            }).ToList();
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"[EdgeTTS] Failed to list voices: {ex.Message}");
-            return [];
-        }
+        _voiceName = voiceName;
     }
 
-    public async Task<PcmAudio?> SynthesizePcmAsync(string text, TtsSpeakOptions options, CancellationToken ct)
+    public override string Name => _voiceName;
+
+    protected override async Task<PcmAudio?> SynthesizePcmDirectAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(text))
         {
@@ -42,11 +28,10 @@ public sealed class EdgeTtsPcmEngine : IPcmTtsEngine, IPreloadableTtsEngine
 
         try
         {
-            var voiceName = options.VoiceName ?? "zh-CN-XiaoyiNeural";
             var rate = MapRate(options.Rate);
             var volume = MapVolume(options.Volume);
 
-            var communicate = new Communicate(text, voiceName, rate, volume);
+            var communicate = new Communicate(text, _voiceName, rate, volume);
 
             using var ms = new MemoryStream();
 
@@ -76,56 +61,6 @@ public sealed class EdgeTtsPcmEngine : IPcmTtsEngine, IPreloadableTtsEngine
             Trace.WriteLine($"[EdgeTTS] Synthesis failed: {ex.Message}");
             return null;
         }
-    }
-
-    public async Task PreloadAsync(string text, TtsSpeakOptions options, CancellationToken ct)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return;
-        }
-
-        try
-        {
-            var pcmAudio = await SynthesizePcmAsync(text, options, ct).ConfigureAwait(false);
-            if (pcmAudio is null)
-            {
-                return;
-            }
-
-            lock (_lock)
-            {
-                _preloadedKey = (text, options.VoiceName ?? "zh-CN-XiaoyiNeural", options.Rate ?? 0);
-                _preloadedValue = pcmAudio;
-            }
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"[EdgeTTS] Preload failed: {ex.Message}");
-        }
-    }
-
-    public Task<PcmAudio?> TryConsumePreloadedAsync(string text, TtsSpeakOptions options, CancellationToken ct)
-    {
-        var voiceName = options.VoiceName ?? "zh-CN-XiaoyiNeural";
-        var rate = options.Rate ?? 0;
-
-        lock (_lock)
-        {
-            if (_preloadedKey is not null &&
-                _preloadedKey.Value.Text == text &&
-                _preloadedKey.Value.VoiceName == voiceName &&
-                _preloadedKey.Value.Rate == rate &&
-                _preloadedValue is not null)
-            {
-                var result = _preloadedValue;
-                _preloadedKey = null;
-                _preloadedValue = null;
-                return Task.FromResult<PcmAudio?>(result);
-            }
-        }
-
-        return Task.FromResult<PcmAudio?>(null);
     }
 
     private static string MapRate(int? rate)
@@ -183,6 +118,46 @@ public sealed class EdgeTtsPcmEngine : IPcmTtsEngine, IPreloadableTtsEngine
         {
             Trace.WriteLine($"[EdgeTTS] MP3 decode failed: {ex.Message}");
             return null;
+        }
+    }
+}
+
+public sealed class EdgeTtsVoiceFactory : IVoiceFactory
+{
+    private readonly VoiceInfo _info;
+
+    public EdgeTtsVoiceFactory(VoiceInfo info)
+    {
+        _info = info;
+    }
+
+    public VoiceInfo Info => _info;
+
+    public IVoice Create()
+    {
+        return new EdgeTtsVoice(_info.DisplayName);
+    }
+}
+
+public sealed class EdgeTtsVoiceFactoryProvider : IVoiceFactoryProvider
+{
+    public async Task<IReadOnlyList<IVoiceFactory>> GetFactoriesAsync(CancellationToken ct)
+    {
+        try
+        {
+            var voices = await VoicesManager.ListVoices(null, ct).ConfigureAwait(false);
+            return voices.Select(v => new EdgeTtsVoiceFactory(new VoiceInfo
+            {
+                Id = $"edge:{v.Name}",
+                DisplayName = v.Name,
+                LocaleOrLanguage = v.Locale,
+                ProviderName = "Edge TTS"
+            })).ToList();
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"[EdgeTTS] Failed to list voices: {ex.Message}");
+            return [];
         }
     }
 }
