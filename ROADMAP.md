@@ -84,9 +84,14 @@ v4 的核心定位：**跨平台（Avalonia + .NET 8）**。在不牺牲跨平�
 - [ ] 最小 smoke test
 - [ ] 文档：v3→v4 差异说明、跨平台依赖说明
 
+### M8 UI 对齐修复
+
+- [ ] 词表编辑框工具栏图标：v3 使用 ToolBarTray + 图标按钮，v4 使用文字按钮，需改为图标
+- [ ] 高亮跟随逻辑修复：当前高亮跟随光标位置，应只跟随播报状态（NextWordIndex）
+- [ ] 语法高亮：v3 有 WordlistHighlighting 资源用于单词着色，v4 缺失
+
 ### 可选增强
 
-- [ ] 语法高亮（词表特殊格式）
 - [ ] mp3/opus 导出（需外部编码器或 NuGet 库）
 - [ ] Linux piper 离线 TTS 支持
 - [ ] macOS NSSpeechSynthesizer（替代 CLI `say`）
