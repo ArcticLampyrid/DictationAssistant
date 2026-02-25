@@ -50,7 +50,7 @@ v4 的核心定位：**跨平台（Avalonia + .NET）**。在不牺牲跨平台�
 - [ ] **全平台：支持 Edge TTS（在线）**
   - [ ] 调研并选型 NuGet：`edge-tts-net` 或 `EdgeTTS`（二选一，优先维护更活跃/接口更稳定者）
   - [ ] 集成 Edge TTS engine：可选 voice、可调语速/音量（按 Edge TTS 语义映射）
-  - [ ] 断网/失败时平滑回落到本地引擎
+  - [ ] **失败处理**：在线 TTS 失败时“静默不打断流程”（不弹窗），仅记录日志/状态栏提示（可选），**不自动回落到其它引擎**
 - [ ] 统一“音量/语速”的语义映射（不同后端范围不同）
 
 ### M4 词表编辑体验打磨（贴近 v3）
@@ -87,9 +87,13 @@ v4 的核心定位：**跨平台（Avalonia + .NET）**。在不牺牲跨平台�
 
 ### M6 打包与发布（跨平台分发）
 
+偏好：**self-contained 打包，并尽量携带依赖的 native 库**（SDL2 / 音频解码库等），降低用户安装负担。
+
 - [ ] Windows：MSIX / NSIS / zip（择一）
 - [ ] macOS：dmg / zip（签名后续）
 - [ ] Linux：AppImage / Flatpak（择一）
+- [ ] self-contained publish（按 RID：win-x64/osx-x64/osx-arm64/linux-x64/linux-arm64…）
+- [ ] 将所需 native 依赖随包携带（或用 NuGet 自带 runtimes/native 的方案）
 - [ ] GitHub Actions：多平台 build + release artifacts
 
 ### M7 质量与维护
