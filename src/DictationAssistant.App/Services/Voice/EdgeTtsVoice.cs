@@ -3,7 +3,8 @@ using DictationAssistant.Core.Abstractions;
 using DictationAssistant.Core.Audio;
 using DictationAssistant.Core.Models;
 using DictationAssistant.Core.Services;
-using EdgeTTS;
+using EdgeTTS.DotNet;
+using EdgeTTS.DotNet.Models;
 using MP3Sharp;
 
 namespace DictationAssistant.App.Services.Voice;
@@ -29,26 +30,25 @@ public sealed class EdgeTtsVoice : CachedVoice
         try
         {
             var rate = MapRate(options.Rate);
-            var communicate = new Communicate(text, _voiceName, rate);
+            var communicate = new Communicate(text, voice: _voiceName, rate: rate);
 
-            using var ms = new MemoryStream();
+            var mp3Bytes = new List<byte>();
 
-            await communicate.Stream(result =>
+            await foreach (var chunk in communicate.StreamAsync(ct))
             {
-                if (result.Type == "Audio")
+                if (chunk is AudioChunk audio)
                 {
-                    result.Data?.CopyTo(ms);
+                    mp3Bytes.AddRange(audio.Data);
                 }
-            }, ct).ConfigureAwait(false);
+            }
 
-            var mp3Bytes = ms.ToArray();
-            if (mp3Bytes.Length == 0)
+            if (mp3Bytes.Count == 0)
             {
                 Trace.WriteLine("[EdgeTTS] No audio data received");
                 return null;
             }
 
-            return DecodeMp3ToPcm(mp3Bytes);
+            return DecodeMp3ToPcm([.. mp3Bytes]);
         }
         catch (OperationCanceledException)
         {
@@ -124,7 +124,7 @@ public sealed class EdgeTtsVoiceFactory : IVoiceFactory
 
     public IVoice Create()
     {
-        return new EdgeTtsVoice(_info.DisplayName);
+        return new EdgeTtsVoice(_info.Id);
     }
 }
 
@@ -134,11 +134,11 @@ public sealed class EdgeTtsVoiceFactoryProvider : IVoiceFactoryProvider
     {
         try
         {
-            var voices = await VoicesManager.ListVoices(null, ct).ConfigureAwait(false);
+            var voices = await Voices.ListVoicesAsync().ConfigureAwait(false);
             return voices.Select(v => new EdgeTtsVoiceFactory(new VoiceInfo
             {
-                Id = $"edge:{v.Name}",
-                DisplayName = v.Name,
+                Id = v.ShortName,
+                DisplayName = v.FriendlyName ?? v.ShortName,
                 LocaleOrLanguage = v.Locale,
                 ProviderName = "Edge TTS"
             })).ToList();
