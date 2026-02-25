@@ -19,9 +19,6 @@ public sealed unsafe class SdlPcmPlayer : IAudioPlayer, IDisposable
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate void SDL_AudioCallback(IntPtr userdata, IntPtr stream, int len);
 
-    [DllImport("SDL2.dll", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-    private static extern int SDL_MixAudioFormat(IntPtr dst, IntPtr src, ushort format, int len, int volume);
-
     public SdlPcmPlayer()
     {
         lock (InitLock)
@@ -122,7 +119,7 @@ public sealed unsafe class SdlPcmPlayer : IAudioPlayer, IDisposable
                 fixed (byte* srcPtr = tempBuffer)
                 fixed (byte* dstPtr = buffer)
                 {
-                    SDL_MixAudioFormat((IntPtr)dstPtr, (IntPtr)srcPtr, data.Format, bytesToRead, data.Volume);
+                    SDL.MixAudioFormat(dstPtr, srcPtr, data.Format, (uint)bytesToRead, data.Volume);
                 }
             }
 
