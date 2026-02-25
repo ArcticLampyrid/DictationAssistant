@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using DictationAssistant.App.Services;
+using DictationAssistant.App.Services.Settings;
 using DictationAssistant.App.Services.Tts;
 using DictationAssistant.App.ViewModels;
 using DictationAssistant.Core.Abstractions;
@@ -20,14 +21,18 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            var settingsStore = new AppSettingsStore();
+            var appSettings = settingsStore.Load();
             var wordListSource = new EditorDocumentWordListSource();
             ITtsEngine ttsEngine = TtsEngineFactory.CreateDefault();
             IDictationPlayer player = new DictationPlayer(ttsEngine, wordListSource);
 
-            desktop.MainWindow = new MainWindow
+            desktop.MainWindow = new MainWindow(appSettings)
             {
-                DataContext = new MainWindowViewModel(wordListSource, player, new LocalTextFileService(), ttsEngine)
+                DataContext = new MainWindowViewModel(wordListSource, player, new LocalTextFileService(), ttsEngine, appSettings)
             };
+
+            desktop.Exit += (_, _) => settingsStore.Save(appSettings);
         }
 
         base.OnFrameworkInitializationCompleted();

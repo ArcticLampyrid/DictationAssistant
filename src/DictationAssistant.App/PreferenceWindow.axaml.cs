@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
+using DictationAssistant.App.Services.Settings;
 using DictationAssistant.App.ViewModels;
 
 namespace DictationAssistant.App;
@@ -10,10 +11,18 @@ public partial class PreferenceWindow : Window
 {
     private PreferenceWindowViewModel? ViewModel => DataContext as PreferenceWindowViewModel;
 
+    public PreferenceSettings ResultSettings { get; private set; } = new();
+
     public PreferenceWindow()
+        : this(new PreferenceSettings())
+    {
+    }
+
+    public PreferenceWindow(PreferenceSettings settings)
     {
         InitializeComponent();
-        DataContext = new PreferenceWindowViewModel();
+        DataContext = new PreferenceWindowViewModel(settings);
+        ResultSettings = settings;
     }
 
     private void InitializeComponent()
@@ -32,6 +41,11 @@ public partial class PreferenceWindow : Window
     {
         _ = sender;
         _ = e;
+        if (ViewModel is not null)
+        {
+            ResultSettings = ViewModel.ToSettings();
+        }
+
         Close(true);
     }
 

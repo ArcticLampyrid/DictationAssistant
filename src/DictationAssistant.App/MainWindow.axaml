@@ -6,8 +6,8 @@
         xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
         x:Class="DictationAssistant.App.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Width="980"
-        Height="680"
+        Width="{Binding MainWindowWidth, Mode=TwoWay}"
+        Height="{Binding MainWindowHeight, Mode=TwoWay}"
         MinWidth="860"
         MinHeight="560"
         Title="自动默写"
@@ -112,7 +112,8 @@
         </StackPanel>
 
         <avaloniaEdit:TextEditor x:Name="WordlistEditor"
-                                 FontSize="28"
+                                 FontFamily="{Binding EditorFontFamily, Mode=TwoWay}"
+                                 FontSize="{Binding EditorFontSize, Mode=TwoWay}"
                                  ShowLineNumbers="True"
                                  HorizontalScrollBarVisibility="Auto"
                                  VerticalScrollBarVisibility="Auto">

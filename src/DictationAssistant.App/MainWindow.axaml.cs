@@ -11,18 +11,26 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using AvaloniaEdit;
+using DictationAssistant.App.Services.Settings;
 using DictationAssistant.App.ViewModels;
 
 namespace DictationAssistant.App;
 
 public partial class MainWindow : Window
 {
+    private readonly AppSettings _appSettings;
     private TextEditor? _wordlistEditor;
     private IStorageFile? _currentFile;
     private bool _isApplyingViewModelPosition;
 
     public MainWindow()
+        : this(new AppSettings())
     {
+    }
+
+    public MainWindow(AppSettings appSettings)
+    {
+        _appSettings = appSettings;
         InitializeComponent();
 
         Opened += (_, _) =>
@@ -39,6 +47,16 @@ public partial class MainWindow : Window
                         Dispatcher.UIThread.Post(() => MoveEditorToCurrentLine(vm));
                     }
                 };
+            }
+        };
+
+        Closing += (_, _) =>
+        {
+            _appSettings.MainWindow.Width = Width;
+            _appSettings.MainWindow.Height = Height;
+            if (GetViewModel() is { } vm)
+            {
+                _appSettings.MainWindow.WordListVisible = vm.WordListVisible;
             }
         };
     }
@@ -220,11 +238,17 @@ public partial class MainWindow : Window
     {
         _ = sender;
         _ = e;
-        var dialog = new PreferenceWindow();
-        var result = await dialog.ShowDialog<bool?>(this);
-        if (result == true && GetViewModel() is { } vm)
+        if (GetViewModel() is not { } vm)
         {
-            vm.Status = "偏好设置暂未持久化";
+            return;
+        }
+
+        var dialog = new PreferenceWindow(vm.CreatePreferenceSnapshot());
+        var result = await dialog.ShowDialog<bool?>(this);
+        if (result == true)
+        {
+            vm.ApplyPreferenceSettings(dialog.ResultSettings);
+            vm.Status = "偏好设置已保存";
         }
     }
 

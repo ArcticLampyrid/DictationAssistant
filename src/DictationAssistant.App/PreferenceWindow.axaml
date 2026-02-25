@@ -37,10 +37,10 @@
             <TextBlock FontWeight="Bold" Text="引擎" />
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto">
             <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="默认中文语音" />
-            <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,8" ItemsSource="{Binding VoiceOptions}" SelectedItem="{Binding DefaultChineseVoice, Mode=TwoWay}" />
+            <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,8" ItemsSource="{Binding VoiceOptions}" SelectedItem="{Binding DefaultChineseVoiceName, Mode=TwoWay}" />
 
             <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="默认英文语音" />
-            <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,8" ItemsSource="{Binding VoiceOptions}" SelectedItem="{Binding DefaultEnglishVoice, Mode=TwoWay}" />
+            <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,8" ItemsSource="{Binding VoiceOptions}" SelectedItem="{Binding DefaultEnglishVoiceName, Mode=TwoWay}" />
 
             <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Center" Text="音源增强目录" />
             <DockPanel Grid.Row="2" Grid.Column="1">

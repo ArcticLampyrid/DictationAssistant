@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Avalonia.Threading;
 using DictationAssistant.App.Services;
+using DictationAssistant.App.Services.Settings;
 using DictationAssistant.Core.Abstractions;
 using DictationAssistant.Core.Models;
 
@@ -12,16 +13,20 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly EditorDocumentWordListSource _wordListSource;
     private readonly IDictationPlayer _dictationPlayer;
     private readonly ITextFileService _textFileService;
+    private readonly AppSettings _appSettings;
 
     public MainWindowViewModel(
         EditorDocumentWordListSource wordListSource,
         IDictationPlayer dictationPlayer,
         ITextFileService textFileService,
-        ITtsEngine ttsEngine)
+        ITtsEngine ttsEngine,
+        AppSettings appSettings)
     {
         _wordListSource = wordListSource;
         _dictationPlayer = dictationPlayer;
         _textFileService = textFileService;
+        _appSettings = appSettings;
+        _appSettings.EnsureDefaults();
 
         TtsEngineName = ttsEngine.Name;
         Status = "就绪";
@@ -53,7 +58,8 @@ public partial class MainWindowViewModel : ObservableObject
             });
         };
 
-        SyncSettingsFromCore();
+        LoadSettings();
+        ApplySettingsToCore();
         OnPropertyChanged(nameof(SpeakStateText));
     }
 
@@ -103,6 +109,27 @@ public partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     private int _rate;
+
+    [ObservableProperty]
+    private double _mainWindowWidth = 980;
+
+    [ObservableProperty]
+    private double _mainWindowHeight = 680;
+
+    [ObservableProperty]
+    private string _editorFontFamily = "Noto Sans CJK SC";
+
+    [ObservableProperty]
+    private double _editorFontSize = 28;
+
+    [ObservableProperty]
+    private string _improvedResourcePath = string.Empty;
+
+    [ObservableProperty]
+    private string _defaultChineseVoiceName = string.Empty;
+
+    [ObservableProperty]
+    private string _defaultEnglishVoiceName = string.Empty;
 
     public bool IsAutoRunning => CurrentState == DictationState.AutoRunning;
 
@@ -263,12 +290,45 @@ public partial class MainWindowViewModel : ObservableObject
         _dictationPlayer.Settings.AutoScrollToCurrentLine = AutoScrollCurrentLine;
     }
 
-    private void SyncSettingsFromCore()
+    public PreferenceSettings CreatePreferenceSnapshot()
     {
-        IntervalSeconds = _dictationPlayer.Settings.IntervalSeconds;
-        TimesPerWord = _dictationPlayer.Settings.TimesPerWord;
-        HighlightCurrentLine = _dictationPlayer.Settings.HighlightCurrentLine;
-        AutoScrollCurrentLine = _dictationPlayer.Settings.AutoScrollToCurrentLine;
+        return new PreferenceSettings
+        {
+            EditorFontFamily = EditorFontFamily,
+            EditorFontSize = EditorFontSize,
+            ImprovedResourcePath = ImprovedResourcePath,
+            DefaultChineseVoiceName = DefaultChineseVoiceName,
+            DefaultEnglishVoiceName = DefaultEnglishVoiceName
+        };
+    }
+
+    public void ApplyPreferenceSettings(PreferenceSettings settings)
+    {
+        EditorFontFamily = settings.EditorFontFamily;
+        EditorFontSize = settings.EditorFontSize;
+        ImprovedResourcePath = settings.ImprovedResourcePath;
+        DefaultChineseVoiceName = settings.DefaultChineseVoiceName;
+        DefaultEnglishVoiceName = settings.DefaultEnglishVoiceName;
+    }
+
+    private void LoadSettings()
+    {
+        MainWindowWidth = _appSettings.MainWindow.Width;
+        MainWindowHeight = _appSettings.MainWindow.Height;
+        WordListVisible = _appSettings.MainWindow.WordListVisible;
+
+        IntervalSeconds = _appSettings.Dictation.IntervalSeconds;
+        TimesPerWord = _appSettings.Dictation.TimesPerWord;
+        HighlightCurrentLine = _appSettings.Dictation.HighlightCurrentLine;
+        AutoScrollCurrentLine = _appSettings.Dictation.AutoScrollCurrentLine;
+        Volume = _appSettings.Dictation.Volume;
+        Rate = _appSettings.Dictation.Rate;
+
+        EditorFontFamily = _appSettings.Preference.EditorFontFamily;
+        EditorFontSize = _appSettings.Preference.EditorFontSize;
+        ImprovedResourcePath = _appSettings.Preference.ImprovedResourcePath;
+        DefaultChineseVoiceName = _appSettings.Preference.DefaultChineseVoiceName;
+        DefaultEnglishVoiceName = _appSettings.Preference.DefaultEnglishVoiceName;
     }
 
     private void ResetProgressUi()
@@ -282,8 +342,73 @@ public partial class MainWindowViewModel : ObservableObject
 
     partial void OnWordListVisibleChanged(bool value)
     {
-        _ = value;
+        _appSettings.MainWindow.WordListVisible = value;
         OnPropertyChanged(nameof(ShowOrHideWordListText));
+    }
+
+    partial void OnIntervalSecondsChanged(int value)
+    {
+        _appSettings.Dictation.IntervalSeconds = value;
+    }
+
+    partial void OnTimesPerWordChanged(int value)
+    {
+        _appSettings.Dictation.TimesPerWord = value;
+    }
+
+    partial void OnHighlightCurrentLineChanged(bool value)
+    {
+        _appSettings.Dictation.HighlightCurrentLine = value;
+    }
+
+    partial void OnAutoScrollCurrentLineChanged(bool value)
+    {
+        _appSettings.Dictation.AutoScrollCurrentLine = value;
+    }
+
+    partial void OnVolumeChanged(int value)
+    {
+        _appSettings.Dictation.Volume = value;
+    }
+
+    partial void OnRateChanged(int value)
+    {
+        _appSettings.Dictation.Rate = value;
+    }
+
+    partial void OnMainWindowWidthChanged(double value)
+    {
+        _appSettings.MainWindow.Width = value;
+    }
+
+    partial void OnMainWindowHeightChanged(double value)
+    {
+        _appSettings.MainWindow.Height = value;
+    }
+
+    partial void OnEditorFontFamilyChanged(string value)
+    {
+        _appSettings.Preference.EditorFontFamily = value;
+    }
+
+    partial void OnEditorFontSizeChanged(double value)
+    {
+        _appSettings.Preference.EditorFontSize = value;
+    }
+
+    partial void OnImprovedResourcePathChanged(string value)
+    {
+        _appSettings.Preference.ImprovedResourcePath = value;
+    }
+
+    partial void OnDefaultChineseVoiceNameChanged(string value)
+    {
+        _appSettings.Preference.DefaultChineseVoiceName = value;
+    }
+
+    partial void OnDefaultEnglishVoiceNameChanged(string value)
+    {
+        _appSettings.Preference.DefaultEnglishVoiceName = value;
     }
 
     private int GetNextAutoIndex()
