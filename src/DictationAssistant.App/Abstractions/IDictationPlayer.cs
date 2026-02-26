@@ -35,4 +35,6 @@ public interface IDictationPlayer
     Task StopAsync();
 
     Task<SaveAudioResult> SaveAudioAsync(SaveAudioRequest request, CancellationToken cancellationToken = default);
+
+    void ResetProgress();
 }

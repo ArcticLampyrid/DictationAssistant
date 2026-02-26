@@ -15,9 +15,17 @@ public sealed class DictationPlayer : IDictationPlayer
     private IWaitingTimeCalculator? _waitingTimeCalculator;
     private readonly AudioExporter _audioExporter;
 
-    private CancellationTokenSource? _sessionCancellation;
-    private Task? _autoTask;
-    private TaskCompletionSource<bool>? _pauseSignal;
+    // Timer CTS controls the auto-play wait loop. Cancelled on pause/stop/manual speak.
+    private CancellationTokenSource? _timerCts;
+    private Task? _autoTimerTask;
+
+    // Playback CTS controls the current SpeakWordAsync call. Cancelled when we need to
+    // interrupt playback (e.g. user clicks SpeakNext while currently speaking).
+    private CancellationTokenSource? _playbackCts;
+
+    private bool _autoMode;
+    private bool _isPausedAutoMode;
+    private int _elapsedTimes;
 
     public DictationPlayer(IVoice voice, IWordListSource wordListSource, IAudioPlayer audioPlayer, DictationSettings? settings = null)
     {
@@ -54,13 +62,16 @@ public sealed class DictationPlayer : IDictationPlayer
         set => _voice = value;
     }
 
-    private int GetWaitingSeconds(string word)
+    private TimeSpan GetWaitingTime(string word)
     {
         if (_waitingTimeCalculator is not null)
-            return Math.Max(0, _waitingTimeCalculator.CalculateWaitingTime(word));
-        if (int.TryParse(Settings.IntervalExpression, out var secs))
-            return Math.Clamp(secs, 0, 600);
-        return 3;
+        {
+            var secs = _waitingTimeCalculator.CalculateWaitingTime(word);
+            return TimeSpan.FromSeconds(Math.Max(0, secs));
+        }
+        if (int.TryParse(Settings.IntervalExpression, out var parsed))
+            return TimeSpan.FromSeconds(Math.Clamp(parsed, 0, 600));
+        return TimeSpan.FromSeconds(3);
     }
 
     public DictationProgress Progress { get; private set; }
@@ -68,6 +79,25 @@ public sealed class DictationPlayer : IDictationPlayer
     public event EventHandler<DictationProgress>? ProgressChanged;
 
     public event EventHandler<DictationState>? StateChanged;
+
+    /// <summary>
+    /// Stops auto-play and resets position to -1 (before first word).
+    /// Equivalent to v3.x ResetProgress + StopAuto.
+    /// </summary>
+    public void ResetProgress()
+    {
+        CancelTimerAndPlayback();
+
+        lock (_stateLock)
+        {
+            _autoMode = false;
+            _isPausedAutoMode = false;
+            _elapsedTimes = 0;
+        }
+
+        UpdateProgress(_ => new DictationProgress(-1, 0, _wordListSource.Count, false));
+        SetState(DictationState.Stopped);
+    }
 
     public Task SpeakPreviousAsync(CancellationToken cancellationToken = default)
     {
@@ -87,6 +117,14 @@ public sealed class DictationPlayer : IDictationPlayer
         return SpeakAtAsync(target, cancellationToken);
     }
 
+    /// <summary>
+    /// Speaks a specific word by index. Matches v3.x Speak(index):
+    /// - Stops timer and current playback
+    /// - Resets ElapsedTimes if position changed
+    /// - Clears pause flag (so auto resumes after this word)
+    /// - Plays the word
+    /// - After play completes, if AutoMode → restart wait loop
+    /// </summary>
     public async Task SpeakAtAsync(int index, CancellationToken cancellationToken = default)
     {
         if (_wordListSource.Count <= 0)
@@ -95,14 +133,89 @@ public sealed class DictationPlayer : IDictationPlayer
         }
 
         index = Math.Clamp(index, 0, _wordListSource.Count - 1);
-        await StopAutoInternalAsync().ConfigureAwait(false);
 
-        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        SetState(DictationState.ManualSpeaking);
-        await SpeakWordAsync(index, 1, linkedCts.Token).ConfigureAwait(false);
-        SetState(DictationState.Stopped);
+        bool wasAutoMode;
+        bool positionChanged;
+
+        // Cancel timer and any current playback
+        CancelTimerAndPlayback();
+
+        lock (_stateLock)
+        {
+            wasAutoMode = _autoMode;
+            positionChanged = Progress.CurrentWordIndex != index;
+
+            if (_isPausedAutoMode)
+            {
+                // Manual speak during pause resumes auto mode (v3.x behavior)
+                _isPausedAutoMode = false;
+            }
+
+            if (positionChanged)
+            {
+                _elapsedTimes = 0;
+            }
+        }
+
+        // Wait for timer task to finish (it should exit quickly after cancellation)
+        await AwaitTimerTaskAsync().ConfigureAwait(false);
+
+        var effectiveState = wasAutoMode ? DictationState.AutoRunning : DictationState.ManualSpeaking;
+        SetState(effectiveState);
+
+        // Create a new playback CTS for this speak operation
+        var playbackCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        lock (_stateLock)
+        {
+            _playbackCts = playbackCts;
+        }
+
+        try
+        {
+            await SpeakWordAsync(index, playbackCts.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            // Playback was interrupted (e.g. another SpeakAt call)
+            return;
+        }
+        finally
+        {
+            lock (_stateLock)
+            {
+                if (_playbackCts == playbackCts)
+                {
+                    _playbackCts = null;
+                }
+            }
+            playbackCts.Dispose();
+        }
+
+        // After play completes: if auto mode, restart wait loop (v3.x: PlayCompleted → timer)
+        bool autoMode;
+        lock (_stateLock)
+        {
+            autoMode = _autoMode;
+            if (autoMode)
+            {
+                _elapsedTimes += 1;
+            }
+        }
+
+        if (autoMode)
+        {
+            SetState(DictationState.AutoRunning);
+            StartAutoWaitLoop();
+        }
+        else
+        {
+            SetState(DictationState.Stopped);
+        }
     }
 
+    /// <summary>
+    /// Starts auto-play from the specified index. Always from index 0 when called from UI.
+    /// </summary>
     public async Task StartAutoAsync(int startIndex = 0, CancellationToken cancellationToken = default)
     {
         if (_wordListSource.Count <= 0)
@@ -111,56 +224,117 @@ public sealed class DictationPlayer : IDictationPlayer
         }
 
         startIndex = Math.Clamp(startIndex, 0, _wordListSource.Count - 1);
-        await StopAutoInternalAsync().ConfigureAwait(false);
 
-        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        CancelTimerAndPlayback();
+
         lock (_stateLock)
         {
-            _sessionCancellation = cts;
-            _pauseSignal = null;
+            _isPausedAutoMode = false;
+            _autoMode = true;
+            _elapsedTimes = 0;
         }
 
+        await AwaitTimerTaskAsync().ConfigureAwait(false);
+
         SetState(DictationState.AutoRunning);
-        _autoTask = RunAutoAsync(startIndex, cts.Token);
+
+        // Create playback CTS for the initial speak
+        var playbackCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        lock (_stateLock)
+        {
+            _playbackCts = playbackCts;
+        }
+
+        try
+        {
+            await SpeakWordAsync(startIndex, playbackCts.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        finally
+        {
+            lock (_stateLock)
+            {
+                if (_playbackCts == playbackCts)
+                {
+                    _playbackCts = null;
+                }
+            }
+            playbackCts.Dispose();
+        }
+
+        bool autoMode;
+        lock (_stateLock)
+        {
+            autoMode = _autoMode;
+            if (autoMode)
+            {
+                _elapsedTimes = 1;
+            }
+        }
+
+        if (autoMode)
+        {
+            StartAutoWaitLoop();
+        }
     }
 
+    /// <summary>
+    /// Pauses auto-play. Keeps AutoMode=true, sets IsPausedAutoMode=true.
+    /// Cancels current timer and playback.
+    /// </summary>
     public void PauseAuto()
     {
         lock (_stateLock)
         {
-            if (State != DictationState.AutoRunning)
+            if (!_autoMode)
             {
                 return;
             }
 
-            _pauseSignal = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _isPausedAutoMode = true;
         }
 
+        CancelTimerAndPlayback();
         SetState(DictationState.AutoPaused);
     }
 
+    /// <summary>
+    /// Resumes auto-play from where it was paused. Restarts the wait loop.
+    /// </summary>
     public void ResumeAuto()
     {
-        TaskCompletionSource<bool>? pauseSignal;
         lock (_stateLock)
         {
-            if (State != DictationState.AutoPaused)
+            if (!_isPausedAutoMode)
             {
                 return;
             }
 
-            pauseSignal = _pauseSignal;
-            _pauseSignal = null;
+            _isPausedAutoMode = false;
         }
 
-        pauseSignal?.TrySetResult(true);
         SetState(DictationState.AutoRunning);
+        StartAutoWaitLoop();
     }
 
-    public async Task StopAsync()
+    /// <summary>
+    /// Stops auto-play but keeps current position. User can still use manual speak.
+    /// </summary>
+    public Task StopAsync()
     {
-        await StopAutoInternalAsync().ConfigureAwait(false);
+        CancelTimerAndPlayback();
+
+        lock (_stateLock)
+        {
+            _autoMode = false;
+            _isPausedAutoMode = false;
+        }
+
         SetState(DictationState.Stopped);
+        return Task.CompletedTask;
     }
 
     public async Task<SaveAudioResult> SaveAudioAsync(SaveAudioRequest request, CancellationToken cancellationToken = default)
@@ -168,74 +342,169 @@ public sealed class DictationPlayer : IDictationPlayer
         return await _audioExporter.ExportAudioAsync(request, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task RunAutoAsync(int startIndex, CancellationToken cancellationToken)
+    private void CancelTimerAndPlayback()
     {
-        try
-        {
-            for (var index = startIndex; index < _wordListSource.Count; index++)
-            {
-                for (var repeat = 1; repeat <= Settings.TimesPerWord; repeat++)
-                {
-                    await WaitIfPausedAsync(cancellationToken).ConfigureAwait(false);
-                    await SpeakWordAsync(index, repeat, cancellationToken).ConfigureAwait(false);
+        _timerCts?.Cancel();
+        _timerCts?.Dispose();
+        _timerCts = null;
 
-                    var shouldDelay = repeat < Settings.TimesPerWord || index < _wordListSource.Count - 1;
-                    if (shouldDelay)
+        _playbackCts?.Cancel();
+        // Don't dispose _playbackCts here — SpeakAtAsync/StartAutoAsync owns it via finally block
+    }
+
+    private async Task AwaitTimerTaskAsync()
+    {
+        if (_autoTimerTask is { } timerTask)
+        {
+            try
+            {
+                await timerTask.ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            _autoTimerTask = null;
+        }
+    }
+
+    private void StartAutoWaitLoop()
+    {
+        var cts = new CancellationTokenSource();
+        _timerCts = cts;
+
+        _autoTimerTask = Task.Run(async () =>
+        {
+            try
+            {
+                await AutoWaitLoopAsync(cts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        });
+    }
+
+    /// <summary>
+    /// Auto-play wait loop. After play completes, waits the configured interval
+    /// for the current word, then speaks the next word (or repeats current).
+    /// Uses a single Task.Delay for the full wait duration instead of polling.
+    /// </summary>
+    private async Task AutoWaitLoopAsync(CancellationToken cancellationToken)
+    {
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            int currentWordIndex;
+            int elapsedTimes;
+
+            lock (_stateLock)
+            {
+                if (!_autoMode || _isPausedAutoMode)
+                    return;
+                currentWordIndex = Progress.CurrentWordIndex;
+                elapsedTimes = _elapsedTimes;
+            }
+
+            if (currentWordIndex < 0 || currentWordIndex >= _wordListSource.Count)
+                return;
+
+            // Calculate and wait the full interval in one go
+            var word = _wordListSource.GetWordAt(currentWordIndex);
+            var waitingTime = GetWaitingTime(word);
+
+            if (waitingTime > TimeSpan.Zero)
+            {
+                await Task.Delay(waitingTime, cancellationToken).ConfigureAwait(false);
+            }
+
+            // Re-check state after waiting (may have been paused/stopped during the wait)
+            lock (_stateLock)
+            {
+                if (!_autoMode || _isPausedAutoMode)
+                    return;
+                // Re-read in case manual speak happened during wait
+                currentWordIndex = Progress.CurrentWordIndex;
+                elapsedTimes = _elapsedTimes;
+            }
+
+            // Decide what to speak next
+            int speakIndex;
+            if (elapsedTimes >= Settings.TimesPerWord)
+            {
+                speakIndex = currentWordIndex + 1; // advance to next word
+            }
+            else
+            {
+                speakIndex = currentWordIndex; // repeat current word
+            }
+
+            // Check if we've reached the end
+            if (speakIndex >= _wordListSource.Count)
+            {
+                lock (_stateLock)
+                {
+                    _autoMode = false;
+                }
+                UpdateProgress(p => p with { IsCompleted = true });
+                SetState(DictationState.Stopped);
+                return;
+            }
+
+            // Reset counters for the new speak
+            lock (_stateLock)
+            {
+                if (speakIndex != currentWordIndex)
+                    _elapsedTimes = 0; // new word
+            }
+
+            // Speak the word
+            using var playbackCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            lock (_stateLock)
+            {
+                _playbackCts = playbackCts;
+            }
+
+            try
+            {
+                await SpeakWordAsync(speakIndex, playbackCts.Token).ConfigureAwait(false);
+            }
+            finally
+            {
+                lock (_stateLock)
+                {
+                    if (_playbackCts == playbackCts)
                     {
-                        var word = _wordListSource.GetWordAt(index);
-                        var waitSeconds = GetWaitingSeconds(word);
-                        if (waitSeconds > 0)
-                        {
-                            await WaitIfPausedAsync(cancellationToken).ConfigureAwait(false);
-                            await Task.Delay(TimeSpan.FromSeconds(waitSeconds), cancellationToken).ConfigureAwait(false);
-                        }
+                        _playbackCts = null;
                     }
                 }
             }
 
-            UpdateProgress(progress => progress with { IsCompleted = true });
-        }
-        catch (OperationCanceledException)
-        {
-        }
-        finally
-        {
+            // After play completes, increment times and loop back to wait
             lock (_stateLock)
             {
-                _sessionCancellation?.Dispose();
-                _sessionCancellation = null;
-                _autoTask = null;
-                _pauseSignal = null;
-            }
-
-            if (State is DictationState.AutoPaused or DictationState.AutoRunning)
-            {
-                SetState(DictationState.Stopped);
+                if (!_autoMode) return;
+                _elapsedTimes += 1;
             }
         }
     }
 
-    private async Task WaitIfPausedAsync(CancellationToken cancellationToken)
+    private async Task SpeakWordAsync(int index, CancellationToken cancellationToken)
     {
-        TaskCompletionSource<bool>? pauseSignal;
-        lock (_stateLock)
-        {
-            pauseSignal = _pauseSignal;
-        }
-
-        if (pauseSignal is null)
+        if (index < 0 || index >= _wordListSource.Count)
         {
             return;
         }
 
-        using var registration = cancellationToken.Register(() => pauseSignal.TrySetCanceled(cancellationToken));
-        await pauseSignal.Task.ConfigureAwait(false);
-    }
-
-    private async Task SpeakWordAsync(int index, int repeat, CancellationToken cancellationToken)
-    {
         var word = _wordListSource.GetWordAt(index);
-        UpdateProgress(_ => new DictationProgress(index, repeat, _wordListSource.Count, false));
+
+        int currentRepeat;
+        lock (_stateLock)
+        {
+            currentRepeat = _elapsedTimes;
+        }
+
+        UpdateProgress(_ => new DictationProgress(index, currentRepeat, _wordListSource.Count, false));
 
         try
         {
@@ -285,37 +554,6 @@ public sealed class DictationPlayer : IDictationPlayer
         }
     }
 
-    private async Task StopAutoInternalAsync()
-    {
-        Task? currentAutoTask;
-        CancellationTokenSource? cts;
-
-        lock (_stateLock)
-        {
-            currentAutoTask = _autoTask;
-            cts = _sessionCancellation;
-            _pauseSignal?.TrySetCanceled();
-            _pauseSignal = null;
-            _autoTask = null;
-            _sessionCancellation = null;
-        }
-
-        cts?.Cancel();
-
-        if (currentAutoTask is not null)
-        {
-            try
-            {
-                await currentAutoTask.ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-            }
-        }
-
-        cts?.Dispose();
-    }
-
     private void SetState(DictationState state)
     {
         if (State == state)
@@ -331,16 +569,5 @@ public sealed class DictationPlayer : IDictationPlayer
     {
         Progress = mutate(Progress);
         ProgressChanged?.Invoke(this, Progress);
-    }
-
-    private sealed class NoOpAudioPlayer : IAudioPlayer
-    {
-        public Task PlayAsync(PcmAudio audio, int volume, CancellationToken ct)
-        {
-            _ = audio;
-            _ = volume;
-            _ = ct;
-            return Task.CompletedTask;
-        }
     }
 }

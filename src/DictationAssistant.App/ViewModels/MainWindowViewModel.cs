@@ -263,8 +263,7 @@ public partial class MainWindowViewModel : ObservableObject
     private async Task StartAutoAsync()
     {
         ApplySettingsToCore();
-        var startIndex = CurrentLineIndex >= 0 ? CurrentLineIndex : 0;
-        await _dictationPlayer.StartAutoAsync(startIndex).ConfigureAwait(false);
+        await _dictationPlayer.StartAutoAsync(0).ConfigureAwait(false);
     }
 
     [RelayCommand]

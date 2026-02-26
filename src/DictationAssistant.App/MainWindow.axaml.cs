@@ -550,7 +550,7 @@ public partial class MainWindow : Window
         return editor.Document.GetText(line.Offset, line.Length);
     }
 
-    private async void ResetRecord_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void ResetRecord_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         _ = sender;
         _ = e;
@@ -559,14 +559,9 @@ public partial class MainWindow : Window
             return;
         }
 
-        await vm.StopCommand.ExecuteAsync(null);
-        vm.CurrentLineIndex = 0;
-        vm.CurrentRepeat = 0;
-        vm.ProgressText = "0 / 0";
-        vm.ProgressPercent = 0;
+        vm.DictationPlayer.ResetProgress();
         vm.Status = "已归零";
     }
-
     private async void OnDrop(object? sender, DragEventArgs e)
     {
         if (_wordlistEditor is null)
