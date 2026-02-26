@@ -19,17 +19,12 @@ public class PcmWriter : IDisposable
     private readonly Stream _outputStream;
     private readonly PcmFormatInfo _formatInfo;
     private readonly bool _leaveOpen;
-    private readonly long _headerPosition;
-    private long _dataLength;
 
     public PcmWriter(PcmFormatInfo formatInfo, Stream outputStream, bool leaveOpen = false)
     {
         _formatInfo = formatInfo;
         _outputStream = outputStream;
         _leaveOpen = leaveOpen;
-
-        WriteHeader(_outputStream, _formatInfo, 0);
-        _headerPosition = _outputStream.Position;
     }
 
     public long MillisecondsToSamples(long ms)
@@ -62,7 +57,6 @@ public class PcmWriter : IDisposable
             remainingBytes -= bytesToWrite;
         }
 
-        _dataLength += len;
         return len;
     }
 
@@ -115,7 +109,6 @@ public class PcmWriter : IDisposable
             totalBytes += lenAlign;
         }
 
-        _dataLength += totalBytes;
         return totalBytes;
     }
 
@@ -129,42 +122,10 @@ public class PcmWriter : IDisposable
         };
     }
 
-    private static void WriteHeader(Stream output, PcmFormatInfo format, long dataLength)
-    {
-        var bytesPerSample = format.SampleFormat == PcmSampleFormat.U8 ? 1 : 2;
-        var blockAlign = (ushort)(format.Channels * bytesPerSample);
-        var byteRate = format.SampleRate * blockAlign;
-        var bitsPerSample = (ushort)(bytesPerSample * 8);
-
-        using var writer = new BinaryWriter(output, System.Text.Encoding.UTF8, leaveOpen: true);
-
-        writer.Write("RIFF"u8.ToArray());
-        writer.Write(36 + dataLength);
-        writer.Write("WAVE"u8.ToArray());
-
-        writer.Write("fmt "u8.ToArray());
-        writer.Write(16);
-        writer.Write((short)1);
-        writer.Write((short)format.Channels);
-        writer.Write(format.SampleRate);
-        writer.Write(byteRate);
-        writer.Write(blockAlign);
-        writer.Write(bitsPerSample);
-
-        writer.Write("data"u8.ToArray());
-        writer.Write((uint)dataLength);
-    }
-
     protected virtual void Dispose(bool disposing)
     {
         if (disposing)
         {
-            if (_headerPosition > 0)
-            {
-                _outputStream.Position = 0;
-                WriteHeader(_outputStream, _formatInfo, _dataLength);
-            }
-
             if (!_leaveOpen)
             {
                 _outputStream.Close();
