@@ -3,6 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:DictationAssistant.App.ViewModels"
+        xmlns:gb="using:GroupBox.Avalonia"
         x:Class="DictationAssistant.App.PreferenceWindow"
         x:DataType="vm:PreferenceWindowViewModel"
         Title="偏好设置"
@@ -19,25 +20,23 @@
     </StackPanel>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-      <StackPanel Spacing="10">
-        <Border BorderThickness="1" BorderBrush="#C8C8C8" Padding="8" CornerRadius="4">
-          <StackPanel Spacing="6">
-            <TextBlock FontWeight="Bold" Text="编辑器" />
-            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
-            <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="字体" />
-            <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,8" Text="{Binding EditorFontFamily, Mode=TwoWay}" Watermark="字体名称（占位）" />
-            <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Center" Text="字号" />
-            <NumericUpDown Grid.Row="1" Grid.Column="1" Minimum="8" Maximum="72" Increment="1" Value="{Binding EditorFontSize, Mode=TwoWay}" />
-            </Grid>
-          </StackPanel>
-        </Border>
+        <StackPanel Spacing="10">
+          <gb:GroupBox Header="编辑器">
+            <StackPanel Spacing="6">
+              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+              <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="字体" />
+              <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,8" Text="{Binding EditorFontFamily, Mode=TwoWay}" Watermark="字体名称（占位）" />
+              <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Center" Text="字号" />
+              <NumericUpDown Grid.Row="1" Grid.Column="1" Minimum="8" Maximum="72" Increment="1" Value="{Binding EditorFontSize, Mode=TwoWay}" />
+              </Grid>
+            </StackPanel>
+          </gb:GroupBox>
 
-        <Border BorderThickness="1" BorderBrush="#C8C8C8" Padding="8" CornerRadius="4">
-          <StackPanel Spacing="6">
-            <TextBlock FontWeight="Bold" Text="引擎" />
-            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto">
-            <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="默认中文语音" />
-            <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,8" ItemsSource="{Binding VoiceOptions}" SelectedItem="{Binding DefaultChineseVoiceName, Mode=TwoWay}" />
+          <gb:GroupBox Header="引擎">
+            <StackPanel Spacing="6">
+              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto">
+              <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="默认中文语音" />
+              <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,8" ItemsSource="{Binding VoiceOptions}" SelectedItem="{Binding DefaultChineseVoiceName, Mode=TwoWay}" />
 
             <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="默认英文语音" />
             <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,8" ItemsSource="{Binding VoiceOptions}" SelectedItem="{Binding DefaultEnglishVoiceName, Mode=TwoWay}" />
@@ -48,8 +47,8 @@
               <TextBox Text="{Binding ImprovedResourcePath, Mode=TwoWay}" Watermark="选择目录（占位）" />
             </DockPanel>
             </Grid>
-          </StackPanel>
-        </Border>
+            </StackPanel>
+          </gb:GroupBox>
       </StackPanel>
     </ScrollViewer>
   </DockPanel>

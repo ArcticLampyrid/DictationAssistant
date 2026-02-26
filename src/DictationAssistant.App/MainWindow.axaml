@@ -4,6 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:DictationAssistant.App.ViewModels"
         xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
+        xmlns:gb="using:GroupBox.Avalonia"
         x:Class="DictationAssistant.App.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Width="{Binding MainWindowWidth, Mode=TwoWay}"
@@ -49,66 +50,63 @@
     </Menu>
 
     <DockPanel DockPanel.Dock="Right" Width="264" Margin="8,8,8,8" LastChildFill="True">
-      <Border DockPanel.Dock="Top" Margin="0,0,0,8" BorderBrush="#C8C8C8" BorderThickness="1" Padding="6">
+      <gb:GroupBox DockPanel.Dock="Top" Margin="0,0,0,8" Header="播报信息">
         <StackPanel>
-          <TextBlock Margin="0,0,0,6" FontWeight="Bold" Text="播报信息" />
-        <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*">
-          <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" FontSize="20" FontWeight="Bold" Margin="4" Text="{Binding CurrentRepeat, StringFormat=本词语播报次数：{0}}" />
-          <TextBlock Grid.Row="1" Grid.Column="0" Margin="4" VerticalAlignment="Center" Text="自动播报间隔/秒：" />
-          <TextBox Grid.Row="1" Grid.Column="1" Margin="4" HorizontalContentAlignment="Right" Text="{Binding IntervalExpression, Mode=TwoWay}" />
-          <TextBlock Grid.Row="2" Grid.Column="0" Margin="4" VerticalAlignment="Center" Text="自动播报次数/词：" />
-          <TextBox Grid.Row="2" Grid.Column="1" Margin="4" HorizontalContentAlignment="Right" Text="{Binding TimesPerWord, Mode=TwoWay}" />
-          <TextBlock Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="4" FontSize="20" FontWeight="Bold" Text="{Binding SpeakStateText}" />
-        </Grid>
+          <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*">
+            <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" FontSize="20" FontWeight="Bold" Margin="4" Text="{Binding CurrentRepeat, StringFormat=本词语播报次数：{0}}" />
+            <TextBlock Grid.Row="1" Grid.Column="0" Margin="4" VerticalAlignment="Center" Text="自动播报间隔/秒：" />
+            <TextBox Grid.Row="1" Grid.Column="1" Margin="4" HorizontalContentAlignment="Right" Text="{Binding IntervalExpression, Mode=TwoWay}" />
+            <TextBlock Grid.Row="2" Grid.Column="0" Margin="4" VerticalAlignment="Center" Text="自动播报次数/词：" />
+            <TextBox Grid.Row="2" Grid.Column="1" Margin="4" HorizontalContentAlignment="Right" Text="{Binding TimesPerWord, Mode=TwoWay}" />
+            <TextBlock Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="4" FontSize="20" FontWeight="Bold" Text="{Binding SpeakStateText}" />
+          </Grid>
         </StackPanel>
-      </Border>
+      </gb:GroupBox>
 
       <Button DockPanel.Dock="Top" Content="{Binding ShowOrHideWordListText}" Command="{Binding ToggleWordListCommand}" Margin="4" Padding="4" />
 
-      <Border DockPanel.Dock="Bottom" Margin="0,8,0,8" BorderBrush="#C8C8C8" BorderThickness="1" Padding="6">
+      <gb:GroupBox DockPanel.Dock="Bottom" Margin="0,8,0,8" Header="引擎设置">
         <StackPanel>
-          <TextBlock Margin="0,0,0,6" FontWeight="Bold" Text="引擎设置" />
-        <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*">
-          <TextBlock Grid.Row="0" Grid.Column="0" Margin="4" VerticalAlignment="Center" Text="音量：" />
-          <Slider Grid.Row="0" Grid.Column="1" Margin="4" Minimum="0" Maximum="100" Value="{Binding Volume, Mode=TwoWay}" />
-          <TextBlock Grid.Row="1" Grid.Column="0" Margin="4" VerticalAlignment="Center" Text="语速：" />
-          <Slider Grid.Row="1" Grid.Column="1" Margin="4" Minimum="-10" Maximum="10" Value="{Binding Rate, Mode=TwoWay}" />
-          <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="4" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto">
-            <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="引擎：" />
-            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding VoiceProviderName}" />
-            <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="语音：" />
-            <ComboBox Grid.Row="1" Grid.Column="1"
-                      ItemsSource="{Binding VoiceOptions}"
-                      SelectedItem="{Binding SelectedVoiceFactory, Mode=TwoWay}">
-              <ComboBox.ItemTemplate>
-                <DataTemplate>
-                  <TextBlock Text="{Binding Info.DisplayName}" />
-                </DataTemplate>
-              </ComboBox.ItemTemplate>
-            </ComboBox>
-            <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="4" Margin="0,4,0,0">
-              <Button Content="中文引擎" Command="{Binding SwitchToChineseVoiceCommand}" Padding="8,2" />
-              <Button Content="英文引擎" Command="{Binding SwitchToEnglishVoiceCommand}" Padding="8,2" />
-            </StackPanel>
+          <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*">
+            <TextBlock Grid.Row="0" Grid.Column="0" Margin="4" VerticalAlignment="Center" Text="音量：" />
+            <Slider Grid.Row="0" Grid.Column="1" Margin="4" Minimum="0" Maximum="100" Value="{Binding Volume, Mode=TwoWay}" />
+            <TextBlock Grid.Row="1" Grid.Column="0" Margin="4" VerticalAlignment="Center" Text="语速：" />
+            <Slider Grid.Row="1" Grid.Column="1" Margin="4" Minimum="-10" Maximum="10" Value="{Binding Rate, Mode=TwoWay}" />
+            <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="4" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto">
+              <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="引擎：" />
+              <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding VoiceProviderName}" />
+              <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="语音：" />
+              <ComboBox Grid.Row="1" Grid.Column="1"
+                        ItemsSource="{Binding VoiceOptions}"
+                        SelectedItem="{Binding SelectedVoiceFactory, Mode=TwoWay}">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding Info.DisplayName}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+              <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="4" Margin="0,4,0,0">
+                <Button Content="中文引擎" Command="{Binding SwitchToChineseVoiceCommand}" Padding="8,2" />
+                <Button Content="英文引擎" Command="{Binding SwitchToEnglishVoiceCommand}" Padding="8,2" />
+              </StackPanel>
+            </Grid>
           </Grid>
-        </Grid>
         </StackPanel>
-      </Border>
+      </gb:GroupBox>
 
-      <Border Margin="0,8,0,0" BorderBrush="#C8C8C8" BorderThickness="1" Padding="6">
+      <gb:GroupBox Margin="0,8,0,0" Header="播报控制">
         <StackPanel>
-          <TextBlock Margin="0,0,0,6" FontWeight="Bold" Text="播报控制" />
-        <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,*">
-          <Button Grid.Row="0" Grid.Column="0" Margin="4" Command="{Binding StartAutoCommand}" Content="开始播报(_S)" />
-          <Button Grid.Row="0" Grid.Column="1" Margin="4" Command="{Binding StopCommand}" Content="停止播报(_D)" />
-          <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="4" FontSize="22" FontWeight="Bold" Content="{Binding PauseOrResumeAutoText}" Command="{Binding PauseOrResumeAutoCommand}" />
-          <Button Grid.Row="2" Grid.Column="0" Margin="4" Command="{Binding SpeakNextCommand}" Content="报下一个(_N)" />
-          <Button Grid.Row="2" Grid.Column="1" Margin="4" Click="ResetRecord_Click" Content="记录归零(_C)" />
-          <Button Grid.Row="3" Grid.Column="0" Margin="4" Command="{Binding SpeakAgainCommand}" Content="再报一遍(_M)" />
-          <Button Grid.Row="3" Grid.Column="1" Margin="4" Command="{Binding SpeakPreviousCommand}" Content="报上一个(_L)" />
-        </Grid>
+          <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,*">
+            <Button Grid.Row="0" Grid.Column="0" Margin="4" Command="{Binding StartAutoCommand}" Content="开始播报(_S)" />
+            <Button Grid.Row="0" Grid.Column="1" Margin="4" Command="{Binding StopCommand}" Content="停止播报(_D)" />
+            <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="4" FontSize="22" FontWeight="Bold" Content="{Binding PauseOrResumeAutoText}" Command="{Binding PauseOrResumeAutoCommand}" />
+            <Button Grid.Row="2" Grid.Column="0" Margin="4" Command="{Binding SpeakNextCommand}" Content="报下一个(_N)" />
+            <Button Grid.Row="2" Grid.Column="1" Margin="4" Click="ResetRecord_Click" Content="记录归零(_C)" />
+            <Button Grid.Row="3" Grid.Column="0" Margin="4" Command="{Binding SpeakAgainCommand}" Content="再报一遍(_M)" />
+            <Button Grid.Row="3" Grid.Column="1" Margin="4" Command="{Binding SpeakPreviousCommand}" Content="报上一个(_L)" />
+          </Grid>
         </StackPanel>
-      </Border>
+      </gb:GroupBox>
     </DockPanel>
 
     <Border Margin="8" BorderBrush="#C8C8C8" BorderThickness="1" Padding="6" IsVisible="{Binding WordListVisible}">
