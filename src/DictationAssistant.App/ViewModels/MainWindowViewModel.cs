@@ -19,6 +19,7 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly AppSettings _appSettings;
     private readonly VoiceAggregator _aggregator;
     private IVoice _currentVoice;
+    private DispatcherTimer? _countdownTimer;
 
     public IDictationPlayer DictationPlayer => _dictationPlayer;
 
@@ -64,6 +65,7 @@ public partial class MainWindowViewModel : ObservableObject
                 OnPropertyChanged(nameof(IsAutoPaused));
                 OnPropertyChanged(nameof(PauseOrResumeAutoText));
                 OnPropertyChanged(nameof(SpeakStateText));
+                UpdateCountdownTimer();
             });
         };
 
@@ -176,7 +178,7 @@ public partial class MainWindowViewModel : ObservableObject
                     var remaining = progress.NextSpeakTime.Value - DateTimeOffset.Now;
                     if (remaining.TotalSeconds > 0)
                     {
-                        return $"即将播报第{nextIndex}个 ({Math.Ceiling(remaining.TotalSeconds)}秒后)";
+                        return $"即将播报第{nextIndex}个 ({remaining.TotalSeconds:F1}秒后)";
                     }
                 }
                 return $"即将播报第{nextIndex}个";
@@ -191,6 +193,38 @@ public partial class MainWindowViewModel : ObservableObject
     {
         WordListVisible = !WordListVisible;
         OnPropertyChanged(nameof(ShowOrHideWordListText));
+    }
+
+    private void UpdateCountdownTimer()
+    {
+        var progress = _dictationPlayer.Progress;
+        if (progress.NextSpeakTime.HasValue && _dictationPlayer.AutoMode && !_dictationPlayer.IsPaused)
+        {
+            if (_countdownTimer is null)
+            {
+                _countdownTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
+                _countdownTimer.Tick += (_, _) =>
+                {
+                    OnPropertyChanged(nameof(SpeakStateText));
+
+                    var p = _dictationPlayer.Progress;
+                    if (!p.NextSpeakTime.HasValue || !_dictationPlayer.AutoMode || _dictationPlayer.IsPaused)
+                    {
+                        StopCountdownTimer();
+                    }
+                };
+            }
+            _countdownTimer.Start();
+        }
+        else
+        {
+            StopCountdownTimer();
+        }
+    }
+
+    private void StopCountdownTimer()
+    {
+        _countdownTimer?.Stop();
     }
 
     [RelayCommand]
