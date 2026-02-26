@@ -2,7 +2,6 @@ using System.Diagnostics;
 using DictationAssistant.App.Abstractions;
 using DictationAssistant.App.Audio;
 using DictationAssistant.App.Models;
-using DictationAssistant.App.Audio;
 using EdgeTTS.DotNet;
 using EdgeTTS.DotNet.Models;
 
