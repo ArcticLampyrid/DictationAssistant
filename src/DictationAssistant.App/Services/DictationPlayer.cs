@@ -1,4 +1,5 @@
 using DictationAssistant.Abstractions;
+using DictationAssistant.App.Lyric;
 using DictationAssistant.Audio;
 using DictationAssistant.Models;
 using System.Diagnostics;
@@ -185,6 +186,7 @@ public sealed class DictationPlayer : IDictationPlayer
 
         var generateLrc = request.LyricMode == "Lrc File" && !string.IsNullOrWhiteSpace(request.LyricsOutputPath);
         var progress = request.Progress;
+        ILyricWriter? lyricWriter = null;
 
         try
         {
@@ -193,8 +195,12 @@ public sealed class DictationPlayer : IDictationPlayer
             var totalWords = _wordListSource.Count;
             var totalSegments = totalWords * Settings.TimesPerWord;
             var currentSegment = 0;
-            var lrcLines = new List<string>();
             var accumulatedDuration = TimeSpan.Zero;
+
+            if (generateLrc)
+            {
+                lyricWriter = new LyricWriter(request.LyricsOutputPath!);
+            }
 
             for (var index = 0; index < totalWords; index++)
             {
@@ -218,7 +224,7 @@ public sealed class DictationPlayer : IDictationPlayer
                         if (generateLrc && repeat == 1)
                         {
                             var lrcTime = FormatLrcTime(accumulatedDuration);
-                            lrcLines.Add($"[{lrcTime}]{word}");
+                            lyricWriter?.WriteTimestamp((long)accumulatedDuration.TotalMilliseconds, word);
                         }
 
                         await pcmStream.WriteAsync(pcmAudio.ToArray(), cancellationToken).ConfigureAwait(false);
@@ -244,9 +250,9 @@ public sealed class DictationPlayer : IDictationPlayer
                 }
             }
 
-            if (generateLrc && lrcLines.Count > 0)
+            if (generateLrc && lyricWriter is not null)
             {
-                await File.WriteAllTextAsync(request.LyricsOutputPath!, string.Join(Environment.NewLine, lrcLines), cancellationToken).ConfigureAwait(false);
+                lyricWriter.Flush();
             }
 
             var pcmData = pcmStream.ToArray();

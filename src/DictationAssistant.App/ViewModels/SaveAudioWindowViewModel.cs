@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using DictationAssistant.Abstractions;
+using DictationAssistant.App.Lyric;
 using DictationAssistant.Models;
 
 namespace DictationAssistant.App.ViewModels;
@@ -104,5 +105,16 @@ public partial class SaveAudioWindowViewModel : ObservableObject
         }
 
         TargetPath = Path.ChangeExtension(TargetPath, value) ?? TargetPath;
+    }
+
+    public ILyricWriter? CreateLyricWriter()
+    {
+        if (LyricMode != "Lrc File" || string.IsNullOrWhiteSpace(TargetPath))
+        {
+            return null;
+        }
+
+        var lrcPath = Path.ChangeExtension(TargetPath, "lrc");
+        return new LyricWriter(lrcPath);
     }
 }
