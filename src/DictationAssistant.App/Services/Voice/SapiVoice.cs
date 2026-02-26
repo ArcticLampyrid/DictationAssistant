@@ -1,8 +1,8 @@
 using System.IO;
-using DictationAssistant.Core.Abstractions;
-using DictationAssistant.Core.Audio;
-using DictationAssistant.Core.Models;
-using DictationAssistant.Core.Services;
+using DictationAssistant.Abstractions;
+using DictationAssistant.Audio;
+using DictationAssistant.Models;
+using DictationAssistant.Services;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 

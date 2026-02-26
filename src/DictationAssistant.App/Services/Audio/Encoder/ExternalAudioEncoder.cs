@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using DictationAssistant.Core.Audio;
+using DictationAssistant.Audio;
 
 namespace DictationAssistant.App.Services.Audio.Encoder;
 

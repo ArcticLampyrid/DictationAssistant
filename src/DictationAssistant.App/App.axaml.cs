@@ -6,8 +6,8 @@ using DictationAssistant.App.Services.Audio;
 using DictationAssistant.App.Services.Settings;
 using DictationAssistant.App.Services.Voice;
 using DictationAssistant.App.ViewModels;
-using DictationAssistant.Core.Abstractions;
-using DictationAssistant.Core.Services;
+using DictationAssistant.Abstractions;
+using DictationAssistant.Services;
 
 namespace DictationAssistant.App;
 

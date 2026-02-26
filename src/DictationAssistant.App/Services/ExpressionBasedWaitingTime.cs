@@ -2,8 +2,8 @@ using System;
 using System.Text.RegularExpressions;
 using NCalc;
 using NCalc.Handlers;
-using DictationAssistant.Core.Abstractions;
-using DictationAssistant.Core.Helpers;
+using DictationAssistant.Abstractions;
+using DictationAssistant.Helpers;
 
 namespace DictationAssistant.App.Services;
 

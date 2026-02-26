@@ -1,4 +1,4 @@
-using DictationAssistant.Core.Audio;
+using DictationAssistant.Audio;
 using System;
 using System.IO;
 

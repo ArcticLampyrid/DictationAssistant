@@ -1,6 +1,6 @@
 using DictationAssistant.App.Services;
-using DictationAssistant.Core.Abstractions;
-using DictationAssistant.Core.Services;
+using DictationAssistant.Abstractions;
+using DictationAssistant.Services;
 
 namespace DictationAssistant.App.Services;
 

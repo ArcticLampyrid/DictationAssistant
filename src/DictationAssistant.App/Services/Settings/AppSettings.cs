@@ -4,14 +4,14 @@ public sealed class AppSettings
 {
     public MainWindowSettings MainWindow { get; set; } = new();
 
-    public Core.Models.DictationSettings Dictation { get; set; } = new();
+    public DictationAssistant.Models.DictationSettings Dictation { get; set; } = new();
 
     public PreferenceSettings Preference { get; set; } = new();
 
     public void EnsureDefaults()
     {
         MainWindow ??= new MainWindowSettings();
-        Dictation ??= new Core.Models.DictationSettings();
+        Dictation ??= new DictationAssistant.Models.DictationSettings();
         Preference ??= new PreferenceSettings();
     }
 }

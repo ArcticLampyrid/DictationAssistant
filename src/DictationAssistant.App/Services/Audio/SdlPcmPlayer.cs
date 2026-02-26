@@ -1,5 +1,5 @@
-using DictationAssistant.Core.Abstractions;
-using DictationAssistant.Core.Audio;
+using DictationAssistant.Abstractions;
+using DictationAssistant.Audio;
 using Hexa.NET.SDL2;
 using System.Runtime.InteropServices;
 

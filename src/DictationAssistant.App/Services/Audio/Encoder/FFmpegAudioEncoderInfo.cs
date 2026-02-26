@@ -1,16 +1,16 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using DictationAssistant.Core.Audio;
+using DictationAssistant.Audio;
 
 namespace DictationAssistant.App.Services.Audio.Encoder;
 
 public class FFmpegAudioEncoderStream : Stream
 {
-    private readonly Core.Audio.FFmpegAudioEncoder _encoder;
+    private readonly DictationAssistant.Audio.FFmpegAudioEncoder _encoder;
     private bool _disposed;
 
-    public FFmpegAudioEncoderStream(Core.Audio.FFmpegAudioEncoder encoder)
+    public FFmpegAudioEncoderStream(DictationAssistant.Audio.FFmpegAudioEncoder encoder)
     {
         _encoder = encoder;
     }
@@ -60,7 +60,7 @@ public class FFmpegAudioEncoderInfo : AudioEncoderInfo
 
     public override PcmAudio CreateEncoder(PcmFormatInfo format, string path, object? encodeSettings)
     {
-        var encoder = new Core.Audio.FFmpegAudioEncoder(path, format.SampleRate, format.Channels, Format);
+        var encoder = new DictationAssistant.Audio.FFmpegAudioEncoder(path, format.SampleRate, format.Channels, Format);
         return new PcmAudio
         {
             Data = new FFmpegAudioEncoderStream(encoder),

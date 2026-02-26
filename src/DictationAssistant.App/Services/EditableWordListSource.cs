@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using DictationAssistant.App.ViewModels;
-using DictationAssistant.Core.Abstractions;
+using DictationAssistant.Abstractions;
 
 namespace DictationAssistant.App.Services;
 

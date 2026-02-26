@@ -3,8 +3,8 @@ using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using DictationAssistant.App.ViewModels;
-using DictationAssistant.Core.Abstractions;
-using DictationAssistant.Core.Models;
+using DictationAssistant.Abstractions;
+using DictationAssistant.Models;
 
 namespace DictationAssistant.App;
 
