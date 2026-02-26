@@ -2,9 +2,9 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using DictationAssistant.App.Services;
-using DictationAssistant.App.Services.Audio;
-using DictationAssistant.App.Services.Settings;
-using DictationAssistant.App.Services.Voice;
+using DictationAssistant.App.Audio;
+using DictationAssistant.App.Settings;
+using DictationAssistant.App.Voice;
 using DictationAssistant.App.ViewModels;
 using DictationAssistant.App.Abstractions;
 

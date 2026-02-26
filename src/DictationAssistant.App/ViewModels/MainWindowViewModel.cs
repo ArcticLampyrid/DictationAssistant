@@ -4,8 +4,8 @@ using CommunityToolkit.Mvvm.Input;
 using Avalonia.Threading;
 using System.Diagnostics;
 using DictationAssistant.App.Services;
-using DictationAssistant.App.Services.Settings;
-using DictationAssistant.App.Services.Voice;
+using DictationAssistant.App.Settings;
+using DictationAssistant.App.Voice;
 using DictationAssistant.App.Abstractions;
 using DictationAssistant.App.Models;
 

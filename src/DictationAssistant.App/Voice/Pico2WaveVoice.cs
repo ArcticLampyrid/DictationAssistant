@@ -2,7 +2,7 @@ using DictationAssistant.App.Abstractions;
 using DictationAssistant.App.Audio;
 using DictationAssistant.App.Models;
 
-namespace DictationAssistant.App.Services.Voice;
+namespace DictationAssistant.App.Voice;
 
 public sealed class Pico2WaveVoice : IVoice
 {

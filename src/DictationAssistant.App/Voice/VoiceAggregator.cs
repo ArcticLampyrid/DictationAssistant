@@ -1,6 +1,6 @@
 using DictationAssistant.App.Abstractions;
 
-namespace DictationAssistant.App.Services.Voice;
+namespace DictationAssistant.App.Voice;
 
 public sealed class VoiceAggregator
 {

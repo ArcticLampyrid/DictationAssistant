@@ -2,7 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
-using DictationAssistant.App.Services.Settings;
+using DictationAssistant.App.Settings;
 using DictationAssistant.App.ViewModels;
 
 namespace DictationAssistant.App;

@@ -2,11 +2,11 @@ using System.Diagnostics;
 using DictationAssistant.App.Abstractions;
 using DictationAssistant.App.Audio;
 using DictationAssistant.App.Models;
-using DictationAssistant.App.Services.Audio;
+using DictationAssistant.App.Audio;
 using EdgeTTS.DotNet;
 using EdgeTTS.DotNet.Models;
 
-namespace DictationAssistant.App.Services.Voice;
+namespace DictationAssistant.App.Voice;
 
 public sealed class EdgeTtsVoice : CachedVoice
 {

@@ -3,7 +3,7 @@ using DictationAssistant.App.Audio;
 using Hexa.NET.SDL2;
 using System.Runtime.InteropServices;
 
-namespace DictationAssistant.App.Services.Audio;
+namespace DictationAssistant.App.Audio;
 
 public sealed unsafe class SdlPcmPlayer : IAudioPlayer, IDisposable
 {

@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 
-namespace DictationAssistant.App.Services.Settings;
+namespace DictationAssistant.App.Settings;
 
 public sealed class AppSettingsStore
 {

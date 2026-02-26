@@ -1,10 +1,10 @@
-using DictationAssistant.App.Services.Audio;
+using DictationAssistant.App.Audio;
 using DictationAssistant.App.Abstractions;
 using DictationAssistant.App.Audio;
 using DictationAssistant.App.Models;
 using System.IO;
 
-namespace DictationAssistant.App.Services.Voice;
+namespace DictationAssistant.App.Voice;
 
 public sealed class ImprovedVoice : IVoice
 {

@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using DictationAssistant.App.Audio;
 
-namespace DictationAssistant.App.Services.Audio.Encoder;
+namespace DictationAssistant.App.Audio.Encoder;
 
 public class FFmpegAudioEncoderStream : Stream
 {

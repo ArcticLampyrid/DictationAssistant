@@ -1,39 +1,31 @@
 using System;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using DictationAssistant.App.Audio;
 
-namespace DictationAssistant.App.Services.Audio.Encoder;
+namespace DictationAssistant.App.Audio.Encoder;
 
-public class WaveEncoder : Stream
+public class ExternalAudioEncoder : Stream
 {
-    private sealed class WaveEncoderInfoImpl : AudioEncoderInfo
-    {
-        public WaveEncoderInfoImpl() : base("Waveform Audio", "wav")
-        {
-        }
+    private readonly Process _process;
 
-        public override PcmAudio CreateEncoder(PcmFormatInfo format, string path, object? encodeSettings)
+    public ExternalAudioEncoder(PcmFormatInfo pcmFormatInfo, string path, string encoderFileName, string encoderArgumentsFormat)
+    {
+        _process = new Process
         {
-            return new PcmAudio
+            StartInfo = new ProcessStartInfo
             {
-                Data = new WaveEncoder(format, path),
-                Format = format
-            };
-        }
-    }
+                FileName = encoderFileName,
+                Arguments = string.Format(CultureInfo.InvariantCulture, encoderArgumentsFormat, Path.GetFullPath(path)),
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardInput = true
+            }
+        };
 
-    public static AudioEncoderInfo EncoderInfo { get; } = new WaveEncoderInfoImpl();
-
-    private readonly Stream _baseStream;
-    private readonly long _headerSize;
-    private readonly PcmFormatInfo _pcmFormatInfo;
-
-    public WaveEncoder(PcmFormatInfo pcmFormatInfo, string path)
-    {
-        _pcmFormatInfo = pcmFormatInfo;
-        _baseStream = File.Open(path, FileMode.Create);
-        WriteWaveHeader(_baseStream, _pcmFormatInfo, 0);
-        _headerSize = _baseStream.Length;
+        _process.Start();
+        WriteWaveHeader(_process.StandardInput.BaseStream, pcmFormatInfo, 0);
     }
 
     public override bool CanRead => false;
@@ -46,7 +38,7 @@ public class WaveEncoder : Stream
         set => throw new NotSupportedException();
     }
 
-    public override void Flush() => _baseStream.Flush();
+    public override void Flush() => _process.StandardInput.BaseStream.Flush();
 
     public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
 
@@ -54,15 +46,15 @@ public class WaveEncoder : Stream
 
     public override void SetLength(long value) => throw new NotSupportedException();
 
-    public override void Write(byte[] buffer, int offset, int count) => _baseStream.Write(buffer, offset, count);
+    public override void Write(byte[] buffer, int offset, int count) => _process.StandardInput.BaseStream.Write(buffer, offset, count);
 
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
-            _baseStream.Position = 0;
-            WriteWaveHeader(_baseStream, _pcmFormatInfo, _baseStream.Length - _headerSize);
-            _baseStream.Dispose();
+            _process.StandardInput.Close();
+            _process.WaitForExit();
+            _process.Dispose();
         }
     }
 

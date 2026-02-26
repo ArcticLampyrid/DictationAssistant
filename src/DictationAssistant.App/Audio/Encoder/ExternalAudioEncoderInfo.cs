@@ -1,6 +1,6 @@
 using DictationAssistant.App.Audio;
 
-namespace DictationAssistant.App.Services.Audio.Encoder;
+namespace DictationAssistant.App.Audio.Encoder;
 
 public class ExternalAudioEncoderInfo : AudioEncoderInfo
 {

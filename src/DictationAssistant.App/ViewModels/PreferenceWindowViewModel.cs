@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 
-using DictationAssistant.App.Services.Settings;
+using DictationAssistant.App.Settings;
 
 namespace DictationAssistant.App.ViewModels;
 

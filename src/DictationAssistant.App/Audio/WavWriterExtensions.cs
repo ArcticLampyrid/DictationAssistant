@@ -2,7 +2,7 @@ using DictationAssistant.App.Audio;
 using System;
 using System.IO;
 
-namespace DictationAssistant.App.Services.Audio;
+namespace DictationAssistant.App.Audio;
 
 public static class WavWriterExtensions
 {

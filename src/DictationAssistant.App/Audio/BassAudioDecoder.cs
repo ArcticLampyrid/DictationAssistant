@@ -3,7 +3,7 @@ using ManagedBass;
 using System.Diagnostics;
 using System.IO;
 
-namespace DictationAssistant.App.Services.Audio;
+namespace DictationAssistant.App.Audio;
 
 public static class BassAudioDecoder
 {

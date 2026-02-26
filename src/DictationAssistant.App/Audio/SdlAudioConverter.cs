@@ -4,7 +4,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace DictationAssistant.App.Services.Audio;
+namespace DictationAssistant.App.Audio;
 
 public static class SdlAudioConverter
 {

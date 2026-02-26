@@ -16,7 +16,7 @@ using Avalonia.Threading;
 using AvaloniaEdit;
 using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.Highlighting.Xshd;
-using DictationAssistant.App.Services.Settings;
+using DictationAssistant.App.Settings;
 using DictationAssistant.App.ViewModels;
 using XmlReader = System.Xml.XmlReader;
 

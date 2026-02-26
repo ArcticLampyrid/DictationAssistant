@@ -2,7 +2,7 @@ using DictationAssistant.App.Abstractions;
 using DictationAssistant.App.Audio;
 using DictationAssistant.App.Models;
 
-namespace DictationAssistant.App.Services;
+namespace DictationAssistant.App.Voice;
 
 public abstract class CachedVoice : IPreloadableVoice
 {

@@ -5,7 +5,7 @@ using DictationAssistant.App.Models;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
-namespace DictationAssistant.App.Services.Voice;
+namespace DictationAssistant.App.Voice;
 
 public sealed class SapiVoice : IVoice
 {

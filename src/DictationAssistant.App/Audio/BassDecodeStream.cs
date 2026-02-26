@@ -2,7 +2,7 @@ using DictationAssistant.App.Audio;
 using ManagedBass;
 using System.IO;
 
-namespace DictationAssistant.App.Services.Audio;
+namespace DictationAssistant.App.Audio;
 
 public sealed class BassDecodeStream : Stream
 {
