@@ -484,7 +484,7 @@ public partial class MainWindow : Window
         vm.Status = $"共 {count} 行";
     }
 
-    private async void SpeakSelection_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void SpeakSelection_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         _ = sender;
         _ = e;
@@ -494,7 +494,7 @@ public partial class MainWindow : Window
         }
 
         var index = Math.Max(_wordlistEditor.TextArea.Caret.Line - 1, 0);
-        await vm.SpeakLineAsync(index);
+        vm.SpeakLine(index);
     }
 
     private void ViewSelectionInBingDictionary_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -530,7 +530,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void StartFromSelection_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void StartFromSelection_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         _ = sender;
         _ = e;
@@ -540,7 +540,7 @@ public partial class MainWindow : Window
         }
 
         var index = Math.Max(_wordlistEditor.TextArea.Caret.Line - 1, 0);
-        await vm.StartAutoFromLineAsync(index);
+        vm.StartAutoFromLine(index);
     }
 
     private static string ReadCaretLineText(TextEditor editor)

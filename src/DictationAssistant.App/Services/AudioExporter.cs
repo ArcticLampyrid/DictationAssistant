@@ -10,23 +10,19 @@ public sealed class AudioExporter
 {
     private readonly IVoice _voice;
     private readonly IWordListSource _wordListSource;
-    private readonly IWaitingTimeCalculator? _waitingTimeCalculator;
-    private readonly DictationSettings _settings;
 
-    public AudioExporter(
-        IVoice voice,
-        IWordListSource wordListSource,
-        IWaitingTimeCalculator? waitingTimeCalculator = null,
-        DictationSettings? settings = null)
+    public AudioExporter(IVoice voice, IWordListSource wordListSource, IWaitingTimeCalculator? waitingTimeCalculator = null)
     {
         _voice = voice;
         _wordListSource = wordListSource;
-        _waitingTimeCalculator = waitingTimeCalculator;
-        _settings = settings ?? new DictationSettings();
     }
 
     public async Task<SaveAudioResult> ExportAudioAsync(
         SaveAudioRequest request,
+        int timesPerWord,
+        int volume,
+        int rate,
+        IWaitingTimeCalculator? waitingTimeCalculator = null,
         CancellationToken cancellationToken = default)
     {
         if (_wordListSource.Count <= 0)
@@ -54,7 +50,7 @@ public sealed class AudioExporter
             await using var pcmStream = new MemoryStream();
 
             var totalWords = _wordListSource.Count;
-            var totalSegments = totalWords * _settings.TimesPerWord;
+            var totalSegments = totalWords * timesPerWord;
             var currentSegment = 0;
             var accumulatedDuration = TimeSpan.Zero;
 
@@ -69,13 +65,13 @@ public sealed class AudioExporter
 
                 var word = _wordListSource.GetWordAt(index);
 
-                for (var repeat = 1; repeat <= _settings.TimesPerWord; repeat++)
+                for (var repeat = 1; repeat <= timesPerWord; repeat++)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
                     var options = new VoiceSynthesisOptions
                     {
-                        Rate = _settings.Rate
+                        Rate = rate
                     };
 
                     var pcmAudio = await _voice.SynthesizePcmAsync(word, options, cancellationToken).ConfigureAwait(false);
@@ -94,9 +90,9 @@ public sealed class AudioExporter
                         accumulatedDuration += audioDuration;
                     }
 
-                    if (repeat < _settings.TimesPerWord || index < totalWords - 1)
+                    if (repeat < timesPerWord || index < totalWords - 1)
                     {
-                        var silenceDuration = GetWaitingSeconds(word);
+                        var silenceDuration = GetWaitingSeconds(word, waitingTimeCalculator);
                         if (silenceDuration > 0 && pcmAudio is not null)
                         {
                             var silenceBytes = CreateSilencePcm(silenceDuration, pcmAudio.Format.SampleRate, pcmAudio.Format.Channels);
@@ -174,12 +170,10 @@ public sealed class AudioExporter
         }
     }
 
-    private int GetWaitingSeconds(string word)
+    private static int GetWaitingSeconds(string word, IWaitingTimeCalculator? calculator)
     {
-        if (_waitingTimeCalculator is not null)
-            return Math.Max(0, _waitingTimeCalculator.CalculateWaitingTime(word));
-        if (int.TryParse(_settings.IntervalExpression, out var secs))
-            return Math.Clamp(secs, 0, 600);
+        if (calculator is not null)
+            return Math.Max(0, calculator.CalculateWaitingTime(word));
         return 3;
     }
 

@@ -40,11 +40,8 @@ public partial class MainWindowViewModel : ObservableObject
         var dictationSettings = new DictationSettings
         {
             IntervalExpression = appSettings.Dictation.IntervalExpression,
-            TimesPerWord = appSettings.Dictation.TimesPerWord,
             HighlightCurrentLine = appSettings.Dictation.HighlightCurrentLine,
             AutoScrollToCurrentLine = appSettings.Dictation.AutoScrollToCurrentLine,
-            Volume = appSettings.Dictation.Volume,
-            Rate = appSettings.Dictation.Rate,
             DefaultChineseVoiceName = appSettings.Preference.DefaultChineseVoiceName,
             DefaultEnglishVoiceName = appSettings.Preference.DefaultEnglishVoiceName
         };
@@ -63,15 +60,6 @@ public partial class MainWindowViewModel : ObservableObject
                     ? "0 / 0"
                     : $"{Math.Max(progress.CurrentWordIndex + 1, 0)} / {progress.TotalWords}";
                 ProgressPercent = progress.Percent;
-                OnPropertyChanged(nameof(SpeakStateText));
-            });
-        };
-
-        _dictationPlayer.StateChanged += (_, state) =>
-        {
-            Dispatcher.UIThread.Post(() =>
-            {
-                CurrentState = state;
                 OnPropertyChanged(nameof(IsAutoRunning));
                 OnPropertyChanged(nameof(IsAutoPaused));
                 OnPropertyChanged(nameof(PauseOrResumeAutoText));
@@ -98,9 +86,6 @@ public partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     private int _currentRepeat;
-
-    [ObservableProperty]
-    private DictationState _currentState;
 
     [ObservableProperty]
     private string _intervalExpression = "3";
@@ -159,9 +144,9 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private IVoiceFactory? _selectedVoiceFactory;
 
-    public bool IsAutoRunning => CurrentState == DictationState.AutoRunning;
+    public bool IsAutoRunning => _dictationPlayer.AutoMode && !_dictationPlayer.IsPaused;
 
-    public bool IsAutoPaused => CurrentState == DictationState.AutoPaused;
+    public bool IsAutoPaused => _dictationPlayer.IsPaused;
 
     public string ShowOrHideWordListText => WordListVisible ? "隐藏词语列表(_W)" : "显示词语列表(_W)";
 
@@ -176,15 +161,25 @@ public partial class MainWindowViewModel : ObservableObject
                 return "自动播报已暂停";
             }
 
-            if (CurrentState == DictationState.ManualSpeaking)
+            if (_dictationPlayer.IsSpeaking)
             {
                 var speakingIndex = Math.Max(CurrentLineIndex + 1, 1);
                 return $"正在播报第{speakingIndex}个";
             }
 
-            if (CurrentState == DictationState.AutoRunning)
+            var progress = _dictationPlayer.Progress;
+            if (_dictationPlayer.AutoMode && progress.NextWordIndex.HasValue)
             {
-                return $"即将播报第{GetNextAutoIndex()}个";
+                var nextIndex = progress.NextWordIndex.Value + 1;
+                if (progress.NextSpeakTime.HasValue)
+                {
+                    var remaining = progress.NextSpeakTime.Value - DateTimeOffset.Now;
+                    if (remaining.TotalSeconds > 0)
+                    {
+                        return $"即将播报第{nextIndex}个 ({Math.Ceiling(remaining.TotalSeconds)}秒后)";
+                    }
+                }
+                return $"即将播报第{nextIndex}个";
             }
 
             return "等待播报";
@@ -239,31 +234,31 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task SpeakPreviousAsync()
+    private void SpeakPrevious()
     {
         ApplySettingsToCore();
-        await _dictationPlayer.SpeakPreviousAsync().ConfigureAwait(false);
+        _dictationPlayer.SpeakPrevious();
     }
 
     [RelayCommand]
-    private async Task SpeakAgainAsync()
+    private void SpeakAgain()
     {
         ApplySettingsToCore();
-        await _dictationPlayer.SpeakAgainAsync().ConfigureAwait(false);
+        _dictationPlayer.SpeakAgain();
     }
 
     [RelayCommand]
-    private async Task SpeakNextAsync()
+    private void SpeakNext()
     {
         ApplySettingsToCore();
-        await _dictationPlayer.SpeakNextAsync().ConfigureAwait(false);
+        _dictationPlayer.SpeakNext();
     }
 
     [RelayCommand]
-    private async Task StartAutoAsync()
+    private void StartAuto()
     {
         ApplySettingsToCore();
-        await _dictationPlayer.StartAutoAsync(0).ConfigureAwait(false);
+        _dictationPlayer.StartAuto(0);
     }
 
     [RelayCommand]
@@ -279,9 +274,9 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task StopAsync()
+    private void Stop()
     {
-        await _dictationPlayer.StopAsync().ConfigureAwait(false);
+        _dictationPlayer.Stop();
     }
 
     [RelayCommand]
@@ -295,30 +290,25 @@ public partial class MainWindowViewModel : ObservableObject
         Status = result.Message;
     }
 
-    public async Task SpeakLineAsync(int index)
+    public void SpeakLine(int index)
     {
         CurrentLineIndex = index;
         ApplySettingsToCore();
-        await _dictationPlayer.SpeakAtAsync(index).ConfigureAwait(false);
+        _dictationPlayer.SpeakAt(index);
     }
 
-    public async Task StartAutoFromLineAsync(int index)
+    public void StartAutoFromLine(int index)
     {
         CurrentLineIndex = index;
         ApplySettingsToCore();
-        await _dictationPlayer.StartAutoAsync(index).ConfigureAwait(false);
+        _dictationPlayer.StartAuto(index);
     }
 
     private void ApplySettingsToCore()
     {
-        _dictationPlayer.Settings.IntervalExpression = IntervalExpression;
-        _dictationPlayer.Settings.TimesPerWord = TimesPerWord;
-        _dictationPlayer.Settings.HighlightCurrentLine = HighlightCurrentLine;
-        _dictationPlayer.Settings.AutoScrollToCurrentLine = AutoScrollCurrentLine;
-        _dictationPlayer.Settings.Volume = Volume;
-        _dictationPlayer.Settings.Rate = Rate;
-        _dictationPlayer.Settings.DefaultChineseVoiceName = DefaultChineseVoiceName;
-        _dictationPlayer.Settings.DefaultEnglishVoiceName = DefaultEnglishVoiceName;
+        _dictationPlayer.TimesPerWord = TimesPerWord;
+        _dictationPlayer.Volume = Volume;
+        _dictationPlayer.Rate = Rate;
     }
 
     private async Task LoadVoiceOptionsAsync()
@@ -542,18 +532,5 @@ public partial class MainWindowViewModel : ObservableObject
     partial void OnDefaultEnglishVoiceNameChanged(string value)
     {
         _appSettings.Preference.DefaultEnglishVoiceName = value;
-    }
-
-    private int GetNextAutoIndex()
-    {
-        var total = _wordListSource.Count;
-        if (total <= 0)
-        {
-            return 1;
-        }
-
-        var current = Math.Max(CurrentLineIndex, 0);
-        var next = CurrentRepeat >= TimesPerWord ? Math.Min(current + 1, total - 1) : current;
-        return next + 1;
     }
 }

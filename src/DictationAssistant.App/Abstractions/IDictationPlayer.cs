@@ -4,37 +4,30 @@ namespace DictationAssistant.App.Abstractions;
 
 public interface IDictationPlayer
 {
-    DictationState State { get; }
+    bool AutoMode { get; set; }
+    bool IsSpeaking { get; }
+    bool IsPaused { get; }
 
-    DictationSettings Settings { get; }
+    IVoice Voice { get; set; }
+    IWaitingTimeCalculator? WaitingTimeCalculator { get; set; }
+    int TimesPerWord { get; set; }
+    int Volume { get; set; }
+    int Rate { get; set; }
 
     DictationProgress Progress { get; }
 
-    IVoice Voice { get; set; }
-
-    IWaitingTimeCalculator? WaitingTimeCalculator { get; set; }
-
     event EventHandler<DictationProgress>? ProgressChanged;
 
-    event EventHandler<DictationState>? StateChanged;
+    void SpeakAt(int index);
+    void SpeakNext();
+    void SpeakPrevious();
+    void SpeakAgain();
 
-    Task SpeakPreviousAsync(CancellationToken cancellationToken = default);
-
-    Task SpeakAgainAsync(CancellationToken cancellationToken = default);
-
-    Task SpeakNextAsync(CancellationToken cancellationToken = default);
-
-    Task SpeakAtAsync(int index, CancellationToken cancellationToken = default);
-
-    Task StartAutoAsync(int startIndex = 0, CancellationToken cancellationToken = default);
-
+    void StartAuto(int startIndex = 0);
     void PauseAuto();
-
     void ResumeAuto();
-
-    Task StopAsync();
+    void Stop();
+    void ResetProgress();
 
     Task<SaveAudioResult> SaveAudioAsync(SaveAudioRequest request, CancellationToken cancellationToken = default);
-
-    void ResetProgress();
 }
