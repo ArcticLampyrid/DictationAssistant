@@ -14,8 +14,8 @@
         mc:Ignorable="d">
   <DockPanel Margin="12">
     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
-      <Button Width="88" IsCancel="True" Content="取消" Click="CancelButton_Click" />
-      <Button Width="88" IsDefault="True" Content="确定" Click="OkButton_Click" />
+      <Button Width="88" IsCancel="True" Content="取消" Click="CancelButton_Click" HorizontalContentAlignment="Center" />
+      <Button Width="88" IsDefault="True" Content="确定" Click="OkButton_Click" HorizontalContentAlignment="Center" />
     </StackPanel>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">

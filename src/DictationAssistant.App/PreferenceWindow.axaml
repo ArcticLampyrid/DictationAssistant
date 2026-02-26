@@ -3,7 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:DictationAssistant.App.ViewModels"
-        xmlns:gb="using:GroupBox.Avalonia"
+        xmlns:controls="using:DictationAssistant.App.Controls"
         x:Class="DictationAssistant.App.PreferenceWindow"
         x:DataType="vm:PreferenceWindowViewModel"
         Title="偏好设置"
@@ -15,28 +15,25 @@
         mc:Ignorable="d">
   <DockPanel Margin="12">
     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
-      <Button Width="88" IsCancel="True" Content="取消" Click="CancelButton_Click" />
-      <Button Width="88" IsDefault="True" Content="确定" Click="OkButton_Click" />
+      <Button Width="88" IsCancel="True" Content="取消" Click="CancelButton_Click" HorizontalContentAlignment="Center" />
+      <Button Width="88" IsDefault="True" Content="确定" Click="OkButton_Click" HorizontalContentAlignment="Center" />
     </StackPanel>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Spacing="10">
-          <gb:GroupBox Header="编辑器">
-            <StackPanel Spacing="6">
-              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
-              <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="字体" />
-              <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,8" Text="{Binding EditorFontFamily, Mode=TwoWay}" Watermark="字体名称（占位）" />
-              <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Center" Text="字号" />
-              <NumericUpDown Grid.Row="1" Grid.Column="1" Minimum="8" Maximum="72" Increment="1" Value="{Binding EditorFontSize, Mode=TwoWay}" />
-              </Grid>
-            </StackPanel>
-          </gb:GroupBox>
+      <StackPanel Spacing="10">
+        <controls:GroupBox Header="编辑器">
+          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+            <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="字体" />
+            <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,8" Text="{Binding EditorFontFamily, Mode=TwoWay}" Watermark="字体名称（占位）" />
+            <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Center" Text="字号" />
+            <NumericUpDown Grid.Row="1" Grid.Column="1" Minimum="8" Maximum="72" Increment="1" Value="{Binding EditorFontSize, Mode=TwoWay}" />
+          </Grid>
+        </controls:GroupBox>
 
-          <gb:GroupBox Header="引擎">
-            <StackPanel Spacing="6">
-              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto">
-              <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="默认中文语音" />
-              <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,8" ItemsSource="{Binding VoiceOptions}" SelectedItem="{Binding DefaultChineseVoiceName, Mode=TwoWay}" />
+        <controls:GroupBox Header="引擎">
+          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto">
+            <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="默认中文语音" />
+            <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,8" ItemsSource="{Binding VoiceOptions}" SelectedItem="{Binding DefaultChineseVoiceName, Mode=TwoWay}" />
 
             <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="默认英文语音" />
             <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,8" ItemsSource="{Binding VoiceOptions}" SelectedItem="{Binding DefaultEnglishVoiceName, Mode=TwoWay}" />
@@ -46,9 +43,8 @@
               <Button DockPanel.Dock="Right" Width="34" Content="..." Click="SetPathForImprovedResourceButton_Click" />
               <TextBox Text="{Binding ImprovedResourcePath, Mode=TwoWay}" Watermark="选择目录（占位）" />
             </DockPanel>
-            </Grid>
-            </StackPanel>
-          </gb:GroupBox>
+          </Grid>
+        </controls:GroupBox>
       </StackPanel>
     </ScrollViewer>
   </DockPanel>

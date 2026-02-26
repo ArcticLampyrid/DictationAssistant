@@ -22,7 +22,7 @@
     </Border>
 
     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-      <Button Width="88" IsDefault="True" Click="OkButton_Click" Content="确定" />
+      <Button Width="88" IsDefault="True" Click="OkButton_Click" Content="确定" HorizontalContentAlignment="Center" />
     </StackPanel>
 
     <TextBox Text="{Binding CopyrightNotice}"

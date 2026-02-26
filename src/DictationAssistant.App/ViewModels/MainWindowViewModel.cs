@@ -50,7 +50,6 @@ public partial class MainWindowViewModel : ObservableObject
         };
 
         _dictationPlayer = new DictationPlayer(_currentVoice, wordListSource, audioPlayer, dictationSettings);
-        VoiceProviderName = _currentVoice.Name;
         Status = "就绪";
 
         _dictationPlayer.ProgressChanged += (_, progress) =>
@@ -87,9 +86,6 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     public EditorDocumentWordListSource WordListSource => _wordListSource;
-
-    [ObservableProperty]
-    private string _voiceProviderName = string.Empty;
 
     [ObservableProperty]
     private string _filePath = string.Empty;
@@ -379,8 +375,6 @@ public partial class MainWindowViewModel : ObservableObject
             {
                 player.Voice = _currentVoice;
             }
-
-            VoiceProviderName = _currentVoice.Name;
         }
     }
 

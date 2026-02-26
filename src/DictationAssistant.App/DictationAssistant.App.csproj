@@ -7,7 +7,6 @@
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.12" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="EdgeTTS.DotNet" Version="*" />
-    <PackageReference Include="GroupBox.Avalonia" Version="11.0.0" />
     <PackageReference Include="HexaGen.Runtime" Version="1.1.24" />
     <PackageReference Include="ManagedBass" Version="3.0.0" />
     <PackageReference Include="NCalcSync" Version="5.12.0" />
