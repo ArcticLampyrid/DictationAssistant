@@ -36,7 +36,7 @@ public static class WaitingTimeParser
         {
             var calculator = Parse(expression);
             var waitingTime = calculator.CalculateWaitingTime("test");
-            if (waitingTime <= 0)
+            if (waitingTime < 0)
             {
                 return new WaitingTimeValidationResult(false, "等待时间必须大于0", null);
             }
