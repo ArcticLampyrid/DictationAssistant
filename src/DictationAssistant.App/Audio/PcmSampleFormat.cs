@@ -1,4 +1,4 @@
-namespace DictationAssistant.Audio;
+namespace DictationAssistant.App.Audio;
 
 public enum PcmSampleFormat : ushort
 {

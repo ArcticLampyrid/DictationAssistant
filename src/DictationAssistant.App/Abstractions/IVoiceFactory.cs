@@ -1,6 +1,6 @@
-using DictationAssistant.Models;
+using DictationAssistant.App.Models;
 
-namespace DictationAssistant.Abstractions;
+namespace DictationAssistant.App.Abstractions;
 
 public interface IVoiceFactory
 {

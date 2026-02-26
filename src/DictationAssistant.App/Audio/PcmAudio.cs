@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace DictationAssistant.Audio;
+namespace DictationAssistant.App.Audio;
 
 public sealed class PcmAudio : IDisposable
 {

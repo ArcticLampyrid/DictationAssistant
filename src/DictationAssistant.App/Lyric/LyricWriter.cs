@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using DictationAssistant.Abstractions;
+using DictationAssistant.App.Abstractions;
 
 namespace DictationAssistant.App.Lyric;
 

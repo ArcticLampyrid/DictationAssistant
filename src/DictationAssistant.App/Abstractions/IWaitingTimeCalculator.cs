@@ -1,4 +1,4 @@
-namespace DictationAssistant.Abstractions;
+namespace DictationAssistant.App.Abstractions;
 
 public interface IWaitingTimeCalculator
 {

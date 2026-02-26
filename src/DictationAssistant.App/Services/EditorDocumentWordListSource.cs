@@ -1,5 +1,5 @@
 using AvaloniaEdit.Document;
-using DictationAssistant.Abstractions;
+using DictationAssistant.App.Abstractions;
 
 namespace DictationAssistant.App.Services;
 

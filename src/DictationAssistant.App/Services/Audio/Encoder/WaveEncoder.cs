@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using DictationAssistant.Audio;
+using DictationAssistant.App.Audio;
 
 namespace DictationAssistant.App.Services.Audio.Encoder;
 

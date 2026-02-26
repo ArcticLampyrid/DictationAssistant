@@ -1,4 +1,4 @@
-using DictationAssistant.Abstractions;
+using DictationAssistant.App.Abstractions;
 
 namespace DictationAssistant.App.Lyric;
 

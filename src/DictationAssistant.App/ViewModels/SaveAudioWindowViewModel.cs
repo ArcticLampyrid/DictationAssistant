@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using DictationAssistant.Abstractions;
+using DictationAssistant.App.Abstractions;
 using DictationAssistant.App.Lyric;
-using DictationAssistant.Models;
+using DictationAssistant.App.Models;
 
 namespace DictationAssistant.App.ViewModels;
 

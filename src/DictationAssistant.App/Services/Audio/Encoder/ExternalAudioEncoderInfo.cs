@@ -1,4 +1,4 @@
-using DictationAssistant.Audio;
+using DictationAssistant.App.Audio;
 
 namespace DictationAssistant.App.Services.Audio.Encoder;
 

@@ -1,10 +1,10 @@
-using DictationAssistant.Abstractions;
+using DictationAssistant.App.Abstractions;
 using DictationAssistant.App.Lyric;
-using DictationAssistant.Audio;
-using DictationAssistant.Models;
+using DictationAssistant.App.Audio;
+using DictationAssistant.App.Models;
 using System.Diagnostics;
 
-namespace DictationAssistant.Services;
+namespace DictationAssistant.App.Services;
 
 public sealed class DictationPlayer : IDictationPlayer
 {

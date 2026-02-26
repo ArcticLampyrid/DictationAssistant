@@ -1,7 +1,7 @@
-using DictationAssistant.Audio;
-using DictationAssistant.Models;
+using DictationAssistant.App.Audio;
+using DictationAssistant.App.Models;
 
-namespace DictationAssistant.Abstractions;
+namespace DictationAssistant.App.Abstractions;
 
 public interface IVoice
 {

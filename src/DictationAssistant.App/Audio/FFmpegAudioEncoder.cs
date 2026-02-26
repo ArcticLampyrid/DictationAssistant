@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DictationAssistant.Audio;
+namespace DictationAssistant.App.Audio;
 
 public sealed class FFmpegAudioEncoder : IAsyncDisposable
 {

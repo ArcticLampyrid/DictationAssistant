@@ -1,6 +1,6 @@
 using System;
 
-namespace DictationAssistant.Audio;
+namespace DictationAssistant.App.Audio;
 
 public static class WavWriter
 {

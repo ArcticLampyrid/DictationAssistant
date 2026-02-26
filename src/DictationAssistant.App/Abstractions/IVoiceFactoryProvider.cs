@@ -1,6 +1,6 @@
-using DictationAssistant.Abstractions;
+using DictationAssistant.App.Abstractions;
 
-namespace DictationAssistant.Abstractions;
+namespace DictationAssistant.App.Abstractions;
 
 public interface IVoiceFactoryProvider
 {

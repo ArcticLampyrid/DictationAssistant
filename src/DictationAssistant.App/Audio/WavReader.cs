@@ -1,6 +1,6 @@
 using System.Buffers.Binary;
 
-namespace DictationAssistant.Audio;
+namespace DictationAssistant.App.Audio;
 
 public static class WavReader
 {

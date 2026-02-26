@@ -1,4 +1,4 @@
-namespace DictationAssistant.Models;
+namespace DictationAssistant.App.Models;
 
 public sealed class SaveAudioRequest
 {

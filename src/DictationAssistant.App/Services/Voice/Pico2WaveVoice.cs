@@ -1,7 +1,6 @@
-using DictationAssistant.Abstractions;
-using DictationAssistant.Audio;
-using DictationAssistant.Models;
-using DictationAssistant.Services;
+using DictationAssistant.App.Abstractions;
+using DictationAssistant.App.Audio;
+using DictationAssistant.App.Models;
 
 namespace DictationAssistant.App.Services.Voice;
 

@@ -6,9 +6,8 @@ using System.Diagnostics;
 using DictationAssistant.App.Services;
 using DictationAssistant.App.Services.Settings;
 using DictationAssistant.App.Services.Voice;
-using DictationAssistant.Abstractions;
-using DictationAssistant.Models;
-using DictationAssistant.Services;
+using DictationAssistant.App.Abstractions;
+using DictationAssistant.App.Models;
 
 namespace DictationAssistant.App.ViewModels;
 

@@ -1,6 +1,6 @@
-using DictationAssistant.Abstractions;
+using DictationAssistant.App.Abstractions;
 
-namespace DictationAssistant.Services;
+namespace DictationAssistant.App.Services;
 
 public sealed class FixedWaitingTime : IWaitingTimeCalculator
 {

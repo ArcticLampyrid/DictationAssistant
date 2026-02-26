@@ -1,4 +1,4 @@
-namespace DictationAssistant.Helpers;
+namespace DictationAssistant.App.Helpers;
 
 public static class WordCountHelper
 {

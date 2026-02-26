@@ -1,4 +1,4 @@
-using DictationAssistant.Audio;
+using DictationAssistant.App.Audio;
 using Hexa.NET.SDL2;
 using System;
 using System.IO;

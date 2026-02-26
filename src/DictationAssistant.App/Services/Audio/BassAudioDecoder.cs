@@ -1,4 +1,4 @@
-using DictationAssistant.Audio;
+using DictationAssistant.App.Audio;
 using ManagedBass;
 using System.Diagnostics;
 using System.IO;

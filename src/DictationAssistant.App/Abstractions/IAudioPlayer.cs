@@ -1,6 +1,6 @@
-using DictationAssistant.Audio;
+using DictationAssistant.App.Audio;
 
-namespace DictationAssistant.Abstractions;
+namespace DictationAssistant.App.Abstractions;
 
 public interface IAudioPlayer
 {

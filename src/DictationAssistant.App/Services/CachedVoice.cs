@@ -1,8 +1,8 @@
-using DictationAssistant.Abstractions;
-using DictationAssistant.Audio;
-using DictationAssistant.Models;
+using DictationAssistant.App.Abstractions;
+using DictationAssistant.App.Audio;
+using DictationAssistant.App.Models;
 
-namespace DictationAssistant.Services;
+namespace DictationAssistant.App.Services;
 
 public abstract class CachedVoice : IPreloadableVoice
 {
