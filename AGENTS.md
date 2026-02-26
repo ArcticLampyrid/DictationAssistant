@@ -18,26 +18,6 @@
 - **不要写测试代码** — 快速行动，功能优先
 - **不要过度工程化** — YAGNI 原则
 
-## 代码组织
-
-```
-src/DictationAssistant.App/
-├── Abstractions/     # 接口定义
-├── Audio/           # 音频处理
-├── Helpers/         # 工具类
-├── Lyric/           # 歌词相关
-├── Models/          # 数据模型
-├── Services/        # 核心服务
-│   ├── Audio/       # 音频相关服务
-│   ├── Settings/    # 设置相关
-│   └── Voice/       # 语音引擎
-└── ViewModels/      # MVVM
-```
-
-## 命名空间规范
-
-统一使用：`DictationAssistant` (核心) + `DictationAssistant.App` (UI)
-
 ## P/Invoke 原则
 
 - 使用 NuGet 库（如 ManagedBass, Hexa.NET.SDL2）而非直接 DllImport
