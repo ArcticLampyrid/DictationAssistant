@@ -477,23 +477,18 @@ public partial class MainWindowViewModel : ObservableObject
 
     private void ValidateAndApplyWaitingTime(string expression)
     {
-        if (string.IsNullOrWhiteSpace(expression))
-        {
-            IntervalValidationHint = "表达式不能为空";
-            return;
-        }
-
-        if (WaitingTimeParser.TryParse(expression, out var calculator))
+        var result = WaitingTimeParser.Validate(expression);
+        if (result.IsValid)
         {
             IntervalValidationHint = string.Empty;
             if (_dictationPlayer is DictationPlayer player)
             {
-                player.WaitingTimeCalculator = calculator;
+                player.WaitingTimeCalculator = result.Calculator;
             }
         }
         else
         {
-            IntervalValidationHint = "无效的表达式";
+            IntervalValidationHint = result.ErrorMessage;
         }
     }
 
