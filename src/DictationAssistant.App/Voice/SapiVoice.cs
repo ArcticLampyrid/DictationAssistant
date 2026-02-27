@@ -9,22 +9,23 @@ namespace DictationAssistant.App.Voice;
 
 public sealed class SapiVoice : IVoice
 {
-    private const int Saft44Khz16BitStereo = 39;
-    private readonly string _voiceName;
+    // https://learn.microsoft.com/en-us/previous-versions/windows/desktop/ee125189%28v=vs.85%29
+    private const int SAFT48kHz16BitStereo = 39;
+    private readonly string _tokenId;
 
-    public SapiVoice(string voiceName)
+    public SapiVoice(string tokenId)
     {
-        _voiceName = voiceName;
+        _tokenId = tokenId;
     }
 
     [SupportedOSPlatform("windows")]
     public Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
-        return Task.Run(() => SynthesizeWindows(text, options, _voiceName), ct);
+        return Task.Run(() => SynthesizeWindows(text, options, _tokenId), ct);
     }
 
     [SupportedOSPlatform("windows")]
-    private static PcmAudio? SynthesizeWindows(string text, VoiceSynthesisOptions options, string voiceName)
+    private static PcmAudio? SynthesizeWindows(string text, VoiceSynthesisOptions options, string tokenId)
     {
         object? voiceObj = null;
         object? streamObj = null;
@@ -44,22 +45,24 @@ public sealed class SapiVoice : IVoice
             dynamic stream = streamObj;
             dynamic audioFormat = audioFormatObj;
 
-            audioFormat.Type = Saft44Khz16BitStereo;
+            audioFormat.Type = SAFT48kHz16BitStereo;
             stream.Format = audioFormat;
             voice.AllowAudioOutputFormatChangesOnNextSet = false;
             voice.AudioOutputStream = stream;
             voice.Rate = options.Rate is int rate ? Math.Clamp(rate, -10, 10) : 0;
 
-            var selectedToken = FindVoiceToken(voiceName);
-            if (selectedToken is not null)
+            var voiceTokenObj = CreateComObject("SAPI.SpObjectToken");
+            if (voiceTokenObj is not null)
             {
                 try
                 {
-                    voice.Voice = selectedToken;
+                    dynamic voiceToken = voiceTokenObj;
+                    voiceToken.SetId(tokenId);
+                    voice.Voice = voiceToken;
                 }
                 finally
                 {
-                    ReleaseCom(selectedToken);
+                    ReleaseCom(voiceTokenObj);
                 }
             }
 
@@ -74,7 +77,7 @@ public sealed class SapiVoice : IVoice
             return new PcmAudio
             {
                 Data = new MemoryStream(raw),
-                Format = new PcmFormatInfo(44100, 2, PcmSampleFormat.S16LE)
+                Format = new PcmFormatInfo(48000, 2, PcmSampleFormat.S16LE)
             };
         }
         catch
@@ -87,58 +90,6 @@ public sealed class SapiVoice : IVoice
             ReleaseCom(streamObj);
             ReleaseCom(voiceObj);
         }
-    }
-
-    [SupportedOSPlatform("windows")]
-    private static object? FindVoiceToken(string voiceName)
-    {
-        var categoryIds = new[]
-        {
-            @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices",
-            @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech Server\v11.0\Voices",
-            @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech_OneCore\Voices"
-        };
-
-        foreach (var categoryId in categoryIds)
-        {
-            object? categoryObj = null;
-            try
-            {
-                categoryObj = CreateComObject("SAPI.SpObjectTokenCategory");
-                if (categoryObj is null)
-                {
-                    continue;
-                }
-
-                dynamic category = categoryObj;
-                category.SetId(categoryId, false);
-                dynamic tokens = category.EnumerateTokens();
-                var count = (int)tokens.Count;
-
-                for (var i = 0; i < count; i++)
-                {
-                    dynamic token = tokens.Item(i);
-                    var name = SafeToString(token.GetDescription());
-                    if (string.Equals(name, voiceName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        ReleaseCom(tokens);
-                        return token;
-                    }
-                    ReleaseCom(token);
-                }
-
-                ReleaseCom(tokens);
-            }
-            catch
-            {
-            }
-            finally
-            {
-                ReleaseCom(categoryObj);
-            }
-        }
-
-        return null;
     }
 
     [SupportedOSPlatform("windows")]
@@ -166,17 +117,19 @@ public sealed class SapiVoice : IVoice
 public sealed class SapiVoiceFactory : IVoiceFactory
 {
     private readonly VoiceInfo _info;
+    private readonly string _tokenId;
 
-    public SapiVoiceFactory(VoiceInfo info)
+    public SapiVoiceFactory(VoiceInfo info, string tokenId)
     {
         _info = info;
+        _tokenId = tokenId;
     }
 
     public VoiceInfo Info => _info;
 
     public IVoice Create()
     {
-        return new SapiVoice(_info.DisplayName);
+        return new SapiVoice(_tokenId);
     }
 
     public override string ToString() => _info.DisplayName;
@@ -227,7 +180,11 @@ public sealed class SapiVoiceFactoryProvider : IVoiceFactoryProvider
                 for (var i = 0; i < count; i++)
                 {
                     dynamic token = tokens.Item(i);
-                    var name = SafeToString(token.GetDescription());
+                    string name = SafeToString(token.GetDescription());
+                    if (string.IsNullOrWhiteSpace(name))
+                    {
+                        name = token.GetAttribute("Name");
+                    }
                     if (!string.IsNullOrWhiteSpace(name) && seen.Add(name))
                     {
                         var locale = ParseSapiLanguageHex(SafeToString(token.GetAttribute("Language")));
@@ -237,7 +194,7 @@ public sealed class SapiVoiceFactoryProvider : IVoiceFactoryProvider
                             DisplayName = name,
                             LocaleOrLanguage = locale
                         };
-                        results.Add(new SapiVoiceFactory(info));
+                        results.Add(new SapiVoiceFactory(info, token.Id));
                     }
                     ReleaseCom(token);
                 }
