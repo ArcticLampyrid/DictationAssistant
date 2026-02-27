@@ -313,17 +313,6 @@ public partial class MainWindowViewModel : ObservableObject
         _dictationPlayer.Stop();
     }
 
-    [RelayCommand]
-    private async Task SaveAudioAsync()
-    {
-        var request = new SaveAudioRequest
-        {
-            OutputPath = string.IsNullOrWhiteSpace(FilePath) ? "dictation.wav" : FilePath + ".wav"
-        };
-        var result = await _dictationPlayer.SaveAudioAsync(request).ConfigureAwait(false);
-        Status = result.Message;
-    }
-
     public void SpeakLine(int index)
     {
         CurrentLineIndex = index;

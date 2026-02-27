@@ -4,7 +4,6 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using DictationAssistant.App.ViewModels;
 using DictationAssistant.App.Abstractions;
-using DictationAssistant.App.Models;
 
 namespace DictationAssistant.App;
 
@@ -65,12 +64,12 @@ public partial class SaveAudioWindow : Window
         {
             Title = "选择目标文件",
             SuggestedFileName = Path.GetFileName(ViewModel.TargetPath),
-            DefaultExtension = ViewModel.OutputFormat,
+            DefaultExtension = ViewModel.SelectedEncoder.Extension,
             FileTypeChoices =
             [
-                new FilePickerFileType($"{ViewModel.OutputFormat} 文件")
+                new FilePickerFileType($"{ViewModel.SelectedEncoder.Extension} 文件")
                 {
-                    Patterns = [$"*.{ViewModel.OutputFormat}"]
+                    Patterns = [$"*.{ViewModel.SelectedEncoder.Extension}"]
                 }
             ]
         });

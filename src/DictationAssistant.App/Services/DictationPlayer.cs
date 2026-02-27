@@ -221,9 +221,9 @@ public sealed class DictationPlayer : IDictationPlayer
         UpdateProgress(p => p with { NextWordIndex = null, NextSpeakTime = null });
     }
 
-    public Task<SaveAudioResult> SaveAudioAsync(SaveAudioRequest request, CancellationToken cancellationToken = default)
+    public Task ExportAudioAsync(PcmWriter pcmWriter, ILyricWriter? lyricWriter, IProgress<double>? progress, CancellationToken cancellationToken = default)
     {
-        return _audioExporter.ExportAudioAsync(request, TimesPerWord, Volume, Rate, _waitingTimeCalculator, cancellationToken);
+        return _audioExporter.ExportAsync(pcmWriter, lyricWriter, TimesPerWord, Volume, Rate, progress, cancellationToken);
     }
 
     private void CancelChain()

@@ -1,4 +1,6 @@
 using DictationAssistant.App.Models;
+using DictationAssistant.App.Lyric;
+using DictationAssistant.App.Audio;
 
 namespace DictationAssistant.App.Abstractions;
 
@@ -29,5 +31,5 @@ public interface IDictationPlayer
     void Stop();
     void ResetProgress();
 
-    Task<SaveAudioResult> SaveAudioAsync(SaveAudioRequest request, CancellationToken cancellationToken = default);
+    Task ExportAudioAsync(PcmWriter pcmWriter, ILyricWriter? lyricWriter, IProgress<double>? progress, CancellationToken cancellationToken = default);
 }

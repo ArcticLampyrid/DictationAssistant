@@ -1,7 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using DictationAssistant.App.Abstractions;
 using DictationAssistant.App.Lyric;
-using DictationAssistant.App.Models;
+using DictationAssistant.App.Audio;
+using DictationAssistant.App.Audio.Encoder;
 
 namespace DictationAssistant.App.ViewModels;
 
@@ -27,9 +28,12 @@ public partial class SaveAudioWindowViewModel : ObservableObject
         "48000"
     ];
 
-    public IReadOnlyList<string> OutputFormatOptions { get; } = ["wav", "mp3", "opus"];
-
     public IReadOnlyList<string> LyricModeOptions { get; } = ["Dismiss", "Lrc File"];
+
+    public IReadOnlyList<AudioEncoderInfo> EncoderOptions { get; }
+
+    [ObservableProperty]
+    private AudioEncoderInfo _selectedEncoder;
 
     [ObservableProperty]
     private string _channel = "Stereo";
@@ -39,9 +43,6 @@ public partial class SaveAudioWindowViewModel : ObservableObject
 
     [ObservableProperty]
     private string _frequency = "44100";
-
-    [ObservableProperty]
-    private string _outputFormat = "wav";
 
     [ObservableProperty]
     private string _lyricMode = "Lrc File";
@@ -54,6 +55,20 @@ public partial class SaveAudioWindowViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _isExporting;
+
+    public SaveAudioWindowViewModel()
+    {
+        var encoders = new List<AudioEncoderInfo> { WaveEncoder.EncoderInfo };
+
+        if (FFmpegAudioEncoder.IsFFmpegAvailableAsync().Result)
+        {
+            encoders.Add(new FFmpegAudioEncoderInfo("mp3"));
+            encoders.Add(new FFmpegAudioEncoderInfo("opus"));
+        }
+
+        EncoderOptions = encoders;
+        _selectedEncoder = encoders[0];
+    }
 
     public void SetDictationPlayer(IDictationPlayer player)
     {
@@ -79,32 +94,61 @@ public partial class SaveAudioWindowViewModel : ObservableObject
 
         var progress = new Progress<double>(p => Status = $"正在导出... {p:P0}");
 
-        var request = new SaveAudioRequest
+        try
         {
-            OutputPath = TargetPath,
-            SampleRate = int.TryParse(Frequency, out var sr) ? sr : 44100,
-            Channels = Channel == "Mono" ? 1 : 2,
-            OutputFormat = OutputFormat,
-            LyricMode = LyricMode,
-            LyricsOutputPath = LyricMode == "Lrc File" ? Path.ChangeExtension(TargetPath, "lrc") : null,
-            Progress = progress
-        };
+            var sampleRate = int.TryParse(Frequency, out var sr) ? sr : 44100;
+            var channels = Channel == "Mono" ? 1 : 2;
+            var sampleFormat = SampleFormat == "Unsigned 8bit" ? PcmSampleFormat.U8 : PcmSampleFormat.S16LE;
+            var targetFormat = new PcmFormatInfo(sampleRate, channels, sampleFormat);
 
-        var result = await _dictationPlayer.SaveAudioAsync(request, cancellationToken).ConfigureAwait(false);
-        Status = result.Message;
-        IsExporting = false;
-        return result.Succeeded;
+            var pcmAudio = SelectedEncoder.CreateEncoder(targetFormat, TargetPath);
+            ILyricWriter? lyricWriter = null;
+
+            if (LyricMode == "Lrc File")
+            {
+                var lrcPath = Path.ChangeExtension(TargetPath, "lrc");
+                lyricWriter = new LyricWriter(lrcPath);
+            }
+
+            using (pcmAudio)
+            {
+                using var pcmWriter = new PcmWriter(targetFormat, pcmAudio.Data, leaveOpen: true);
+
+                await _dictationPlayer.ExportAudioAsync(pcmWriter, lyricWriter, progress, cancellationToken).ConfigureAwait(false);
+
+                if (pcmAudio.Data is FFmpegAudioEncoderStream ffmpegStream)
+                {
+                    await ffmpegStream.FinishAsync(cancellationToken).ConfigureAwait(false);
+                }
+            }
+
+            Status = "导出完成";
+            IsExporting = false;
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            Status = "导出已取消";
+            IsExporting = false;
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Status = $"导出失败: {ex.Message}";
+            IsExporting = false;
+            return false;
+        }
     }
 
-    partial void OnOutputFormatChanged(string value)
+    partial void OnSelectedEncoderChanged(AudioEncoderInfo value)
     {
         if (string.IsNullOrWhiteSpace(TargetPath))
         {
-            TargetPath = $"dictation.{value}";
+            TargetPath = $"dictation.{value.Extension}";
             return;
         }
 
-        TargetPath = Path.ChangeExtension(TargetPath, value) ?? TargetPath;
+        TargetPath = Path.ChangeExtension(TargetPath, value.Extension) ?? TargetPath;
     }
 
     public ILyricWriter? CreateLyricWriter()
