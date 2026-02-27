@@ -29,7 +29,6 @@ public partial class MainWindow : Window
     private readonly AppSettings _appSettings;
     private TextEditor? _wordlistEditor;
     private IStorageFile? _currentFile;
-    private bool _isApplyingViewModelPosition;
     private HighlightedLineBackgroundRenderer? _highlightedLineRenderer;
 
     public MainWindow()
@@ -104,57 +103,28 @@ public partial class MainWindow : Window
         _wordlistEditor.TextArea.TextView.BackgroundRenderers.Add(_highlightedLineRenderer);
     }
 
-    private void SyncCurrentLineFromCaret(MainWindowViewModel vm)
-    {
-        if (_wordlistEditor is null || _isApplyingViewModelPosition)
-        {
-            return;
-        }
-
-        var line = _wordlistEditor.TextArea.Caret.Line;
-        vm.CurrentLineIndex = Math.Max(line - 1, 0);
-    }
-
     private void MoveEditorToCurrentLine(MainWindowViewModel vm)
     {
-        if (_wordlistEditor is null || _wordlistEditor.Document.LineCount <= 0)
+        if (_wordlistEditor is null)
         {
             return;
         }
 
         var index = vm.CurrentLineIndex;
-        if (index < 0)
+        if (index < 0 || index >= _wordlistEditor.Document.LineCount)
         {
-            if (_highlightedLineRenderer is { } renderer)
-            {
-                renderer.LineNumber = 0;
-            }
-
+            _highlightedLineRenderer?.LineNumber = 0;
             return;
         }
 
-        var lineNumber = Math.Clamp(index + 1, 1, _wordlistEditor.Document.LineCount);
+        var lineNumber = index + 1;
         var line = _wordlistEditor.Document.GetLineByNumber(lineNumber);
 
-        _isApplyingViewModelPosition = true;
-        try
+        if (vm.AutoScrollCurrentLine)
         {
-            _wordlistEditor.TextArea.Caret.Offset = line.Offset;
-            if (vm.AutoScrollCurrentLine)
-            {
-                _wordlistEditor.ScrollToLine(lineNumber);
-                _wordlistEditor.TextArea.Caret.BringCaretToView();
-            }
-
-            if (_highlightedLineRenderer is { } renderer)
-            {
-                renderer.LineNumber = vm.HighlightCurrentLine ? lineNumber : 0;
-            }
+            _wordlistEditor.ScrollToLine(lineNumber);
         }
-        finally
-        {
-            _isApplyingViewModelPosition = false;
-        }
+         _highlightedLineRenderer?.LineNumber = vm.HighlightCurrentLine ? lineNumber : 0;
     }
 
     private MainWindowViewModel? GetViewModel() => DataContext as MainWindowViewModel;
@@ -188,7 +158,6 @@ public partial class MainWindow : Window
         if (GetViewModel() is { } vm)
         {
             var path = file.TryGetLocalPath() ?? file.Name;
-            vm.FilePath = path;
             vm.CurrentLineIndex = 0;
         }
     }
@@ -224,7 +193,6 @@ public partial class MainWindow : Window
         if (GetViewModel() is { } vm)
         {
             var path = file.TryGetLocalPath() ?? file.Name;
-            vm.FilePath = path;
         }
     }
 
@@ -242,7 +210,6 @@ public partial class MainWindow : Window
 
         if (GetViewModel() is { } vm)
         {
-            vm.FilePath = string.Empty;
                 vm.CurrentLineIndex = 0;
         }
     }
@@ -483,7 +450,6 @@ public partial class MainWindow : Window
 
             if (GetViewModel() is { } vm)
             {
-                vm.FilePath = localPath;
                 vm.CurrentLineIndex = 0;
             }
         }
@@ -508,11 +474,6 @@ public partial class MainWindow : Window
         {
             var text = await File.ReadAllTextAsync(filePath);
             _wordlistEditor.Text = text;
-
-            if (GetViewModel() is { } vm)
-            {
-                vm.FilePath = filePath;
-            }
         }
         catch (Exception ex)
         {

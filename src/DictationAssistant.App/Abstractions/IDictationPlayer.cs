@@ -21,7 +21,7 @@ public interface IDictationPlayer
 
     event EventHandler<DictationProgress>? ProgressChanged;
 
-    void SpeakAt(int index);
+    void SpeakAt(int index, bool resetElapsedTimes = false);
     void SpeakNext();
     void SpeakPrevious();
     void SpeakAgain();

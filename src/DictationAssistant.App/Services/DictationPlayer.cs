@@ -121,7 +121,7 @@ public sealed class DictationPlayer : IDictationPlayer
         SpeakAt(target);
     }
 
-    public void SpeakAt(int index)
+    public void SpeakAt(int index, bool resetElapsedTimes = false)
     {
         if (_wordListSource.Count <= 0)
         {
@@ -132,17 +132,11 @@ public sealed class DictationPlayer : IDictationPlayer
 
         CancelChain();
 
-        bool positionChanged;
         lock (_stateLock)
         {
-            positionChanged = Progress.CurrentWordIndex != index;
-
-            if (_isPaused)
-            {
-                _isPaused = false;
-            }
-
-            if (positionChanged)
+            _isPaused = false;
+            bool positionChanged = Progress.CurrentWordIndex != index;
+            if (resetElapsedTimes || positionChanged)
             {
                 _elapsedTimes = 0;
             }
@@ -168,7 +162,7 @@ public sealed class DictationPlayer : IDictationPlayer
         }
 
         var target = Math.Clamp(startIndex, 0, _wordListSource.Count - 1);
-        SpeakAt(target);
+        SpeakAt(target, true);
     }
 
     public void PauseAuto()
@@ -318,75 +312,71 @@ public sealed class DictationPlayer : IDictationPlayer
 
     private async Task ScheduleAndContinueAsync(int currentIndex, CancellationToken ct)
     {
-        while (true)
+        ct.ThrowIfCancellationRequested();
+
+        int currentElapsedTimes;
+        lock (_stateLock)
         {
-            ct.ThrowIfCancellationRequested();
+            currentElapsedTimes = _elapsedTimes;
+        }
 
-            int currentElapsedTimes;
+        int nextIndex;
+        if (currentElapsedTimes >= TimesPerWord)
+        {
+            nextIndex = currentIndex + 1;
+        }
+        else
+        {
+            nextIndex = currentIndex;
+        }
+
+        if (nextIndex >= _wordListSource.Count)
+        {
             lock (_stateLock)
             {
-                currentElapsedTimes = _elapsedTimes;
+                _autoMode = false;
             }
-
-            int nextIndex;
-            if (currentElapsedTimes >= TimesPerWord)
-            {
-                nextIndex = currentIndex + 1;
-            }
-            else
-            {
-                nextIndex = currentIndex;
-            }
-
-            if (nextIndex >= _wordListSource.Count)
-            {
-                lock (_stateLock)
-                {
-                    _autoMode = false;
-                }
-                UpdateProgress(p => p with { IsCompleted = true, NextWordIndex = null, NextSpeakTime = null });
-                return;
-            }
-
-            var word = _wordListSource.GetWordAt(currentIndex);
-            var waitDuration = GetWaitingTime(word);
-            var scheduledTime = DateTimeOffset.Now + waitDuration;
-
-            UpdateProgress(_ => new DictationProgress(currentIndex, currentElapsedTimes, _wordListSource.Count, nextIndex, scheduledTime, false));
-
-            if (waitDuration > TimeSpan.Zero)
-            {
-                try
-                {
-                    await Task.Delay(waitDuration, ct).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException)
-                {
-                    UpdateProgress(p => p with { NextWordIndex = null, NextSpeakTime = null });
-                    return;
-                }
-            }
-
-            lock (_stateLock)
-            {
-                if (!_autoMode || _isPaused)
-                {
-                    UpdateProgress(p => p with { NextWordIndex = null, NextSpeakTime = null });
-                    return;
-                }
-            }
-
-            if (nextIndex != currentIndex)
-            {
-                lock (_stateLock)
-                {
-                    _elapsedTimes = 0;
-                }
-            }
-
-            await SpeakChainAsync(nextIndex, ct).ConfigureAwait(false);
+            UpdateProgress(p => p with { IsCompleted = true, NextWordIndex = null, NextSpeakTime = null });
             return;
         }
+
+        var word = _wordListSource.GetWordAt(currentIndex);
+        var waitDuration = GetWaitingTime(word);
+        var scheduledTime = DateTimeOffset.Now + waitDuration;
+
+        UpdateProgress(_ => new DictationProgress(currentIndex, currentElapsedTimes, _wordListSource.Count, nextIndex, scheduledTime, false));
+
+        if (waitDuration > TimeSpan.Zero)
+        {
+            try
+            {
+                await Task.Delay(waitDuration, ct).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                UpdateProgress(p => p with { NextWordIndex = null, NextSpeakTime = null });
+                return;
+            }
+        }
+
+        lock (_stateLock)
+        {
+            if (!_autoMode || _isPaused)
+            {
+                UpdateProgress(p => p with { NextWordIndex = null, NextSpeakTime = null });
+                return;
+            }
+        }
+
+        if (nextIndex != currentIndex)
+        {
+            lock (_stateLock)
+            {
+                _elapsedTimes = 0;
+            }
+        }
+
+        await SpeakChainAsync(nextIndex, ct).ConfigureAwait(false);
     }
 
     private async Task SpeakWordAsync(int index, CancellationToken ct)
@@ -433,7 +423,7 @@ public sealed class DictationPlayer : IDictationPlayer
                     {
                         Trace.WriteLine($"Preload failed for '{nextWord}': {ex}");
                     }
-                });
+                }, CancellationToken.None);
             }
         }
         catch (OperationCanceledException)

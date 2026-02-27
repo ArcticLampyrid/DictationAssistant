@@ -15,7 +15,6 @@ public partial class MainWindowViewModel : ObservableObject
 {
     private readonly EditorDocumentWordListSource _wordListSource;
     private readonly IDictationPlayer _dictationPlayer;
-    private readonly ITextFileService _textFileService;
     private readonly AppSettings _appSettings;
     private readonly AppSettingsStore _settingsStore;
     private readonly VoiceAggregator _aggregator;
@@ -34,14 +33,12 @@ public partial class MainWindowViewModel : ObservableObject
     public MainWindowViewModel(
         EditorDocumentWordListSource wordListSource,
         IAudioPlayer audioPlayer,
-        ITextFileService textFileService,
         VoiceAggregator aggregator,
         IVoice initialVoice,
         AppSettings appSettings,
         AppSettingsStore settingsStore)
     {
         _wordListSource = wordListSource;
-        _textFileService = textFileService;
         _appSettings = appSettings;
         _settingsStore = settingsStore;
         _aggregator = aggregator;
@@ -68,7 +65,6 @@ public partial class MainWindowViewModel : ObservableObject
                 ProgressText = progress.TotalWords <= 0
                     ? "0 / 0"
                     : $"{Math.Max(progress.CurrentWordIndex + 1, 0)} / {progress.TotalWords}";
-                ProgressPercent = progress.Percent;
                 OnPropertyChanged(nameof(IsAutoRunning));
                 OnPropertyChanged(nameof(IsAutoPaused));
                 OnPropertyChanged(nameof(PauseOrResumeAutoText));
@@ -84,10 +80,6 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     public EditorDocumentWordListSource WordListSource => _wordListSource;
-
-    [ObservableProperty]
-    private string _filePath = string.Empty;
-
 
     [ObservableProperty]
     private int _currentLineIndex = -1;
@@ -112,9 +104,6 @@ public partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     private string _progressText = "0 / 0";
-
-    [ObservableProperty]
-    private double _progressPercent;
 
     [ObservableProperty]
     private bool _wordListVisible = true;
@@ -169,13 +158,14 @@ public partial class MainWindowViewModel : ObservableObject
                 return "自动播报已暂停";
             }
 
+            var progress = _dictationPlayer.Progress;
+
             if (_dictationPlayer.IsSpeaking)
             {
-                var speakingIndex = Math.Max(CurrentLineIndex + 1, 1);
+                var speakingIndex = Math.Max(progress.CurrentWordIndex + 1, 1);
                 return $"正在播报第{speakingIndex}个";
             }
 
-            var progress = _dictationPlayer.Progress;
             if (_dictationPlayer.AutoMode && progress.NextWordIndex.HasValue)
             {
                 var nextIndex = progress.NextWordIndex.Value + 1;
@@ -243,30 +233,6 @@ public partial class MainWindowViewModel : ObservableObject
         }
 
         PauseAuto();
-    }
-
-    public async Task<string?> LoadTextFromFileAsync(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return null;
-        }
-
-        var content = await _textFileService.ReadAllTextAsync(path).ConfigureAwait(false);
-        FilePath = path;
-        ResetProgressUi();
-        return content;
-    }
-
-    public async Task SaveTextToFileAsync(string path, string text)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
-
-        await _textFileService.WriteAllTextAsync(path, text).ConfigureAwait(false);
-        FilePath = path;
     }
 
     [RelayCommand]
@@ -337,14 +303,12 @@ public partial class MainWindowViewModel : ObservableObject
 
     public void SpeakLine(int index)
     {
-        CurrentLineIndex = index;
         ApplySettingsToCore();
         _dictationPlayer.SpeakAt(index);
     }
 
     public void StartAutoFromLine(int index)
     {
-        CurrentLineIndex = index;
         ApplySettingsToCore();
         _dictationPlayer.StartAuto(index);
     }
@@ -485,15 +449,6 @@ public partial class MainWindowViewModel : ObservableObject
         ImprovedResourcePath = _appSettings.Preference.ImprovedResourcePath;
         DefaultChineseVoiceId = _appSettings.Preference.DefaultChineseVoiceId;
         DefaultEnglishVoiceId = _appSettings.Preference.DefaultEnglishVoiceId;
-    }
-
-    private void ResetProgressUi()
-    {
-        CurrentLineIndex = -1;
-        CurrentRepeat = 0;
-        ProgressText = "0 / 0";
-        ProgressPercent = 0;
-        OnPropertyChanged(nameof(SpeakStateText));
     }
 
     partial void OnWordListVisibleChanged(bool value)
