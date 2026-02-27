@@ -11,6 +11,7 @@ public sealed class DictationPlayer : IDictationPlayer
     private readonly IWordListSource _wordListSource;
     private readonly object _stateLock = new();
     private IWaitingTimeCalculator? _waitingTimeCalculator;
+    private Task? _currentChainTask;
     private CancellationTokenSource? _currentChainCts;
     private bool _autoMode;
     private bool _isPaused;
@@ -130,22 +131,22 @@ public sealed class DictationPlayer : IDictationPlayer
 
         index = Math.Clamp(index, 0, _wordListSource.Count - 1);
 
-        CancelChain();
-
-        lock (_stateLock)
+        CancelChain().ContinueWith(_ =>
         {
-            _isPaused = false;
-            bool positionChanged = Progress.CurrentWordIndex != index;
-            if (resetElapsedTimes || positionChanged)
+            lock (_stateLock)
             {
-                _elapsedTimes = 0;
+                _isPaused = false;
+                bool positionChanged = Progress.CurrentWordIndex != index;
+                if (resetElapsedTimes || positionChanged)
+                {
+                    _elapsedTimes = 0;
+                }
             }
-        }
 
-        var cts = new CancellationTokenSource();
-        _currentChainCts = cts;
-
-        _ = SpeakChainAsync(index, cts.Token);
+            var cts = new CancellationTokenSource();
+            _currentChainCts = cts;
+            _currentChainTask = SpeakChainAsync(index, cts.Token);
+        });
     }
 
     public void StartAuto(int startIndex = 0)
@@ -177,7 +178,7 @@ public sealed class DictationPlayer : IDictationPlayer
             _isPaused = true;
         }
 
-        CancelChain();
+        _ = CancelChain();
     }
 
     public void ResumeAuto()
@@ -194,8 +195,7 @@ public sealed class DictationPlayer : IDictationPlayer
 
         var cts = new CancellationTokenSource();
         _currentChainCts = cts;
-
-        _ = ScheduleAndContinueAsync(Progress.CurrentWordIndex, cts.Token);
+        _currentChainTask = ScheduleAndContinueAsync(Progress.CurrentWordIndex, cts.Token);
     }
 
     public void Stop()
@@ -206,17 +206,31 @@ public sealed class DictationPlayer : IDictationPlayer
             _isPaused = false;
         }
 
-        CancelChain();
-
-        UpdateProgress(p => p with { NextWordIndex = null, NextSpeakTime = null });
+        CancelChain().ContinueWith(_ =>
+        {
+            UpdateProgress(p => p with { NextWordIndex = null, NextSpeakTime = null });
+        });
     }
 
 
-    private void CancelChain()
+    private async Task CancelChain()
     {
         _currentChainCts?.Cancel();
         _currentChainCts?.Dispose();
         _currentChainCts = null;
+        if (_currentChainTask is not null)
+        {
+            try
+            {
+                await _currentChainTask;
+            }
+            catch (OperationCanceledException)
+            {
+                // ignore
+            }
+            _currentChainTask.Dispose();
+            _currentChainTask = null;
+        }
     }
 
     private async Task SpeakChainAsync(int index, CancellationToken ct)
@@ -278,15 +292,7 @@ public sealed class DictationPlayer : IDictationPlayer
 
             if (waitDuration > TimeSpan.Zero)
             {
-                try
-                {
-                    await Task.Delay(waitDuration, ct).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException)
-                {
-                    UpdateProgress(p => p with { NextWordIndex = null, NextSpeakTime = null });
-                    return;
-                }
+                await Task.Delay(waitDuration, ct).ConfigureAwait(false);
             }
 
             lock (_stateLock)
@@ -348,15 +354,7 @@ public sealed class DictationPlayer : IDictationPlayer
 
         if (waitDuration > TimeSpan.Zero)
         {
-            try
-            {
-                await Task.Delay(waitDuration, ct).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                UpdateProgress(p => p with { NextWordIndex = null, NextSpeakTime = null });
-                return;
-            }
+            await Task.Delay(waitDuration, ct).ConfigureAwait(false);
         }
 
         lock (_stateLock)
@@ -388,51 +386,40 @@ public sealed class DictationPlayer : IDictationPlayer
 
         var word = _wordListSource.GetWordAt(index);
 
-        try
+        var options = new VoiceSynthesisOptions
         {
-            var options = new VoiceSynthesisOptions
+            Rate = Rate
+        };
+
+        var pcmAudio = await _voice.SynthesizePcmAsync(word, options, ct).ConfigureAwait(false);
+
+        if (pcmAudio is null)
+        {
+            Trace.WriteLine($"TTS synth returned no playable PCM for word '{word}'.");
+            return;
+        }
+
+        await _audioPlayer.PlayAsync(pcmAudio, Volume, ct).ConfigureAwait(false);
+
+        if (_voice is IPreloadableVoice preloadable && index + 1 < _wordListSource.Count)
+        {
+            var nextWord = _wordListSource.GetWordAt(index + 1);
+            var nextOptions = new VoiceSynthesisOptions
             {
                 Rate = Rate
             };
 
-            var pcmAudio = await _voice.SynthesizePcmAsync(word, options, ct).ConfigureAwait(false);
-
-            if (pcmAudio is null)
+            _ = Task.Run(async () =>
             {
-                Trace.WriteLine($"TTS synth returned no playable PCM for word '{word}'.");
-                return;
-            }
-
-            await _audioPlayer.PlayAsync(pcmAudio, Volume, ct).ConfigureAwait(false);
-
-            if (_voice is IPreloadableVoice preloadable && index + 1 < _wordListSource.Count)
-            {
-                var nextWord = _wordListSource.GetWordAt(index + 1);
-                var nextOptions = new VoiceSynthesisOptions
+                try
                 {
-                    Rate = Rate
-                };
-
-                _ = Task.Run(async () =>
+                    await preloadable.PreloadAsync(nextWord, nextOptions, CancellationToken.None).ConfigureAwait(false);
+                }
+                catch (Exception ex)
                 {
-                    try
-                    {
-                        await preloadable.PreloadAsync(nextWord, nextOptions, CancellationToken.None).ConfigureAwait(false);
-                    }
-                    catch (Exception ex)
-                    {
-                        Trace.WriteLine($"Preload failed for '{nextWord}': {ex}");
-                    }
-                }, CancellationToken.None);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"TTS speak failed for word '{word}': {ex}");
+                    Trace.WriteLine($"Preload failed for '{nextWord}': {ex}");
+                }
+            }, CancellationToken.None);
         }
     }
 
