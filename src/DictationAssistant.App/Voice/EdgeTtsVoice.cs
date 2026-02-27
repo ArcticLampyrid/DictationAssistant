@@ -16,8 +16,6 @@ public sealed class EdgeTtsVoice : CachedVoice
         _voiceName = voiceName;
     }
 
-    public override string Name => _voiceName;
-
     protected override async Task<PcmAudio?> SynthesizePcmDirectAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(text))
@@ -123,6 +121,8 @@ public sealed class EdgeTtsVoiceFactory : IVoiceFactory
     {
         return new EdgeTtsVoice(_info.Id);
     }
+
+    public override string ToString() => _info.DisplayName;
 }
 
 public sealed class EdgeTtsVoiceFactoryProvider : IVoiceFactoryProvider
@@ -134,7 +134,7 @@ public sealed class EdgeTtsVoiceFactoryProvider : IVoiceFactoryProvider
             var voices = await Voices.ListVoicesAsync().ConfigureAwait(false);
             return voices.Select(v => new EdgeTtsVoiceFactory(new VoiceInfo
             {
-                Id = v.ShortName,
+                Id = $"edge-tts:{v.ShortName}",
                 DisplayName = v.FriendlyName ?? v.ShortName,
                 LocaleOrLanguage = v.Locale,
                 ProviderName = "Edge TTS"

@@ -17,8 +17,6 @@ public sealed class SapiVoice : IVoice
         _voiceName = voiceName;
     }
 
-    public string Name => _voiceName;
-
     [SupportedOSPlatform("windows")]
     public Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
@@ -180,6 +178,8 @@ public sealed class SapiVoiceFactory : IVoiceFactory
     {
         return new SapiVoice(_info.DisplayName);
     }
+
+    public override string ToString() => _info.DisplayName;
 }
 
 public sealed class SapiVoiceFactoryProvider : IVoiceFactoryProvider

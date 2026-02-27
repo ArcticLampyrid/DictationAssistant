@@ -17,8 +17,6 @@ public sealed class ImprovedVoice : IVoice
         _resourceDirectory = resourceDirectory;
     }
 
-    public string Name => $"[Improved] {_inner.Name}";
-
     public async Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
         var filePath = FindFile(text);

@@ -16,8 +16,6 @@ public abstract class CachedVoice : IPreloadableVoice
         _cacheCapacity = cacheCapacity;
     }
 
-    public abstract string Name { get; }
-
     protected abstract Task<PcmAudio?> SynthesizePcmDirectAsync(string text, VoiceSynthesisOptions options, CancellationToken ct);
 
     public async Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)

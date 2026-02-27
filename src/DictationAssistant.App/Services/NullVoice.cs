@@ -8,8 +8,6 @@ public sealed class NullVoice : IVoice
 {
     public static NullVoice Instance { get; } = new();
 
-    public string Name => "Null Voice";
-
     public Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
         _ = text;

@@ -60,7 +60,7 @@ public partial class App : Application
 
             desktop.MainWindow = new MainWindow(appSettings)
             {
-                DataContext = new MainWindowViewModel(wordListSource, audioPlayer, new LocalTextFileService(), aggregator, initialVoice, appSettings)
+                DataContext = new MainWindowViewModel(wordListSource, audioPlayer, new LocalTextFileService(), aggregator, initialVoice, appSettings, settingsStore)
             };
 
             if (WaitingTimeParser.TryParse(appSettings.Dictation.IntervalExpression, out var calculator))

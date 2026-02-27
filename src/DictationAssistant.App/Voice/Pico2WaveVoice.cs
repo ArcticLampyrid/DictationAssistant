@@ -13,8 +13,6 @@ public sealed class Pico2WaveVoice : IVoice
         _language = language;
     }
 
-    public string Name => _language;
-
     public async Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
         var wavBytes = await SynthesizeWavAsync(text, ct).ConfigureAwait(false);
@@ -65,6 +63,8 @@ public sealed class Pico2WaveVoiceFactory : IVoiceFactory
     {
         return new Pico2WaveVoice(_info.DisplayName);
     }
+
+    public override string ToString() => _info.DisplayName;
 }
 
 public sealed class Pico2WaveVoiceFactoryProvider : IVoiceFactoryProvider

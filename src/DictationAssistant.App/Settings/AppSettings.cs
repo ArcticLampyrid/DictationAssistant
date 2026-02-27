@@ -18,17 +18,6 @@ public sealed class AppSettings
 
 public sealed class MainWindowSettings
 {
-    public double Width { get; set; } = 980;
-
-    public double Height { get; set; } = 680;
-
-    public double? X { get; set; }
-
-    public double? Y { get; set; }
-
-    public string WindowState { get; set; } = "Normal";
-
-    public bool WordListVisible { get; set; } = true;
 }
 
 // App uses Core.Models.DictationSettings directly via using alias
@@ -42,7 +31,7 @@ public sealed class PreferenceSettings
 
     public string ImprovedResourcePath { get; set; } = string.Empty;
 
-    public string DefaultChineseVoiceName { get; set; } = string.Empty;
+    public string DefaultChineseVoiceId { get; set; } = string.Empty;
 
-    public string DefaultEnglishVoiceName { get; set; } = string.Empty;
+    public string DefaultEnglishVoiceId { get; set; } = string.Empty;
 }

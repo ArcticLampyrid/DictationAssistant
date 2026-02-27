@@ -13,8 +13,6 @@ public sealed class EspeakNgVoice : IVoice
         _voiceName = voiceName;
     }
 
-    public string Name => _voiceName;
-
     public async Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
         var wavBytes = await SynthesizeWavAsync(text, options, ct).ConfigureAwait(false);
@@ -82,6 +80,8 @@ public sealed class EspeakNgVoiceFactory : IVoiceFactory
     {
         return new EspeakNgVoice(_info.DisplayName);
     }
+
+    public override string ToString() => _info.DisplayName;
 }
 
 public sealed class EspeakNgVoiceFactoryProvider : IVoiceFactoryProvider

@@ -13,8 +13,6 @@ public sealed class MacSayVoice : IVoice
         _voiceName = voiceName;
     }
 
-    public string Name => _voiceName;
-
     public async Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
         var wavBytes = await SynthesizeWavAsync(text, options, ct).ConfigureAwait(false);
@@ -108,6 +106,8 @@ public sealed class MacSayVoiceFactory : IVoiceFactory
     {
         return new MacSayVoice(_info.DisplayName);
     }
+
+    public override string ToString() => _info.DisplayName;
 }
 
 public sealed class MacSayVoiceFactoryProvider : IVoiceFactoryProvider

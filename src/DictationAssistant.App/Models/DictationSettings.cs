@@ -35,7 +35,9 @@ public sealed class DictationSettings
         set => _rate = Math.Clamp(value, -10, 10);
     }
 
-    public string DefaultChineseVoiceName { get; set; } = string.Empty;
+    public string DefaultChineseVoiceId { get; set; } = string.Empty;
 
-    public string DefaultEnglishVoiceName { get; set; } = string.Empty;
+    public string DefaultEnglishVoiceId { get; set; } = string.Empty;
+
+    public string LastSelectedVoiceId { get; set; } = string.Empty;
 }

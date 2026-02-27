@@ -15,8 +15,8 @@ public partial class PreferenceWindowViewModel : ObservableObject
     {
         EditorFontFamily = settings.EditorFontFamily;
         EditorFontSize = settings.EditorFontSize;
-        DefaultChineseVoiceName = settings.DefaultChineseVoiceName;
-        DefaultEnglishVoiceName = settings.DefaultEnglishVoiceName;
+        DefaultChineseVoiceId = settings.DefaultChineseVoiceId;
+        DefaultEnglishVoiceId = settings.DefaultEnglishVoiceId;
         ImprovedResourcePath = settings.ImprovedResourcePath;
 
         VoiceOptions = voiceOptions.Count > 0
@@ -33,10 +33,10 @@ public partial class PreferenceWindowViewModel : ObservableObject
     private double _editorFontSize = 28;
 
     [ObservableProperty]
-    private string _defaultChineseVoiceName = string.Empty;
+    private string _defaultChineseVoiceId = string.Empty;
 
     [ObservableProperty]
-    private string _defaultEnglishVoiceName = string.Empty;
+    private string _defaultEnglishVoiceId = string.Empty;
 
     [ObservableProperty]
     private string _improvedResourcePath = string.Empty;
@@ -48,8 +48,8 @@ public partial class PreferenceWindowViewModel : ObservableObject
             EditorFontFamily = EditorFontFamily,
             EditorFontSize = EditorFontSize,
             ImprovedResourcePath = ImprovedResourcePath,
-            DefaultChineseVoiceName = DefaultChineseVoiceName,
-            DefaultEnglishVoiceName = DefaultEnglishVoiceName
+            DefaultChineseVoiceId = DefaultChineseVoiceId,
+            DefaultEnglishVoiceId = DefaultEnglishVoiceId
         };
     }
 }
