@@ -109,17 +109,19 @@ public sealed class EdgeTtsVoice : CachedVoice
 public sealed class EdgeTtsVoiceFactory : IVoiceFactory
 {
     private readonly VoiceInfo _info;
+    private readonly string _internalName;
 
-    public EdgeTtsVoiceFactory(VoiceInfo info)
+    public EdgeTtsVoiceFactory(VoiceInfo info, string internalName)
     {
         _info = info;
+        _internalName = internalName;
     }
 
     public VoiceInfo Info => _info;
 
     public IVoice Create()
     {
-        return new EdgeTtsVoice(_info.Id);
+        return new EdgeTtsVoice(_internalName);
     }
 
     public override string ToString() => _info.DisplayName;
@@ -137,8 +139,7 @@ public sealed class EdgeTtsVoiceFactoryProvider : IVoiceFactoryProvider
                 Id = $"edge-tts:{v.ShortName}",
                 DisplayName = v.FriendlyName ?? v.ShortName,
                 LocaleOrLanguage = v.Locale,
-                ProviderName = "Edge TTS"
-            })).ToList();
+            }, v.ShortName)).ToList();
         }
         catch (Exception ex)
         {

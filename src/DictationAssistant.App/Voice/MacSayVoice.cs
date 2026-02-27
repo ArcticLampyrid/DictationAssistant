@@ -114,6 +114,10 @@ public sealed class MacSayVoiceFactoryProvider : IVoiceFactoryProvider
 {
     public async Task<IReadOnlyList<IVoiceFactory>> GetFactoriesAsync(CancellationToken cancellationToken)
     {
+        if (!OperatingSystem.IsMacOS())
+        {
+            return [];
+        }
         try
         {
             var output = await ProcessRunner.RunCaptureAsync("say", ["-v", "?"], null, cancellationToken).ConfigureAwait(false);
@@ -139,7 +143,6 @@ public sealed class MacSayVoiceFactoryProvider : IVoiceFactoryProvider
                     Id = $"say:{tokens[0]}",
                     DisplayName = tokens[0],
                     LocaleOrLanguage = tokens.Length > 1 ? tokens[1] : null,
-                    ProviderName = "macOS say"
                 };
                 voices.Add(new MacSayVoiceFactory(info));
             }

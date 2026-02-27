@@ -235,8 +235,7 @@ public sealed class SapiVoiceFactoryProvider : IVoiceFactoryProvider
                         {
                             Id = $"sapi:{name}",
                             DisplayName = name,
-                            LocaleOrLanguage = locale,
-                            ProviderName = "Windows SAPI"
+                            LocaleOrLanguage = locale
                         };
                         results.Add(new SapiVoiceFactory(info));
                     }

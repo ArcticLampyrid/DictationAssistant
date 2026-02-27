@@ -68,17 +68,19 @@ public sealed class EspeakNgVoice : IVoice
 public sealed class EspeakNgVoiceFactory : IVoiceFactory
 {
     private readonly VoiceInfo _info;
+    private readonly string _voiceName;
 
-    public EspeakNgVoiceFactory(VoiceInfo info)
+    public EspeakNgVoiceFactory(VoiceInfo info, string voiceName)
     {
         _info = info;
+        _voiceName = voiceName;
     }
 
     public VoiceInfo Info => _info;
 
     public IVoice Create()
     {
-        return new EspeakNgVoice(_info.DisplayName);
+        return new EspeakNgVoice(_voiceName);
     }
 
     public override string ToString() => _info.DisplayName;
@@ -88,6 +90,10 @@ public sealed class EspeakNgVoiceFactoryProvider : IVoiceFactoryProvider
 {
     public async Task<IReadOnlyList<IVoiceFactory>> GetFactoriesAsync(CancellationToken cancellationToken)
     {
+        if (!OperatingSystem.IsLinux())
+        {
+            return [];
+        }
         try
         {
             var output = await ProcessRunner.RunCaptureAsync("espeak-ng", ["--voices"], null, cancellationToken).ConfigureAwait(false);
@@ -107,15 +113,14 @@ public sealed class EspeakNgVoiceFactoryProvider : IVoiceFactoryProvider
                 {
                     continue;
                 }
-
+                var voiceName = columns[3].Replace('_', ' ');
                 var info = new VoiceInfo
                 {
                     Id = $"espeak:{columns[3]}",
-                    DisplayName = columns[3],
+                    DisplayName = $"{voiceName} (eSpeak NG)",
                     LocaleOrLanguage = columns[1],
-                    ProviderName = "espeak-ng"
                 };
-                voices.Add(new EspeakNgVoiceFactory(info));
+                voices.Add(new EspeakNgVoiceFactory(info, voiceName));
             }
 
             return voices;

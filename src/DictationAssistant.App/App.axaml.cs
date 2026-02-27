@@ -26,31 +26,12 @@ public partial class App : Application
             var appSettings = settingsStore.Load();
             var wordListSource = new EditorDocumentWordListSource();
             var audioPlayer = new SdlPcmPlayer();
-
-            var providers = new List<IVoiceFactoryProvider>();
-            if (OperatingSystem.IsWindows())
-            {
-                providers.Add(new SapiVoiceFactoryProvider());
-            }
-
-            if (OperatingSystem.IsMacOS() && ProcessRunner.FindOnPath("say") is not null)
-            {
-                providers.Add(new MacSayVoiceFactoryProvider());
-            }
-
-            if (OperatingSystem.IsLinux() && ProcessRunner.FindOnPath("espeak-ng") is not null)
-            {
-                providers.Add(new EspeakNgVoiceFactoryProvider());
-            }
-
-            if (OperatingSystem.IsLinux() && ProcessRunner.FindOnPath("pico2wave") is not null)
-            {
-                providers.Add(new Pico2WaveVoiceFactoryProvider());
-            }
-
-            providers.Add(new EdgeTtsVoiceFactoryProvider());
-
-            var aggregator = new VoiceAggregator(providers.ToArray());
+            var aggregator = new VoiceAggregator([
+                new SapiVoiceFactoryProvider(),
+                new MacSayVoiceFactoryProvider(),
+                new EspeakNgVoiceFactoryProvider(),
+                new EdgeTtsVoiceFactoryProvider(),
+            ]);
 
             var initialVoice = NullVoice.Instance;
 
