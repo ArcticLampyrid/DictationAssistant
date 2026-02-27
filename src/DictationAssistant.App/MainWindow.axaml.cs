@@ -17,6 +17,8 @@ using AvaloniaEdit;
 using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.Highlighting.Xshd;
 using DictationAssistant.App.Settings;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 using DictationAssistant.App.ViewModels;
 using XmlReader = System.Xml.XmlReader;
 
@@ -49,6 +51,14 @@ public partial class MainWindow : Window
             if (DataContext is MainWindowViewModel vm)
             {
                 HookEditor(vm);
+                vm.AlertRequested += message =>
+                {
+                    Dispatcher.UIThread.Post(async () =>
+                    {
+                        var box = MessageBoxManager.GetMessageBoxStandard("自动默写", message, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info);
+                        await box.ShowWindowDialogAsync(this);
+                    });
+                };
                 vm.PropertyChanged += (_, args) =>
                 {
                     if (args.PropertyName == nameof(MainWindowViewModel.CurrentLineIndex) ||
@@ -550,12 +560,19 @@ public partial class MainWindow : Window
         return editor.Document.GetText(line.Offset, line.Length);
     }
 
-    private void ResetRecord_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void ResetRecord_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         _ = sender;
         _ = e;
         if (GetViewModel() is not { } vm)
         {
+            return;
+        }
+
+        if (vm.DictationPlayer.AutoMode)
+        {
+            var box = MessageBoxManager.GetMessageBoxStandard("自动默写", "请先停止自动播报！", ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info);
+            await box.ShowWindowDialogAsync(this);
             return;
         }
 

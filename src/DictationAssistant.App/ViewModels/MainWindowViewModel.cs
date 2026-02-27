@@ -21,6 +21,12 @@ public partial class MainWindowViewModel : ObservableObject
     private IVoice _currentVoice;
     private DispatcherTimer? _countdownTimer;
 
+    /// <summary>
+    /// Raised when a user-facing alert message should be shown.
+    /// The View subscribes to this and shows a MessageBox.
+    /// </summary>
+    public event Action<string>? AlertRequested;
+
     public IDictationPlayer DictationPlayer => _dictationPlayer;
 
     public MainWindowViewModel(
@@ -270,6 +276,11 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void SpeakPrevious()
     {
+        if (_dictationPlayer.Progress.CurrentWordIndex <= 0)
+        {
+            AlertRequested?.Invoke("已经是第1个了！");
+            return;
+        }
         ApplySettingsToCore();
         _dictationPlayer.SpeakPrevious();
     }
@@ -277,6 +288,11 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void SpeakAgain()
     {
+        if (_dictationPlayer.Progress.CurrentWordIndex < 0 || _dictationPlayer.Progress.CurrentWordIndex >= _wordListSource.Count)
+        {
+            AlertRequested?.Invoke("还没报过或已移除报过的词语！");
+            return;
+        }
         ApplySettingsToCore();
         _dictationPlayer.SpeakAgain();
     }
@@ -284,6 +300,16 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void SpeakNext()
     {
+        if (_wordListSource.Count == 0)
+        {
+            AlertRequested?.Invoke("请先添加词语！");
+            return;
+        }
+        if (_dictationPlayer.Progress.CurrentWordIndex >= _wordListSource.Count - 1)
+        {
+            AlertRequested?.Invoke("已经播完了。");
+            return;
+        }
         ApplySettingsToCore();
         _dictationPlayer.SpeakNext();
     }

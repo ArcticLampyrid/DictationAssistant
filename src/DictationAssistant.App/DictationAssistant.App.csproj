@@ -9,6 +9,7 @@
     <PackageReference Include="EdgeTTS.DotNet" Version="*" />
     <PackageReference Include="HexaGen.Runtime" Version="1.1.24" />
     <PackageReference Include="ManagedBass" Version="3.0.0" />
+    <PackageReference Include="MessageBox.Avalonia" Version="3.3.1.1" />
     <PackageReference Include="NCalcSync" Version="5.12.0" />
     <PackageReference Include="Hexa.NET.SDL2" Version="1.2.*" />
   </ItemGroup>
