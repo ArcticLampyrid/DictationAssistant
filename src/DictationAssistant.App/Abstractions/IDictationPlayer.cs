@@ -12,6 +12,7 @@ public interface IDictationPlayer
 
     IVoice Voice { get; set; }
     IWaitingTimeCalculator? WaitingTimeCalculator { get; set; }
+    IWordListSource WordListSource { get; }
     int TimesPerWord { get; set; }
     int Volume { get; set; }
     int Rate { get; set; }
@@ -31,5 +32,4 @@ public interface IDictationPlayer
     void Stop();
     void ResetProgress();
 
-    Task ExportAudioAsync(PcmWriter pcmWriter, ILyricWriter? lyricWriter, IProgress<double>? progress, CancellationToken cancellationToken = default);
 }

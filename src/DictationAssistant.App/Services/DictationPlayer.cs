@@ -1,6 +1,4 @@
 using DictationAssistant.App.Abstractions;
-using DictationAssistant.App.Lyric;
-using DictationAssistant.App.Audio;
 using DictationAssistant.App.Models;
 using System.Diagnostics;
 
@@ -13,8 +11,6 @@ public sealed class DictationPlayer : IDictationPlayer
     private readonly IWordListSource _wordListSource;
     private readonly object _stateLock = new();
     private IWaitingTimeCalculator? _waitingTimeCalculator;
-    private readonly AudioExporter _audioExporter;
-
     private CancellationTokenSource? _currentChainCts;
     private bool _autoMode;
     private bool _isPaused;
@@ -30,8 +26,6 @@ public sealed class DictationPlayer : IDictationPlayer
         _audioPlayer = audioPlayer;
         _wordListSource = wordListSource;
         Progress = DictationProgress.Empty with { TotalWords = _wordListSource.Count };
-        _audioExporter = new AudioExporter(voice, wordListSource, null);
-
         _wordListSource.Changed += (_, _) =>
         {
             UpdateProgress(progress => progress with
@@ -72,6 +66,8 @@ public sealed class DictationPlayer : IDictationPlayer
         get => _waitingTimeCalculator;
         set => _waitingTimeCalculator = value;
     }
+
+    public IWordListSource WordListSource => _wordListSource;
 
     public IVoice Voice
     {
@@ -221,10 +217,6 @@ public sealed class DictationPlayer : IDictationPlayer
         UpdateProgress(p => p with { NextWordIndex = null, NextSpeakTime = null });
     }
 
-    public Task ExportAudioAsync(PcmWriter pcmWriter, ILyricWriter? lyricWriter, IProgress<double>? progress, CancellationToken cancellationToken = default)
-    {
-        return _audioExporter.ExportAsync(pcmWriter, lyricWriter, TimesPerWord, Volume, Rate, progress, cancellationToken);
-    }
 
     private void CancelChain()
     {

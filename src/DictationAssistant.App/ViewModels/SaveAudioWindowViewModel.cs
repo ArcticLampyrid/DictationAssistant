@@ -3,6 +3,7 @@ using DictationAssistant.App.Abstractions;
 using DictationAssistant.App.Lyric;
 using DictationAssistant.App.Audio;
 using DictationAssistant.App.Audio.Encoder;
+using DictationAssistant.App.Services;
 
 namespace DictationAssistant.App.ViewModels;
 
@@ -114,7 +115,14 @@ public partial class SaveAudioWindowViewModel : ObservableObject
             {
                 using var pcmWriter = new PcmWriter(targetFormat, pcmAudio.Data, leaveOpen: true);
 
-                await _dictationPlayer.ExportAudioAsync(pcmWriter, lyricWriter, progress, cancellationToken).ConfigureAwait(false);
+                var exporter = new AudioExporter(
+                    _dictationPlayer.Voice,
+                    _dictationPlayer.WordListSource,
+                    _dictationPlayer.WaitingTimeCalculator);
+                await exporter.ExportAsync(
+                    pcmWriter, lyricWriter,
+                    _dictationPlayer.TimesPerWord, _dictationPlayer.Rate,
+                    progress, cancellationToken).ConfigureAwait(false);
 
                 if (pcmAudio.Data is FFmpegAudioEncoderStream ffmpegStream)
                 {

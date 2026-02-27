@@ -22,7 +22,6 @@ public sealed class AudioExporter
         PcmWriter pcmWriter,
         ILyricWriter? lyricWriter,
         int timesPerWord,
-        int volume,
         int rate,
         IProgress<double>? progress,
         CancellationToken cancellationToken = default)
