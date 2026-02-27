@@ -21,9 +21,40 @@ public static class BassAudioDecoder
                     Trace.WriteLine($"[BassAudioDecoder] Failed to initialize BASS: {Bass.LastError}");
                     return false;
                 }
+                LoadPlugins();
                 _initialized = true;
             }
             return true;
+        }
+    }
+
+    private static void LoadPlugins()
+    {
+        var baseDir = AppContext.BaseDirectory;
+        var pluginDir = Path.Combine(baseDir, "bass_plugin");
+        if (!Directory.Exists(pluginDir))
+        {
+            return;
+        }
+
+        try
+        {
+            foreach (var file in Directory.GetFiles(pluginDir))
+            {
+                var handle = Bass.PluginLoad(file);
+                if (handle != 0)
+                {
+                    Trace.WriteLine($"[BassAudioDecoder] Loaded plugin: {Path.GetFileName(file)}");
+                }
+                else
+                {
+                    Trace.WriteLine($"[BassAudioDecoder] Failed to load plugin: {Path.GetFileName(file)} ({Bass.LastError})");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"[BassAudioDecoder] Plugin loading error: {ex.Message}");
         }
     }
 
