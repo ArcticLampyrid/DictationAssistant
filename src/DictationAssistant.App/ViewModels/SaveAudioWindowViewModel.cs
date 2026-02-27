@@ -11,6 +11,8 @@ public partial class SaveAudioWindowViewModel : ObservableObject
 {
     private IDictationPlayer? _dictationPlayer;
 
+    public event Action<string>? AlertRequested;
+
     public IReadOnlyList<string> ChannelOptions { get; } = ["Mono", "Stereo"];
 
     public IReadOnlyList<string> SampleFormatOptions { get; } = ["Unsigned 8bit", "Signed 16bit"];
@@ -130,20 +132,20 @@ public partial class SaveAudioWindowViewModel : ObservableObject
                 }
             }
 
-            Status = "导出完成";
             IsExporting = false;
+            AlertRequested?.Invoke("导出完成");
             return true;
         }
         catch (OperationCanceledException)
         {
-            Status = "导出已取消";
             IsExporting = false;
+            AlertRequested?.Invoke("导出已取消");
             return false;
         }
         catch (Exception ex)
         {
-            Status = $"导出失败: {ex.Message}";
             IsExporting = false;
+            AlertRequested?.Invoke($"导出失败: {ex.Message}");
             return false;
         }
     }

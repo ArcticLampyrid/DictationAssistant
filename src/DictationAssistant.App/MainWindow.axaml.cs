@@ -481,7 +481,7 @@ public partial class MainWindow : Window
         _wordlistEditor?.SelectAll();
     }
 
-    private void Count_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void Count_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         _ = sender;
         _ = e;
@@ -491,7 +491,8 @@ public partial class MainWindow : Window
         }
 
         var count = _wordlistEditor.Document.LineCount;
-        vm.Status = $"共 {count} 行";
+        var box = MessageBoxManager.GetMessageBoxStandard("自动默写", $"词语数量：{count}", ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info);
+        await box.ShowWindowDialogAsync(this);
     }
 
     private void SpeakSelection_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

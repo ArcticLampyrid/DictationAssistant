@@ -3,6 +3,9 @@ using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using DictationAssistant.App.ViewModels;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
+using Avalonia.Threading;
 using DictationAssistant.App.Abstractions;
 
 namespace DictationAssistant.App;
@@ -22,6 +25,14 @@ public partial class SaveAudioWindow : Window
         if (DataContext is SaveAudioWindowViewModel vm)
         {
             vm.SetDictationPlayer(dictationPlayer);
+            vm.AlertRequested += message =>
+            {
+                Dispatcher.UIThread.Post(async () =>
+                {
+                    var box = MessageBoxManager.GetMessageBoxStandard("保存音频", message, ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info);
+                    await box.ShowWindowDialogAsync(this);
+                });
+            };
         }
     }
 

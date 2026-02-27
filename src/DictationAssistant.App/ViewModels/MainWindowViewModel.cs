@@ -426,7 +426,7 @@ public partial class MainWindowViewModel : ObservableObject
         }
         else
         {
-            Status = "未能找到中文引擎";
+            AlertRequested?.Invoke("未能找到中文引擎");
         }
     }
 
@@ -440,7 +440,7 @@ public partial class MainWindowViewModel : ObservableObject
         }
         else
         {
-            Status = "未能找到英文引擎";
+            AlertRequested?.Invoke("未能找到英文引擎");
         }
     }
 
