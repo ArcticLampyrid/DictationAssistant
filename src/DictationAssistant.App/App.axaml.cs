@@ -1,3 +1,4 @@
+using System.IO;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -68,6 +69,19 @@ public partial class App : Application
             }
 
             desktop.MainWindow.Closing += (_, _) => settingsStore.Save(appSettings);
+
+            // Command-line file argument support (v3.x compat)
+            if (desktop.Args is { Length: > 0 } cliArgs)
+            {
+                var filePath = cliArgs[0];
+                if (File.Exists(filePath) && desktop.MainWindow is MainWindow mainWin)
+                {
+                    mainWin.Opened += async (_, _) =>
+                    {
+                        await mainWin.LoadFileByPathAsync(Path.GetFullPath(filePath));
+                    };
+                }
+            }
 
             desktop.Exit += (_, _) =>
             {

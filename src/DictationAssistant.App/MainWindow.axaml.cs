@@ -604,4 +604,32 @@ public partial class MainWindow : Window
             }
         }
     }
+
+    public async Task LoadFileByPathAsync(string filePath)
+    {
+        if (_wordlistEditor is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var text = await File.ReadAllTextAsync(filePath);
+            _wordlistEditor.Text = text;
+
+            if (GetViewModel() is { } vm)
+            {
+                vm.FilePath = filePath;
+                vm.Status = $"已加载：{filePath}";
+            }
+        }
+        catch (Exception ex)
+        {
+            if (GetViewModel() is { } vm)
+            {
+                vm.Status = $"无法打开文件：{ex.Message}";
+            }
+        }
+    }
+
 }
