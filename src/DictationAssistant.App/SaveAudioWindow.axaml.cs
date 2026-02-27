@@ -60,12 +60,7 @@ public partial class SaveAudioWindow : Window
         _ = e;
         if (ViewModel is { } vm)
         {
-            var success = await vm.ExportAsync();
-            if (success)
-            {
-                Close(true);
-            }
-            // On failure/cancel, stay open so user can retry or close manually
+            await vm.ExportAsync();
         }
     }
 
