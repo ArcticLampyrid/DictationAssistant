@@ -38,8 +38,8 @@
       <MenuItem Header="选项(_O)">
         <MenuItem Header="偏好设置(_P)..." Click="Preference_Click" />
         <Separator />
-        <MenuItem Header="自动翻页" ToggleType="CheckBox" IsChecked="{Binding AutoScrollCurrentLine}" />
-        <MenuItem Header="高亮跟随" ToggleType="CheckBox" IsChecked="{Binding HighlightCurrentLine}" />
+        <MenuItem Header="自动翻页" ToggleType="CheckBox" IsChecked="{Binding AutoScrollCurrentLine, Mode=TwoWay}" />
+        <MenuItem Header="高亮跟随" ToggleType="CheckBox" IsChecked="{Binding HighlightCurrentLine, Mode=TwoWay}" />
       </MenuItem>
       <MenuItem Header="辅助(_A)">
         <MenuItem Header="保存音频" Click="SaveAudio_Click" />
