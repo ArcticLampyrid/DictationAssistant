@@ -3,9 +3,9 @@
 ## v3.x 对齐（功能补齐）
 
 ### 高优先级
-- [ ] 命令行参数打开文件 (`DictationAssistant wordlist.txt`)
-- [ ] BASS 插件加载（启动时扫描 `bass_plugin` 目录）
-- [ ] 音频导出格式选项（使用对话框中选择的采样率/声道数）
+- [x] 命令行参数打开文件 (`DictationAssistant wordlist.txt`)
+- [x] BASS 插件加载（启动时扫描 `bass_plugin` 目录）
+- [x] 音频导出格式选项（使用对话框中选择的采样率/声道数）
 
 ### 中优先级
 - [ ] 工具栏添加删除按钮
