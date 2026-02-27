@@ -7,18 +7,25 @@
         x:DataType="vm:SaveAudioWindowViewModel"
         Title="保存音频"
         Width="440"
-        Height="360"
+        Height="400"
         MinWidth="380"
-        MinHeight="300"
+        MinHeight="340"
         WindowStartupLocation="CenterOwner"
         mc:Ignorable="d">
   <DockPanel Margin="12">
-    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
-      <Button Width="88" IsCancel="True" Content="取消" Click="CancelButton_Click" HorizontalContentAlignment="Center" />
-      <Button Width="88" IsDefault="True" Content="确定" Click="OkButton_Click" HorizontalContentAlignment="Center" />
+    <!-- Bottom: progress bar + buttons -->
+    <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="0,12,0,0">
+      <ProgressBar Minimum="0" Maximum="1" Value="{Binding ExportProgress}"
+                   IsVisible="{Binding IsExporting}" Height="18" />
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+        <Button Width="88" Content="取消" Click="CancelButton_Click" HorizontalContentAlignment="Center" />
+        <Button Width="88" IsDefault="True" Content="确定" Click="OkButton_Click"
+                IsEnabled="{Binding !IsExporting}" HorizontalContentAlignment="Center" />
+      </StackPanel>
     </StackPanel>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <!-- Settings form -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto" IsEnabled="{Binding !IsExporting}">
       <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
         <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="声道" />
         <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding ChannelOptions}" SelectedItem="{Binding Channel, Mode=TwoWay}" />

@@ -56,6 +56,11 @@ public partial class SaveAudioWindowViewModel : ObservableObject
     [ObservableProperty]
     private bool _isExporting;
 
+    [ObservableProperty]
+    private double _exportProgress;
+
+    private CancellationTokenSource? _exportCts;
+
     public SaveAudioWindowViewModel()
     {
         var encoders = new List<AudioEncoderInfo> { WaveEncoder.EncoderInfo };
@@ -75,7 +80,7 @@ public partial class SaveAudioWindowViewModel : ObservableObject
         _dictationPlayer = player;
     }
 
-    public async Task<bool> ExportAsync(CancellationToken cancellationToken)
+    public async Task<bool> ExportAsync()
     {
         if (_dictationPlayer is null)
         {
@@ -89,43 +94,56 @@ public partial class SaveAudioWindowViewModel : ObservableObject
             return false;
         }
 
+        // Snapshot all parameters from UI thread before going async
+        var words = _dictationPlayer.WordListSource.GetWords();
+        var voice = _dictationPlayer.Voice;
+        var waitingTimeCalculator = _dictationPlayer.WaitingTimeCalculator;
+        var timesPerWord = _dictationPlayer.TimesPerWord;
+        var rate = _dictationPlayer.Rate;
+        var sampleRate = int.TryParse(Frequency, out var sr) ? sr : 44100;
+        var channels = Channel == "Mono" ? 1 : 2;
+        var sampleFormat = SampleFormat == "Unsigned 8bit" ? PcmSampleFormat.U8 : PcmSampleFormat.S16LE;
+        var targetFormat = new PcmFormatInfo(sampleRate, channels, sampleFormat);
+        var selectedEncoder = SelectedEncoder;
+        var targetPath = TargetPath;
+        var lyricMode = LyricMode;
+
         IsExporting = true;
-        IProgress<double>? progress = null;
+        ExportProgress = 0;
+        _exportCts = new CancellationTokenSource();
+        var ct = _exportCts.Token;
+
+        var progress = new Progress<double>(p => ExportProgress = p);
 
         try
         {
-            var sampleRate = int.TryParse(Frequency, out var sr) ? sr : 44100;
-            var channels = Channel == "Mono" ? 1 : 2;
-            var sampleFormat = SampleFormat == "Unsigned 8bit" ? PcmSampleFormat.U8 : PcmSampleFormat.S16LE;
-            var targetFormat = new PcmFormatInfo(sampleRate, channels, sampleFormat);
-
-            var pcmAudio = SelectedEncoder.CreateEncoder(targetFormat, TargetPath);
-            ILyricWriter? lyricWriter = null;
-
-            if (LyricMode == "Lrc File")
+            await Task.Run(async () =>
             {
-                var lrcPath = Path.ChangeExtension(TargetPath, "lrc");
-                lyricWriter = new LyricWriter(lrcPath);
-            }
+                var encoderAudio = selectedEncoder.CreateEncoder(targetFormat, targetPath);
+                ILyricWriter? lyricWriter = null;
 
-            using (pcmAudio)
-            {
-                using var pcmWriter = new PcmWriter(targetFormat, pcmAudio.Data, leaveOpen: true);
-
-                var exporter = new AudioExporter(
-                    _dictationPlayer.Voice,
-                    _dictationPlayer.WordListSource,
-                    _dictationPlayer.WaitingTimeCalculator);
-                await exporter.ExportAsync(
-                    pcmWriter, lyricWriter,
-                    _dictationPlayer.TimesPerWord, _dictationPlayer.Rate,
-                    progress, cancellationToken).ConfigureAwait(false);
-
-                if (pcmAudio.Data is FFmpegAudioEncoderStream ffmpegStream)
+                if (lyricMode == "Lrc File")
                 {
-                    await ffmpegStream.FinishAsync(cancellationToken).ConfigureAwait(false);
+                    var lrcPath = Path.ChangeExtension(targetPath, "lrc");
+                    lyricWriter = new LyricWriter(lrcPath);
                 }
-            }
+
+                using (encoderAudio)
+                {
+                    using var pcmWriter = new PcmWriter(targetFormat, encoderAudio.Data, leaveOpen: true);
+
+                    var exporter = new AudioExporter(voice, words, waitingTimeCalculator);
+                    await exporter.ExportAsync(
+                        pcmWriter, lyricWriter,
+                        timesPerWord, rate,
+                        progress, ct).ConfigureAwait(false);
+
+                    if (encoderAudio.Data is FFmpegAudioEncoderStream ffmpegStream)
+                    {
+                        await ffmpegStream.FinishAsync(ct).ConfigureAwait(false);
+                    }
+                }
+            }, ct).ConfigureAwait(false);
 
             IsExporting = false;
             AlertRequested?.Invoke("导出完成");
@@ -143,6 +161,16 @@ public partial class SaveAudioWindowViewModel : ObservableObject
             AlertRequested?.Invoke($"导出失败: {ex.Message}");
             return false;
         }
+        finally
+        {
+            _exportCts?.Dispose();
+            _exportCts = null;
+        }
+    }
+
+    public void CancelExport()
+    {
+        _exportCts?.Cancel();
     }
 
     partial void OnSelectedEncoderChanged(AudioEncoderInfo value)

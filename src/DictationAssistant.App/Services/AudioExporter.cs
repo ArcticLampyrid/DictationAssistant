@@ -8,13 +8,13 @@ namespace DictationAssistant.App.Services;
 public sealed class AudioExporter
 {
     private readonly IVoice _voice;
-    private readonly IWordListSource _wordListSource;
+    private readonly IReadOnlyList<string> _words;
     private readonly IWaitingTimeCalculator? _waitingTimeCalculator;
 
-    public AudioExporter(IVoice voice, IWordListSource wordListSource, IWaitingTimeCalculator? waitingTimeCalculator = null)
+    public AudioExporter(IVoice voice, IReadOnlyList<string> words, IWaitingTimeCalculator? waitingTimeCalculator = null)
     {
         _voice = voice;
-        _wordListSource = wordListSource;
+        _words = words;
         _waitingTimeCalculator = waitingTimeCalculator;
     }
 
@@ -26,12 +26,12 @@ public sealed class AudioExporter
         IProgress<double>? progress,
         CancellationToken cancellationToken = default)
     {
-        if (_wordListSource.Count <= 0)
+        if (_words.Count <= 0)
         {
             throw new InvalidOperationException("没有词语可导出");
         }
 
-        var totalWords = _wordListSource.Count;
+        var totalWords = _words.Count;
         var totalSegments = totalWords * timesPerWord;
         var currentSegment = 0;
         long byteOffset = 0;
@@ -42,7 +42,7 @@ public sealed class AudioExporter
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var word = _wordListSource.GetWordAt(index);
+            var word = _words[index];
             var waitingMs = GetWaitingSeconds(word) * 1000;
 
             if (timesPerWord >= 1)

@@ -45,6 +45,12 @@ public partial class SaveAudioWindow : Window
     {
         _ = sender;
         _ = e;
+        if (ViewModel is { IsExporting: true } vm)
+        {
+            vm.CancelExport();
+            return;
+        }
+
         Close(false);
     }
 
@@ -54,12 +60,23 @@ public partial class SaveAudioWindow : Window
         _ = e;
         if (ViewModel is { } vm)
         {
-            var success = await vm.ExportAsync(CancellationToken.None);
-            Close(success);
-            return;
+            var success = await vm.ExportAsync();
+            if (success)
+            {
+                Close(true);
+            }
+            // On failure/cancel, stay open so user can retry or close manually
         }
+    }
 
-        Close(false);
+    protected override void OnClosing(WindowClosingEventArgs e)
+    {
+        base.OnClosing(e);
+        // Prevent closing while exporting (user must cancel first)
+        if (ViewModel is { IsExporting: true })
+        {
+            e.Cancel = true;
+        }
     }
 
     private async void SetTargetPath_Click(object? sender, RoutedEventArgs e)
