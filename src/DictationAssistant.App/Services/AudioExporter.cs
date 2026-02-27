@@ -49,10 +49,13 @@ public sealed class AudioExporter
         {
             await using var pcmStream = new MemoryStream();
 
+            var targetFormat = new PcmFormatInfo(request.SampleRate, request.Channels, PcmSampleFormat.S16LE);
+            using var pcmWriter = new PcmWriter(targetFormat, pcmStream);
+
             var totalWords = _wordListSource.Count;
             var totalSegments = totalWords * timesPerWord;
             var currentSegment = 0;
-            var accumulatedDuration = TimeSpan.Zero;
+            long byteOffset = 0;
 
             if (generateLrc)
             {
@@ -80,24 +83,18 @@ public sealed class AudioExporter
                     {
                         if (generateLrc && repeat == 1)
                         {
-                            lyricWriter?.WriteTimestamp((long)accumulatedDuration.TotalMilliseconds, word);
+                            lyricWriter?.WriteTimestamp(pcmWriter.BytesToMilliseconds(byteOffset), word);
                         }
 
-                        await pcmStream.WriteAsync(pcmAudio.ToArray(), cancellationToken).ConfigureAwait(false);
-
-                        var audioDuration = TimeSpan.FromSeconds(
-                            (double)pcmAudio.Data.Length / (pcmAudio.Format.SampleRate * pcmAudio.Format.Channels * 2));
-                        accumulatedDuration += audioDuration;
+                        byteOffset += pcmWriter.Write(pcmAudio);
                     }
 
                     if (repeat < timesPerWord || index < totalWords - 1)
                     {
-                        var silenceDuration = GetWaitingSeconds(word, waitingTimeCalculator);
-                        if (silenceDuration > 0 && pcmAudio is not null)
+                        var silenceMs = GetWaitingSeconds(word, waitingTimeCalculator) * 1000;
+                        if (silenceMs > 0 && pcmAudio is not null)
                         {
-                            var silenceBytes = CreateSilencePcm(silenceDuration, pcmAudio.Format.SampleRate, pcmAudio.Format.Channels);
-                            await pcmStream.WriteAsync(silenceBytes, cancellationToken).ConfigureAwait(false);
-                            accumulatedDuration += TimeSpan.FromSeconds(silenceDuration);
+                            byteOffset += pcmWriter.WriteDelay(silenceMs);
                         }
                     }
 
@@ -112,24 +109,16 @@ public sealed class AudioExporter
             }
 
             var pcmData = pcmStream.ToArray();
-            var sampleRate = request.SampleRate;
-            var channels = request.Channels;
-
-            if (pcmData.Length > 0)
-            {
-                sampleRate = 44100;
-                channels = 2;
-            }
 
             if (format == "wav")
             {
                 await using var outputStream = new FileStream(request.OutputPath, FileMode.Create, FileAccess.Write);
-                WavWriter.WriteHeader(outputStream, sampleRate, channels, pcmData.Length);
+                WavWriter.WriteHeader(outputStream, request.SampleRate, request.Channels, pcmData.Length);
                 await outputStream.WriteAsync(pcmData, cancellationToken).ConfigureAwait(false);
             }
             else
             {
-                await using var encoder = new FFmpegAudioEncoder(request.OutputPath, sampleRate, channels, format);
+                await using var encoder = new FFmpegAudioEncoder(request.OutputPath, request.SampleRate, request.Channels, format);
                 await encoder.InputStream.WriteAsync(pcmData, cancellationToken).ConfigureAwait(false);
                 await encoder.FinishAsync(cancellationToken).ConfigureAwait(false);
             }
@@ -175,12 +164,5 @@ public sealed class AudioExporter
         if (calculator is not null)
             return Math.Max(0, calculator.CalculateWaitingTime(word));
         return 3;
-    }
-
-    private static byte[] CreateSilencePcm(double durationSeconds, int sampleRate, int channels)
-    {
-        var bytesPerSample = 2;
-        var totalBytes = (int)(sampleRate * channels * bytesPerSample * durationSeconds);
-        return new byte[totalBytes];
     }
 }

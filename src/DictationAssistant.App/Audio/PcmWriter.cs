@@ -37,6 +37,13 @@ public class PcmWriter : IDisposable
         return MillisecondsToSamples(ms) * GetBlockAlign();
     }
 
+    public long BytesToMilliseconds(long byteOffset)
+    {
+        var blockAlign = GetBlockAlign();
+        var samples = byteOffset / blockAlign;
+        return (samples / _formatInfo.SampleRate) * 1000 + ((samples % _formatInfo.SampleRate) * 1000) / _formatInfo.SampleRate;
+    }
+
     private int GetBlockAlign()
     {
         var bytesPerSample = _formatInfo.SampleFormat == PcmSampleFormat.U8 ? 1 : 2;
