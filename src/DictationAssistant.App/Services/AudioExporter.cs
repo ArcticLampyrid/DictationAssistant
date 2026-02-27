@@ -37,52 +37,69 @@ public sealed class AudioExporter
         var currentSegment = 0;
         long byteOffset = 0;
 
+        progress?.Report(0);
+
         for (var index = 0; index < totalWords; index++)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             var word = _wordListSource.GetWordAt(index);
+            var waitingMs = GetWaitingSeconds(word) * 1000;
 
-            for (var repeat = 1; repeat <= timesPerWord; repeat++)
+            if (timesPerWord >= 1)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                var options = new VoiceSynthesisOptions
-                {
-                    Rate = rate
-                };
-
+                // First speak
+                var options = new VoiceSynthesisOptions { Rate = rate };
                 var pcmAudio = await _voice.SynthesizePcmAsync(word, options, cancellationToken).ConfigureAwait(false);
 
                 if (pcmAudio is not null)
                 {
-                    if (lyricWriter is not null && repeat == 1)
-                    {
-                        lyricWriter.WriteTimestamp(pcmWriter.BytesToMilliseconds(byteOffset), word);
-                    }
-
+                    lyricWriter?.WriteTimestamp(pcmWriter.BytesToMilliseconds(byteOffset), word);
                     byteOffset += pcmWriter.Write(pcmAudio);
-                }
+                    byteOffset += pcmWriter.WriteDelay(waitingMs);
 
-                if (repeat < timesPerWord || index < totalWords - 1)
-                {
-                    var silenceMs = GetWaitingSeconds(word) * 1000;
-                    if (silenceMs > 0 && pcmAudio is not null)
+                    // Subsequent repeats
+                    for (var repeat = 2; repeat <= timesPerWord; repeat++)
                     {
-                        byteOffset += pcmWriter.WriteDelay(silenceMs);
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        if (pcmAudio.Data.CanSeek)
+                        {
+                            pcmAudio.Data.Seek(0, SeekOrigin.Begin);
+                        }
+                        else
+                        {
+                            pcmAudio.Dispose();
+                            pcmAudio = await _voice.SynthesizePcmAsync(word, options, cancellationToken).ConfigureAwait(false);
+                            if (pcmAudio is null)
+                            {
+                                break;
+                            }
+                        }
+
+                        lyricWriter?.WriteTimestamp(pcmWriter.BytesToMilliseconds(byteOffset), word);
+                        byteOffset += pcmWriter.Write(pcmAudio);
+                        byteOffset += pcmWriter.WriteDelay(waitingMs);
+
+                        currentSegment++;
+                        progress?.Report((double)currentSegment / totalSegments);
                     }
+
+                    pcmAudio?.Dispose();
                 }
 
                 currentSegment++;
                 progress?.Report((double)currentSegment / totalSegments);
             }
+
+            // Blank marker after each word (at offset - 10ms), matching v3.x
+            lyricWriter?.WriteTimestamp(pcmWriter.BytesToMilliseconds(byteOffset) - 10, " ");
         }
 
-        if (lyricWriter is not null)
-        {
-            lyricWriter.Flush();
-        }
+        // Footer marker, matching v3.x
+        lyricWriter?.WriteTimestamp(pcmWriter.BytesToMilliseconds(byteOffset), "本文件由 自动默写 程序自动生成");
 
+        lyricWriter?.Flush();
         progress?.Report(1.0);
     }
 
