@@ -54,9 +54,6 @@ public partial class SaveAudioWindowViewModel : ObservableObject
     private string _targetPath = "dictation.wav";
 
     [ObservableProperty]
-    private string _status = string.Empty;
-
-    [ObservableProperty]
     private bool _isExporting;
 
     public SaveAudioWindowViewModel()
@@ -82,20 +79,18 @@ public partial class SaveAudioWindowViewModel : ObservableObject
     {
         if (_dictationPlayer is null)
         {
-            Status = "错误：未初始化播放器";
+            AlertRequested?.Invoke("错误：未初始化播放器");
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(TargetPath))
         {
-            Status = "请指定输出路径";
+            AlertRequested?.Invoke("请指定输出路径");
             return false;
         }
 
         IsExporting = true;
-        Status = "正在导出...";
-
-        var progress = new Progress<double>(p => Status = $"正在导出... {p:P0}");
+        IProgress<double>? progress = null;
 
         try
         {

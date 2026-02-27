@@ -311,7 +311,6 @@ public partial class MainWindow : Window
         {
             var path = file.TryGetLocalPath() ?? file.Name;
             vm.FilePath = path;
-            vm.Status = $"已加载：{path}";
             vm.CurrentLineIndex = 0;
         }
     }
@@ -348,7 +347,6 @@ public partial class MainWindow : Window
         {
             var path = file.TryGetLocalPath() ?? file.Name;
             vm.FilePath = path;
-            vm.Status = $"已保存：{path}";
         }
     }
 
@@ -367,8 +365,7 @@ public partial class MainWindow : Window
         if (GetViewModel() is { } vm)
         {
             vm.FilePath = string.Empty;
-            vm.Status = "已新建空白词语列表";
-            vm.CurrentLineIndex = 0;
+                vm.CurrentLineIndex = 0;
         }
     }
 
@@ -394,8 +391,7 @@ public partial class MainWindow : Window
         if (result == true)
         {
             vm.ApplyPreferenceSettings(dialog.ResultSettings);
-            vm.Status = "偏好设置已保存";
-        }
+            }
     }
 
     private async void SaveAudio_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -412,7 +408,6 @@ public partial class MainWindow : Window
         var result = await dialog.ShowDialog<bool?>(this);
         if (GetViewModel() is { } currentVm)
         {
-            currentVm.Status = result == true ? "导出完成" : "已取消保存音频";
         }
     }
 
@@ -508,7 +503,7 @@ public partial class MainWindow : Window
         vm.SpeakLine(index);
     }
 
-    private void ViewSelectionInBingDictionary_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void ViewSelectionInBingDictionary_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         _ = sender;
         _ = e;
@@ -536,7 +531,8 @@ public partial class MainWindow : Window
         {
             if (GetViewModel() is { } vm)
             {
-                vm.Status = "无法打开浏览器";
+                var box = MessageBoxManager.GetMessageBoxStandard("自动默写", "无法打开浏览器", ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error);
+                    await box.ShowWindowDialogAsync(this);
             }
         }
     }
@@ -578,7 +574,6 @@ public partial class MainWindow : Window
         }
 
         vm.DictationPlayer.ResetProgress();
-        vm.Status = "已归零";
     }
     private async void OnDrop(object? sender, DragEventArgs e)
     {
@@ -610,7 +605,6 @@ public partial class MainWindow : Window
             if (GetViewModel() is { } vm)
             {
                 vm.FilePath = localPath;
-                vm.Status = $"已加载：{localPath}";
                 vm.CurrentLineIndex = 0;
             }
         }
@@ -618,7 +612,8 @@ public partial class MainWindow : Window
         {
             if (GetViewModel() is { } vm)
             {
-                vm.Status = $"无法打开文件：{ex.Message}";
+                var errBox2 = MessageBoxManager.GetMessageBoxStandard("自动默写", $"无法打开文件：{ex.Message}", ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error);
+                    await errBox2.ShowWindowDialogAsync(this);
             }
         }
     }
@@ -638,15 +633,12 @@ public partial class MainWindow : Window
             if (GetViewModel() is { } vm)
             {
                 vm.FilePath = filePath;
-                vm.Status = $"已加载：{filePath}";
             }
         }
         catch (Exception ex)
         {
-            if (GetViewModel() is { } vm)
-            {
-                vm.Status = $"无法打开文件：{ex.Message}";
-            }
+            var errBox = MessageBoxManager.GetMessageBoxStandard("自动默写", $"无法打开文件：{ex.Message}", ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error);
+                await errBox.ShowWindowDialogAsync(this);
         }
     }
 

@@ -54,8 +54,6 @@ public partial class MainWindowViewModel : ObservableObject
         };
 
         _dictationPlayer = new DictationPlayer(_currentVoice, wordListSource, audioPlayer, dictationSettings);
-        Status = "就绪";
-
         _dictationPlayer.ProgressChanged += (_, progress) =>
         {
             Dispatcher.UIThread.Post(() =>
@@ -86,8 +84,6 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private string _filePath = string.Empty;
 
-    [ObservableProperty]
-    private string _status = string.Empty;
 
     [ObservableProperty]
     private int _currentLineIndex = -1;
@@ -249,13 +245,11 @@ public partial class MainWindowViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            Status = "请选择文件";
             return null;
         }
 
         var content = await _textFileService.ReadAllTextAsync(path).ConfigureAwait(false);
         FilePath = path;
-        Status = $"已加载：{path}";
         ResetProgressUi();
         return content;
     }
@@ -264,13 +258,11 @@ public partial class MainWindowViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            Status = "请选择保存路径";
             return;
         }
 
         await _textFileService.WriteAllTextAsync(path, text).ConfigureAwait(false);
         FilePath = path;
-        Status = $"已保存：{path}";
     }
 
     [RelayCommand]
