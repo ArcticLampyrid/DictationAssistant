@@ -1,50 +1,37 @@
 using System.Diagnostics;
 using DictationAssistant.App.Abstractions;
 using DictationAssistant.App.Audio;
+using DictationAssistant.App.Helpers;
 using DictationAssistant.App.Models;
 using EdgeTTS.DotNet;
 using EdgeTTS.DotNet.Models;
 
 namespace DictationAssistant.App.Voice;
 
-public sealed class EdgeTtsVoice : CachedVoice
+public sealed class EdgeTtsVoice : IPreloadableVoice
 {
     private readonly string _voiceName;
+    private readonly CachedDataLoader<CacheKey, byte[]> _cache;
 
-    public EdgeTtsVoice(string voiceName)
+    public EdgeTtsVoice(string voiceName, int cacheCapacity = 4)
     {
         _voiceName = voiceName;
+        _cache = new CachedDataLoader<CacheKey, byte[]>(LoadMp3Async, cacheCapacity);
     }
 
-    protected override async Task<PcmAudio?> SynthesizePcmDirectAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
+    public async Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(text))
         {
             return null;
         }
 
+        var key = new CacheKey(text, options.Rate ?? 0);
+
         try
         {
-            var rate = MapRate(options.Rate);
-            var communicate = new Communicate(text, voice: _voiceName, rate: rate);
-
-            var mp3Bytes = new List<byte>();
-
-            await foreach (var chunk in communicate.StreamAsync(ct))
-            {
-                if (chunk is AudioChunk audio)
-                {
-                    mp3Bytes.AddRange(audio.Data);
-                }
-            }
-
-            if (mp3Bytes.Count == 0)
-            {
-                Trace.WriteLine("[EdgeTTS] No audio data received");
-                return null;
-            }
-
-            return DecodeMp3ToPcm([.. mp3Bytes]);
+            var mp3Bytes = await _cache.GetAsync(key, ct).ConfigureAwait(false);
+            return DecodeMp3ToPcm(mp3Bytes);
         }
         catch (OperationCanceledException)
         {
@@ -57,45 +44,66 @@ public sealed class EdgeTtsVoice : CachedVoice
         }
     }
 
-    private static string MapRate(int? rate)
+    public Task PreloadAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
-        if (rate is null)
+        if (string.IsNullOrWhiteSpace(text))
         {
-            return "+0%";
+            return Task.CompletedTask;
         }
 
-        var edgeRate = rate.Value * 10;
-        return edgeRate >= 0 ? $"+{edgeRate}%" : $"{edgeRate}%";
+        var key = new CacheKey(text, options.Rate ?? 0);
+
+        // Fire and forget: trigger cache loading in the background
+        _ = _cache.GetAsync(key, CancellationToken.None);
+        return Task.CompletedTask;
     }
 
+    private async Task<byte[]> LoadMp3Async(CacheKey key)
+    {
+        var rate = MapRate(key.Rate);
+        var communicate = new Communicate(key.Text, voice: _voiceName, rate: rate);
 
+        var mp3Bytes = new List<byte>();
+
+        await foreach (var chunk in communicate.StreamAsync())
+        {
+            if (chunk is AudioChunk audio)
+            {
+                mp3Bytes.AddRange(audio.Data);
+            }
+        }
+
+        if (mp3Bytes.Count == 0)
+        {
+            Trace.WriteLine("[EdgeTTS] No audio data received");
+            throw new InvalidOperationException("No audio data received from EdgeTTS");
+        }
+
+        return mp3Bytes.ToArray();
+    }
+
+    private static string MapRate(int rate)
+    {
+        var edgeRate = rate * 10;
+        return edgeRate >= 0 ? $"+{edgeRate}%" : $"{edgeRate}%";
+    }
 
     private static PcmAudio? DecodeMp3ToPcm(byte[] mp3Bytes)
     {
         try
         {
-            using var mp3Stream = new MemoryStream(mp3Bytes);
-            using var decodeStream = BassAudioDecoder.DecodeStream(mp3Stream);
+            var mp3Stream = new MemoryStream(mp3Bytes);
+            var decodeStream = BassAudioDecoder.DecodeStream(mp3Stream);
             if (decodeStream == null)
             {
+                mp3Stream.Dispose();
                 return null;
-            }
-
-            var format = decodeStream.Format;
-
-            using var pcmStream = new MemoryStream();
-            var buffer = new byte[8192];
-            int bytesRead;
-
-            while ((bytesRead = decodeStream.Read(buffer, 0, buffer.Length)) > 0)
-            {
-                pcmStream.Write(buffer, 0, bytesRead);
             }
 
             return new PcmAudio
             {
-                Data = pcmStream,
-                Format = format
+                Data = decodeStream,
+                Format = decodeStream.Format
             };
         }
         catch (Exception ex)
@@ -104,6 +112,8 @@ public sealed class EdgeTtsVoice : CachedVoice
             return null;
         }
     }
+
+    private readonly record struct CacheKey(string Text, int Rate);
 }
 
 public sealed class EdgeTtsVoiceFactory : IVoiceFactory
