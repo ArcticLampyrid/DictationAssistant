@@ -20,10 +20,16 @@ public sealed class MacSayVoice : IVoice
         {
             return null;
         }
-
-        return WavReader.TryReadPcmAudio(wavBytes, out var pcmAudio, out _)
-            ? pcmAudio
-            : null;
+        var pcmStream = BassAudioDecoder.DecodeStream(new MemoryStream(wavBytes));
+        if (pcmStream is null)
+        {
+            return null;
+        }
+        return new PcmAudio()
+        {
+            Data = pcmStream,
+            Format = pcmStream.Format
+        };
     }
 
     private async Task<byte[]?> SynthesizeWavAsync(string text, VoiceSynthesisOptions options, CancellationToken cancellationToken)
