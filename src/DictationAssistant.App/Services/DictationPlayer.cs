@@ -92,16 +92,17 @@ public sealed class DictationPlayer : IDictationPlayer
 
     public void ResetProgress()
     {
-        CancelChain();
-
-        lock (_stateLock)
+        CancelChain().ContinueWith(_ =>
         {
-            _autoMode = false;
-            _isPaused = false;
-            _elapsedTimes = 0;
-        }
+            lock (_stateLock)
+            {
+                _autoMode = false;
+                _isPaused = false;
+                _elapsedTimes = 0;
+            }
 
-        UpdateProgress(_ => new DictationProgress(-1, 0, _wordListSource.Count, null, null, false));
+            UpdateProgress(_ => new DictationProgress(-1, 0, _wordListSource.Count, null, null, false));
+        });
     }
 
     public void SpeakNext()
