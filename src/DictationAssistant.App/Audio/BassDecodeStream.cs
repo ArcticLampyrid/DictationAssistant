@@ -26,22 +26,21 @@ public sealed class BassDecodeStream : Stream
         );
     }
 
-    public static BassDecodeStream? CreateFromFile(string filePath)
+    public static BassDecodeStream CreateFromFile(string filePath)
     {
+        BassInitialization.EnsureInitialized();
+        
         var stream = Bass.CreateStream(filePath, Flags: BassFlags.Decode | BassFlags.Unicode);
         if (stream == 0)
         {
-            return null;
+            throw new InvalidOperationException($"Failed to create BASS stream for {filePath}: {Bass.LastError}");
         }
         return new BassDecodeStream(stream);
     }
 
-    public static BassDecodeStream? CreateFromStream(Stream inputStream)
+    public static BassDecodeStream CreateFromStream(Stream inputStream)
     {
-        if (!BassAudioDecoder.EnsureInitialized())
-        {
-            return null;
-        }
+        BassInitialization.EnsureInitialized();
 
         var fileProcs = new FileProcedures
         {
@@ -74,7 +73,7 @@ public sealed class BassDecodeStream : Stream
         var stream = Bass.CreateStream(StreamSystem.NoBuffer, BassFlags.Decode | BassFlags.Unicode, fileProcs);
         if (stream == 0)
         {
-            return null;
+            throw new InvalidOperationException($"Failed to create BASS stream from input stream: {Bass.LastError}");
         }
 
         return new BassDecodeStream(stream);

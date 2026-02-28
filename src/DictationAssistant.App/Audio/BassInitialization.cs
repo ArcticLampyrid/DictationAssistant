@@ -5,12 +5,12 @@ using System.IO;
 
 namespace DictationAssistant.App.Audio;
 
-public static class BassAudioDecoder
+public static class BassInitialization
 {
     private static bool _initialized;
     private static readonly object _initLock = new();
 
-    public static bool EnsureInitialized()
+    public static void EnsureInitialized()
     {
         lock (_initLock)
         {
@@ -18,13 +18,11 @@ public static class BassAudioDecoder
             {
                 if (!Bass.Init(0))
                 {
-                    Trace.WriteLine($"[BassAudioDecoder] Failed to initialize BASS: {Bass.LastError}");
-                    return false;
+                    throw new InvalidOperationException("Failed to initialize BASS audio decoder");
                 }
                 LoadPlugins();
                 _initialized = true;
             }
-            return true;
         }
     }
 
@@ -55,47 +53,6 @@ public static class BassAudioDecoder
         catch (Exception ex)
         {
             Trace.WriteLine($"[BassAudioDecoder] Plugin loading error: {ex.Message}");
-        }
-    }
-
-    public static BassDecodeStream? DecodeFile(string filePath)
-    {
-        return CreateDecodeStream(filePath);
-    }
-
-    public static BassDecodeStream? DecodeStream(Stream inputStream)
-    {
-        return CreateDecodeStream(inputStream);
-    }
-
-    public static BassDecodeStream? CreateDecodeStream(string filePath)
-    {
-        try
-        {
-            if (!EnsureInitialized())
-            {
-                return null;
-            }
-
-            return BassDecodeStream.CreateFromFile(filePath);
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"[BassAudioDecoder] Exception creating stream for {filePath}: {ex.Message}");
-            return null;
-        }
-    }
-
-    public static BassDecodeStream? CreateDecodeStream(Stream inputStream)
-    {
-        try
-        {
-            return BassDecodeStream.CreateFromStream(inputStream);
-        }
-        catch (Exception ex)
-        {
-            Trace.WriteLine($"[BassAudioDecoder] Exception creating stream from Stream: {ex.Message}");
-            return null;
         }
     }
 }

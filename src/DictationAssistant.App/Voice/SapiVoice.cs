@@ -19,13 +19,13 @@ public sealed class SapiVoice : IVoice
     }
 
     [SupportedOSPlatform("windows")]
-    public Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
+    public Task<PcmAudio> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
         return Task.Run(() => SynthesizeWindows(text, options, _tokenId), ct);
     }
 
     [SupportedOSPlatform("windows")]
-    private static PcmAudio? SynthesizeWindows(string text, VoiceSynthesisOptions options, string tokenId)
+    private static PcmAudio SynthesizeWindows(string text, VoiceSynthesisOptions options, string tokenId)
     {
         object? voiceObj = null;
         object? streamObj = null;
@@ -38,7 +38,7 @@ public sealed class SapiVoice : IVoice
             audioFormatObj = CreateComObject("SAPI.SpAudioFormat");
             if (voiceObj is null || streamObj is null || audioFormatObj is null)
             {
-                return null;
+                return PcmAudio.Empty;
             }
 
             dynamic voice = voiceObj;
@@ -71,7 +71,7 @@ public sealed class SapiVoice : IVoice
             var raw = (byte[]?)stream.GetData();
             if (raw is null || raw.Length == 0)
             {
-                return null;
+                return PcmAudio.Empty;
             }
 
             return new PcmAudio
@@ -82,7 +82,7 @@ public sealed class SapiVoice : IVoice
         }
         catch
         {
-            return null;
+            return PcmAudio.Empty;
         }
         finally
         {

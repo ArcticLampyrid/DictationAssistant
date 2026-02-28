@@ -8,11 +8,11 @@ public sealed class NullVoice : IVoice
 {
     public static NullVoice Instance { get; } = new();
 
-    public Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
+    public Task<PcmAudio> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
         _ = text;
         _ = options;
         _ = ct;
-        return Task.FromResult<PcmAudio?>(null);
+        return Task.FromResult(PcmAudio.Empty);
     }
 }

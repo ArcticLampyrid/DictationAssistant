@@ -394,12 +394,6 @@ public sealed class DictationPlayer : IDictationPlayer
 
         var pcmAudio = await _voice.SynthesizePcmAsync(word, options, ct).ConfigureAwait(false);
 
-        if (pcmAudio is null)
-        {
-            Trace.WriteLine($"TTS synth returned no playable PCM for word '{word}'.");
-            return;
-        }
-
         // Preload the next word while the current one is being played, 
         // if supported by the voice and if there is a next word.
         if (_voice is IPreloadableVoice preloadable && index + 1 < _wordListSource.Count)

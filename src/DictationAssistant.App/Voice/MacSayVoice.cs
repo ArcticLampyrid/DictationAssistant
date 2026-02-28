@@ -13,17 +13,17 @@ public sealed class MacSayVoice : IVoice
         _voiceName = voiceName;
     }
 
-    public async Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
+    public async Task<PcmAudio> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
         var aiffBytes = await SynthesizeAiffAsync(text, options, ct).ConfigureAwait(false);
         if (aiffBytes is null)
         {
-            return null;
+            return PcmAudio.Empty;
         }
-        var pcmStream = BassAudioDecoder.DecodeStream(new MemoryStream(aiffBytes));
+        var pcmStream = BassDecodeStream.CreateFromStream(new MemoryStream(aiffBytes));
         if (pcmStream is null)
         {
-            return null;
+            return PcmAudio.Empty;
         }
         return new PcmAudio()
         {

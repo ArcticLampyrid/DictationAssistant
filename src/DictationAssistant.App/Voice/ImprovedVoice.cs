@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using DictationAssistant.App.Abstractions;
 using DictationAssistant.App.Audio;
 using DictationAssistant.App.Models;
@@ -17,39 +18,27 @@ public sealed class ImprovedVoice : IVoice
         _resourceDirectory = resourceDirectory;
     }
 
-    public async Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
+    public async Task<PcmAudio> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
         var filePath = FindFile(text);
         if (filePath is not null)
         {
-            using var decodeStream = BassAudioDecoder.DecodeFile(filePath);
-            if (decodeStream is not null)
+            try
             {
-                return ReadPcmFromStream(decodeStream);
+                using var decodeStream = BassDecodeStream.CreateFromFile(filePath);
+                return new PcmAudio
+                {
+                    Data = decodeStream,
+                    Format = decodeStream.Format
+                };
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"[ImprovedVoice] Failed to load audio from file '{filePath}': {ex.Message}");
             }
         }
 
         return await _inner.SynthesizePcmAsync(text, options, ct).ConfigureAwait(false);
-    }
-
-    private static PcmAudio? ReadPcmFromStream(BassDecodeStream decodeStream)
-    {
-        var format = decodeStream.Format;
-
-        using var memoryStream = new MemoryStream();
-        var buffer = new byte[8192];
-        int bytesRead;
-
-        while ((bytesRead = decodeStream.Read(buffer, 0, buffer.Length)) > 0)
-        {
-            memoryStream.Write(buffer, 0, bytesRead);
-        }
-
-        return new PcmAudio
-        {
-            Data = memoryStream,
-            Format = format
-        };
     }
 
     private string? FindFile(string text)

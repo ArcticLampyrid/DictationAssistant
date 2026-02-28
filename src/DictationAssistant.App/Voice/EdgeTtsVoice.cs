@@ -19,11 +19,11 @@ public sealed class EdgeTtsVoice : IPreloadableVoice
         _cache = new CachedDataLoader<CacheKey, byte[]>(LoadMp3Async, cacheCapacity);
     }
 
-    public async Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
+    public async Task<PcmAudio> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(text))
         {
-            return null;
+            return PcmAudio.Empty;
         }
 
         var key = new CacheKey(text, options.Rate ?? 0);
@@ -40,7 +40,7 @@ public sealed class EdgeTtsVoice : IPreloadableVoice
         catch (Exception ex)
         {
             Trace.WriteLine($"[EdgeTTS] Synthesis failed: {ex.Message}");
-            return null;
+            return PcmAudio.Empty;
         }
     }
 
@@ -88,29 +88,16 @@ public sealed class EdgeTtsVoice : IPreloadableVoice
         return edgeRate >= 0 ? $"+{edgeRate}%" : $"{edgeRate}%";
     }
 
-    private static PcmAudio? DecodeMp3ToPcm(byte[] mp3Bytes)
+    private static PcmAudio DecodeMp3ToPcm(byte[] mp3Bytes)
     {
-        try
-        {
-            var mp3Stream = new MemoryStream(mp3Bytes);
-            var decodeStream = BassAudioDecoder.DecodeStream(mp3Stream);
-            if (decodeStream == null)
-            {
-                mp3Stream.Dispose();
-                return null;
-            }
+        var mp3Stream = new MemoryStream(mp3Bytes);
+        var decodeStream = BassDecodeStream.CreateFromStream(mp3Stream);
 
-            return new PcmAudio
-            {
-                Data = decodeStream,
-                Format = decodeStream.Format
-            };
-        }
-        catch (Exception ex)
+        return new PcmAudio
         {
-            Trace.WriteLine($"[EdgeTTS] Audio decode failed: {ex.Message}");
-            return null;
-        }
+            Data = decodeStream,
+            Format = decodeStream.Format
+        };
     }
 
     private readonly record struct CacheKey(string Text, int Rate);
