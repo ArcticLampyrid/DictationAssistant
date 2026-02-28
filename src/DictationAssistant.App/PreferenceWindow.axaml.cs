@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
+using DictationAssistant.App.Abstractions;
 using DictationAssistant.App.Settings;
 using DictationAssistant.App.ViewModels;
 
@@ -9,18 +10,16 @@ namespace DictationAssistant.App;
 
 public partial class PreferenceWindow : Window
 {
-    private static readonly IReadOnlyList<string> EmptyVoiceOptions = [];
-
     private PreferenceWindowViewModel? ViewModel => DataContext as PreferenceWindowViewModel;
 
     public PreferenceSettings ResultSettings { get; private set; } = new();
 
     public PreferenceWindow()
-        : this(new PreferenceSettings(), EmptyVoiceOptions)
+        : this(new PreferenceSettings(), [])
     {
     }
 
-    public PreferenceWindow(PreferenceSettings settings, IReadOnlyList<string> voiceOptions)
+    public PreferenceWindow(PreferenceSettings settings, IReadOnlyList<IVoiceFactory> voiceOptions)
     {
         InitializeComponent();
         DataContext = new PreferenceWindowViewModel(settings, voiceOptions);

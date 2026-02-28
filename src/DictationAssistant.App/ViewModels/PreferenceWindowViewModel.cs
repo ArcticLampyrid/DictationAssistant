@@ -1,5 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-
+using DictationAssistant.App.Abstractions;
 using DictationAssistant.App.Settings;
 
 namespace DictationAssistant.App.ViewModels;
@@ -11,20 +11,17 @@ public partial class PreferenceWindowViewModel : ObservableObject
     {
     }
 
-    public PreferenceWindowViewModel(PreferenceSettings settings, IReadOnlyList<string> voiceOptions)
+    public PreferenceWindowViewModel(PreferenceSettings settings, IReadOnlyList<IVoiceFactory> voiceOptions)
     {
         EditorFontFamily = settings.EditorFontFamily;
         EditorFontSize = settings.EditorFontSize;
-        DefaultChineseVoiceId = settings.DefaultChineseVoiceId;
-        DefaultEnglishVoiceId = settings.DefaultEnglishVoiceId;
+        DefaultChineseVoice = voiceOptions.FirstOrDefault(v => v.Info.Id == settings.DefaultChineseVoiceId);
+        DefaultEnglishVoice = voiceOptions.FirstOrDefault(v => v.Info.Id == settings.DefaultEnglishVoiceId);
         ImprovedResourcePath = settings.ImprovedResourcePath;
-
-        VoiceOptions = voiceOptions.Count > 0
-            ? voiceOptions.ToArray()
-            : ["（当前引擎不支持枚举语音）"];
+        VoiceOptions = voiceOptions;
     }
 
-    public IReadOnlyList<string> VoiceOptions { get; }
+    public IReadOnlyList<IVoiceFactory> VoiceOptions { get; }
 
     [ObservableProperty]
     private string _editorFontFamily = "Noto Sans CJK SC";
@@ -33,10 +30,10 @@ public partial class PreferenceWindowViewModel : ObservableObject
     private double _editorFontSize = 28;
 
     [ObservableProperty]
-    private string _defaultChineseVoiceId = string.Empty;
+    private IVoiceFactory? _defaultChineseVoice = null;
 
     [ObservableProperty]
-    private string _defaultEnglishVoiceId = string.Empty;
+    private IVoiceFactory? _defaultEnglishVoice = null;
 
     [ObservableProperty]
     private string _improvedResourcePath = string.Empty;
@@ -48,8 +45,8 @@ public partial class PreferenceWindowViewModel : ObservableObject
             EditorFontFamily = EditorFontFamily,
             EditorFontSize = EditorFontSize,
             ImprovedResourcePath = ImprovedResourcePath,
-            DefaultChineseVoiceId = DefaultChineseVoiceId,
-            DefaultEnglishVoiceId = DefaultEnglishVoiceId
+            DefaultChineseVoiceId = DefaultChineseVoice?.Info.Id ?? string.Empty,
+            DefaultEnglishVoiceId = DefaultEnglishVoice?.Info.Id ?? string.Empty
         };
     }
 }

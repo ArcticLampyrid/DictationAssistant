@@ -370,7 +370,8 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void SwitchToChineseVoice()
     {
-        var factory = VoiceOptions.FirstOrDefault(f => f.Info.LocaleOrLanguage?.StartsWith("zh", StringComparison.OrdinalIgnoreCase) == true);
+        var factory = VoiceOptions.FirstOrDefault(f => f.Info.Id == DefaultChineseVoiceId)
+            ?? VoiceOptions.FirstOrDefault(f => f.Info.LocaleOrLanguage?.StartsWith("zh", StringComparison.OrdinalIgnoreCase) == true);
         if (factory is not null)
         {
             SelectedVoiceFactory = factory;
@@ -384,7 +385,8 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void SwitchToEnglishVoice()
     {
-        var factory = VoiceOptions.FirstOrDefault(f => f.Info.LocaleOrLanguage?.StartsWith("en", StringComparison.OrdinalIgnoreCase) == true);
+        var factory = VoiceOptions.FirstOrDefault(f => f.Info.Id == DefaultEnglishVoiceId)
+            ?? VoiceOptions.FirstOrDefault(f => f.Info.LocaleOrLanguage?.StartsWith("en", StringComparison.OrdinalIgnoreCase) == true);
         if (factory is not null)
         {
             SelectedVoiceFactory = factory;
