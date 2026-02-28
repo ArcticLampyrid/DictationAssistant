@@ -1,4 +1,5 @@
 using DictationAssistant.App.Abstractions;
+using DictationAssistant.App.Audio;
 using DictationAssistant.App.Models;
 using System.Diagnostics;
 
@@ -27,14 +28,6 @@ public sealed class DictationPlayer : IDictationPlayer
         _audioPlayer = audioPlayer;
         _wordListSource = wordListSource;
         Progress = DictationProgress.Empty with { TotalWords = _wordListSource.Count };
-        _wordListSource.Changed += (_, _) =>
-        {
-            UpdateProgress(progress => progress with
-            {
-                TotalWords = _wordListSource.Count,
-                CurrentWordIndex = Math.Min(progress.CurrentWordIndex, _wordListSource.Count - 1)
-            });
-        };
     }
 
     public bool AutoMode
@@ -275,7 +268,8 @@ public sealed class DictationPlayer : IDictationPlayer
                 nextIndex = index;
             }
 
-            if (nextIndex >= _wordListSource.Count)
+            var word = _wordListSource.TryGetAt(index);
+            if (word is null)
             {
                 lock (_stateLock)
                 {
@@ -285,7 +279,6 @@ public sealed class DictationPlayer : IDictationPlayer
                 return;
             }
 
-            var word = _wordListSource.GetWordAt(index);
             var waitDuration = GetWaitingTime(word);
             var scheduledTime = DateTimeOffset.Now + waitDuration;
 
@@ -337,7 +330,8 @@ public sealed class DictationPlayer : IDictationPlayer
             nextIndex = currentIndex;
         }
 
-        if (nextIndex >= _wordListSource.Count)
+        var word = _wordListSource.TryGetAt(currentIndex);
+        if (word is null)
         {
             lock (_stateLock)
             {
@@ -347,7 +341,6 @@ public sealed class DictationPlayer : IDictationPlayer
             return;
         }
 
-        var word = _wordListSource.GetWordAt(currentIndex);
         var waitDuration = GetWaitingTime(word);
         var scheduledTime = DateTimeOffset.Now + waitDuration;
 
@@ -385,36 +378,39 @@ public sealed class DictationPlayer : IDictationPlayer
             return;
         }
 
-        var word = _wordListSource.GetWordAt(index);
+        var word = _wordListSource.TryGetAt(index);
 
         var options = new VoiceSynthesisOptions
         {
             Rate = Rate
         };
 
-        var pcmAudio = await _voice.SynthesizePcmAsync(word, options, ct).ConfigureAwait(false);
+        var pcmAudio = word is null ? PcmAudio.Empty : await _voice.SynthesizePcmAsync(word, options, ct).ConfigureAwait(false);
 
         // Preload the next word while the current one is being played, 
         // if supported by the voice and if there is a next word.
-        if (_voice is IPreloadableVoice preloadable && index + 1 < _wordListSource.Count)
+        if (_voice is IPreloadableVoice preloadable)
         {
-            var nextWord = _wordListSource.GetWordAt(index + 1);
+            var nextWord = _wordListSource.TryGetAt(index + 1);
             var nextOptions = new VoiceSynthesisOptions
             {
                 Rate = Rate
             };
 
-            _ = Task.Run(async () =>
+            if (nextWord is not null)
             {
-                try
+                _ = Task.Run(async () =>
                 {
-                    await preloadable.PreloadAsync(nextWord, nextOptions, CancellationToken.None).ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    Trace.WriteLine($"Preload failed for '{nextWord}': {ex}");
-                }
-            }, CancellationToken.None);
+                    try
+                    {
+                        await preloadable.PreloadAsync(nextWord, nextOptions, CancellationToken.None).ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.WriteLine($"Preload failed for '{nextWord}': {ex}");
+                    }
+                }, CancellationToken.None);
+            }
         }
 
         await _audioPlayer.PlayAsync(pcmAudio, ct).ConfigureAwait(false);

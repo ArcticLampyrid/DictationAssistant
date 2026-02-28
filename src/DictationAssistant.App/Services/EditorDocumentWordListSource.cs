@@ -1,3 +1,4 @@
+using Avalonia.Threading;
 using AvaloniaEdit.Document;
 using DictationAssistant.App.Abstractions;
 
@@ -6,44 +7,37 @@ namespace DictationAssistant.App.Services;
 public sealed class EditorDocumentWordListSource : IWordListSource
 {
     private TextDocument? _document;
-    private string[] _lines = [string.Empty];
 
-    public int Count => _lines.Length;
-
-    public event EventHandler? Changed;
+    public int Count => Dispatcher.UIThread.Invoke(() => _document?.LineCount ?? 0);
 
     public void AttachDocument(TextDocument document)
     {
-        if (ReferenceEquals(_document, document))
-        {
-            return;
-        }
-
-        if (_document is not null)
-        {
-            _document.Changed -= OnDocumentChanged;
-        }
-
         _document = document;
-        _document.Changed += OnDocumentChanged;
-        RefreshLines();
     }
 
-    public IReadOnlyList<string> GetWords() => _lines;
-
-    public string GetWordAt(int index) => _lines[index];
-
-    private void OnDocumentChanged(object? sender, DocumentChangeEventArgs e)
+    public IReadOnlyList<string> GetWords() => Dispatcher.UIThread.Invoke(() =>
     {
-        _ = sender;
-        _ = e;
-        RefreshLines();
-    }
+        if (_document == null)
+            return [];
 
-    private void RefreshLines()
+        var words = new string[_document.LineCount];
+        for (int i = 0; i < _document.LineCount; i++)
+        {
+            var line = _document.GetLineByNumber(i + 1);
+            words[i] = _document.GetText(line.Offset, line.Length);
+        }
+        return words;
+    });
+
+    public string? TryGetAt(int index)
     {
-        var normalized = (_document?.Text ?? string.Empty).Replace("\r\n", "\n").Replace('\r', '\n');
-        _lines = normalized.Split('\n');
-        Changed?.Invoke(this, EventArgs.Empty);
+        return Dispatcher.UIThread.Invoke(() =>
+        {
+            if (_document == null || index < 0 || index >= _document.LineCount)
+                return null;
+
+            var line = _document.GetLineByNumber(index + 1);
+            return _document.GetText(line.Offset, line.Length);
+        });
     }
 }
