@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace DictationAssistant.App.Audio;
 
-public sealed unsafe class SdlPcmPlayer : IAudioPlayer, IDisposable
+public sealed class SdlPcmPlayer : IAudioPlayer, IDisposable
 {
     private const uint SDL_INIT_AUDIO = 0x10;
 
@@ -36,7 +36,7 @@ public sealed unsafe class SdlPcmPlayer : IAudioPlayer, IDisposable
         }
     }
 
-    public Task PlayAsync(PcmAudio audio, int volume, CancellationToken ct)
+    public async Task PlayAsync(PcmAudio audio, int volume, CancellationToken ct)
     {
         ThrowIfDisposed();
 
@@ -46,120 +46,121 @@ public sealed unsafe class SdlPcmPlayer : IAudioPlayer, IDisposable
             throw new NotSupportedException($"Unsupported PCM format: {audio.Format.SampleFormat}");
         }
 
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
         var userdata = new AudioCallbackData
         {
             PcmStream = audio.Data,
             SdlVolume = (byte)(volume * 128 / 100),
             SdlFormat = sdlFormat,
-            BlockAlign = audio.Format.Channels * GetBytesPerSample(audio.Format.SampleFormat)
+            Tcs = tcs
         };
 
-        var callback = new SDL_AudioCallback((udata, streamPtr, len) =>
-        {
-            if (streamPtr == IntPtr.Zero || len == 0)
-            {
-                return;
-            }
-
-            var handle = GCHandle.FromIntPtr(udata);
-            if (!handle.IsAllocated || handle.Target is not AudioCallbackData data)
-            {
-                throw new InvalidOperationException("Invalid SDL audio callback userdata.");
-            }
-
-
-            int numOfRead = 0;
-            if (!data.IsCompleted)
-            {
-                var buffer = new byte[len];
-                while (numOfRead < len)
-                {
-                    var t = data.PcmStream.Read(buffer, numOfRead, len - numOfRead);
-                    numOfRead += t;
-                    if (t == 0)
-                        break;
-                }
-                if (data.SdlVolume < 128)
-                {
-                    fixed (byte* srcPtr = buffer)
-                    {
-                        SDL.MixAudioFormat((byte*)streamPtr, srcPtr, data.SdlFormat, (uint)numOfRead, data.SdlVolume);
-                    }
-                }
-                else
-                {
-                    Marshal.Copy(buffer, 0, streamPtr, numOfRead);
-                }
-            }
-
-            if (numOfRead < len)
-            {
-                var remaining = len - numOfRead;
-                var silence = new byte[remaining];
-                if (SdlFormatIsUnsigned(data.SdlFormat))
-                {
-                    Array.Fill(silence, (byte)128);
-                }
-                Marshal.Copy(silence, 0, streamPtr + numOfRead, remaining);
-                data.IsCompleted = true;
-            }
-        });
+        var callback = new SDL_AudioCallback(AudioCallback);
 
         IntPtr callbackPtr = Marshal.GetFunctionPointerForDelegate(callback);
         var userdataGcHandle = GCHandle.Alloc(userdata, GCHandleType.Normal);
 
-        var tcs = new TaskCompletionSource();
-        var desired = new SDLAudioSpec
-        {
-            Freq = audio.Format.SampleRate,
-            Format = sdlFormat,
-            Channels = (byte)Math.Clamp(audio.Format.Channels, 1, byte.MaxValue),
-            Samples = 1024,
-            Callback = (void*)callbackPtr,
-            Userdata = GCHandle.ToIntPtr(userdataGcHandle).ToPointer()
-        };
-
-        var device = OpenDevice(ref desired, out var obtained);
+        var device = OpenDevice(audio.Format, sdlFormat, callbackPtr, userdataGcHandle, out var obtained);
         if (device == 0)
         {
             userdataGcHandle.Free();
             throw new InvalidOperationException($"SDL open audio device failed: {SDL.GetErrorS()}");
         }
 
-        if (obtained.Format != userdata.SdlFormat)
+        if (obtained.Format != sdlFormat)
         {
             userdataGcHandle.Free();
             SDL.CloseAudioDevice(device);
             throw new NotSupportedException($"SDL device returned unsupported format: 0x{obtained.Format:X}");
         }
+
         SDL.PauseAudioDevice(device, 0);
 
-        var thread = new Thread(() =>
+        // Pin the callback delegate to prevent GC collection while SDL is using it
+        var callbackGcHandle = GCHandle.Alloc(callback);
+
+        using var ctr = ct.Register(() => tcs.TrySetCanceled(ct));
+        try
         {
-            try
+            await tcs.Task.ConfigureAwait(false);
+        }
+        finally
+        {
+            SDL.CloseAudioDevice(device);
+            userdataGcHandle.Free();
+            callbackGcHandle.Free();
+        }
+    }
+
+    private static unsafe void AudioCallback(IntPtr udata, IntPtr streamPtr, int len)
+    {
+        if (streamPtr == IntPtr.Zero || len == 0)
+        {
+            return;
+        }
+
+        var handle = GCHandle.FromIntPtr(udata);
+        if (!handle.IsAllocated || handle.Target is not AudioCallbackData data)
+        {
+            throw new InvalidOperationException("Invalid SDL audio callback userdata.");
+        }
+
+        int numOfRead = 0;
+        if (!data.IsCompleted)
+        {
+            var buffer = new byte[len];
+            while (numOfRead < len)
             {
-                while (!userdata.IsCompleted && !ct.IsCancellationRequested)
+                var t = data.PcmStream.Read(buffer, numOfRead, len - numOfRead);
+                numOfRead += t;
+                if (t == 0)
+                    break;
+            }
+            if (data.SdlVolume < 128)
+            {
+                fixed (byte* srcPtr = buffer)
                 {
-                    Thread.Sleep(10);
+                    SDL.MixAudioFormat((byte*)streamPtr, srcPtr, data.SdlFormat, (uint)numOfRead, data.SdlVolume);
                 }
             }
-            catch (Exception ex)
+            else
             {
-                tcs.TrySetException(ex);
+                Marshal.Copy(buffer, 0, streamPtr, numOfRead);
             }
-            finally
-            {
-                SDL.CloseAudioDevice(device);
-                userdataGcHandle.Free();
-                tcs.TrySetResult();
-            }
-        })
-        {
-            IsBackground = true
-        };
-        thread.Start();
+        }
 
-        return tcs.Task;
+        if (numOfRead < len)
+        {
+            var remaining = len - numOfRead;
+            var silence = new byte[remaining];
+            if (SdlFormatIsUnsigned(data.SdlFormat))
+            {
+                Array.Fill(silence, (byte)128);
+            }
+            Marshal.Copy(silence, 0, streamPtr + numOfRead, remaining);
+            data.IsCompleted = true;
+            data.Tcs.TrySetResult();
+        }
+    }
+
+    private static unsafe uint OpenDevice(PcmFormatInfo format, ushort sdlFormat, IntPtr callbackPtr, GCHandle userdataGcHandle, out SDLAudioSpec obtained)
+    {
+        var desired = new SDLAudioSpec
+        {
+            Freq = format.SampleRate,
+            Format = sdlFormat,
+            Channels = (byte)Math.Clamp(format.Channels, 1, byte.MaxValue),
+            Samples = 1024,
+            Callback = (void*)callbackPtr,
+            Userdata = GCHandle.ToIntPtr(userdataGcHandle).ToPointer()
+        };
+
+        fixed (SDLAudioSpec* obtainedPtr = &obtained)
+        {
+            var device = SDL.OpenAudioDevice((byte*)null, 0, &desired, obtainedPtr, 0);
+            return device;
+        }
     }
 
     public void Dispose()
@@ -184,16 +185,6 @@ public sealed unsafe class SdlPcmPlayer : IAudioPlayer, IDisposable
         _disposed = true;
     }
 
-    private static uint OpenDevice(ref SDLAudioSpec desired, out SDLAudioSpec obtained)
-    {
-        fixed (SDLAudioSpec* obtainedPtr = &obtained)
-        fixed (SDLAudioSpec* desiredPtr = &desired)
-        {
-            var device = SDL.OpenAudioDevice((byte*)null, 0, desiredPtr, obtainedPtr, 0);
-            return device;
-        }
-    }
-
     private static ushort GetSdlFormat(PcmSampleFormat format)
     {
         return format switch
@@ -209,23 +200,13 @@ public sealed unsafe class SdlPcmPlayer : IAudioPlayer, IDisposable
         return (sdlFormat & (1 << 15)) == 0;
     }
 
-    private static int GetBytesPerSample(PcmSampleFormat format)
-    {
-        return format switch
-        {
-            PcmSampleFormat.U8 => 1,
-            PcmSampleFormat.S16LE => 2,
-            _ => 2
-        };
-    }
-
     private class AudioCallbackData
     {
         public required Stream PcmStream { get; set; }
         public byte SdlVolume { get; set; }
         public ushort SdlFormat { get; set; }
-        public int BlockAlign { get; set; }
         public bool IsCompleted { get; set; }
+        public required TaskCompletionSource Tcs { get; set; }
     }
 
     private void ThrowIfDisposed()
