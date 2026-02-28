@@ -400,8 +400,8 @@ public sealed class DictationPlayer : IDictationPlayer
             return;
         }
 
-        await _audioPlayer.PlayAsync(pcmAudio, Volume, ct).ConfigureAwait(false);
-
+        // Preload the next word while the current one is being played, 
+        // if supported by the voice and if there is a next word.
         if (_voice is IPreloadableVoice preloadable && index + 1 < _wordListSource.Count)
         {
             var nextWord = _wordListSource.GetWordAt(index + 1);
@@ -422,6 +422,8 @@ public sealed class DictationPlayer : IDictationPlayer
                 }
             }, CancellationToken.None);
         }
+
+        await _audioPlayer.PlayAsync(pcmAudio, Volume, ct).ConfigureAwait(false);
     }
 
     private void UpdateProgress(Func<DictationProgress, DictationProgress> mutate)
