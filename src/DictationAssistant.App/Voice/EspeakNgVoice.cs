@@ -63,12 +63,17 @@ public sealed class EspeakNgVoice : IVoice
         using var process = Process.Start(startInfo);
         if (process == null) return null;
         process.Start();
+
+        // Start reading output and error streams asynchronously
+        var outputTask = ReadAllBytesAsync(process.StandardOutput.BaseStream, cancellationToken);
+        var errorTask = ReadAllBytesAsync(process.StandardError.BaseStream, cancellationToken);
+
+        // Write the input text and close stdin to signal end of input
         await process.StandardInput.WriteLineAsync(text).ConfigureAwait(false);
         await process.StandardInput.FlushAsync().ConfigureAwait(false);
         process.StandardInput.Close();
 
-        var outputTask = ReadAllBytesAsync(process.StandardOutput.BaseStream, cancellationToken);
-        var errorTask = ReadAllBytesAsync(process.StandardError.BaseStream, cancellationToken);
+        // Wait for both output and error reading to complete
         await Task.WhenAll(outputTask, errorTask).ConfigureAwait(false);
         process.StandardOutput.BaseStream.Close();
         process.StandardError.BaseStream.Close();
