@@ -15,12 +15,12 @@ public sealed class MacSayVoice : IVoice
 
     public async Task<PcmAudio?> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
     {
-        var wavBytes = await SynthesizeWavAsync(text, options, ct).ConfigureAwait(false);
-        if (wavBytes is null)
+        var aiffBytes = await SynthesizeAiffAsync(text, options, ct).ConfigureAwait(false);
+        if (aiffBytes is null)
         {
             return null;
         }
-        var pcmStream = BassAudioDecoder.DecodeStream(new MemoryStream(wavBytes));
+        var pcmStream = BassAudioDecoder.DecodeStream(new MemoryStream(aiffBytes));
         if (pcmStream is null)
         {
             return null;
@@ -32,9 +32,9 @@ public sealed class MacSayVoice : IVoice
         };
     }
 
-    private async Task<byte[]?> SynthesizeWavAsync(string text, VoiceSynthesisOptions options, CancellationToken cancellationToken)
+    private async Task<byte[]?> SynthesizeAiffAsync(string text, VoiceSynthesisOptions options, CancellationToken cancellationToken)
     {
-        var tempFile = Path.Combine(Path.GetTempPath(), $"dictationassistant-say-{Guid.NewGuid():N}.wav");
+        var tempFile = Path.Combine(Path.GetTempPath(), $"dictationassistant-say-{Guid.NewGuid():N}.aiff");
         try
         {
             var args = new List<string>();
@@ -47,40 +47,16 @@ public sealed class MacSayVoice : IVoice
             if (options.Rate is int rate)
             {
                 args.Add("-r");
-                args.Add((120 + Math.Clamp(rate, -10, 10) * 20).ToString());
+                args.Add((175 + Math.Clamp(rate, -10, 10) * 15).ToString());
             }
 
             args.Add("-o");
             args.Add(tempFile);
-            args.Add("--file-format=WAVE");
-            args.Add("--data-format=LEI16@44100");
-            args.Add(text);
+            args.Add("--file-format=AIFF");
+            args.Add("-f");
+            args.Add("-");
 
-            try
-            {
-                await ProcessRunner.RunAsync("say", args, null, cancellationToken).ConfigureAwait(false);
-            }
-            catch
-            {
-                var fallbackArgs = new List<string>();
-                if (!string.IsNullOrWhiteSpace(_voiceName))
-                {
-                    fallbackArgs.Add("-v");
-                    fallbackArgs.Add(_voiceName);
-                }
-
-                if (options.Rate is int fallbackRate)
-                {
-                    fallbackArgs.Add("-r");
-                    fallbackArgs.Add((120 + Math.Clamp(fallbackRate, -10, 10) * 20).ToString());
-                }
-
-                fallbackArgs.Add("-o");
-                fallbackArgs.Add(tempFile);
-                fallbackArgs.Add(text);
-                await ProcessRunner.RunAsync("say", fallbackArgs, null, cancellationToken).ConfigureAwait(false);
-            }
-
+            await ProcessRunner.RunAsync("say", args, text, cancellationToken).ConfigureAwait(false);
             return await File.ReadAllBytesAsync(tempFile, cancellationToken).ConfigureAwait(false);
         }
         catch
