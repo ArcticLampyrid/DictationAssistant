@@ -99,11 +99,6 @@ public sealed class SapiVoice : IVoice
         return comType is null ? null : Activator.CreateInstance(comType);
     }
 
-    private static string SafeToString(object? value)
-    {
-        return value?.ToString() ?? string.Empty;
-    }
-
     [SupportedOSPlatform("windows")]
     private static void ReleaseCom(object? comObject)
     {

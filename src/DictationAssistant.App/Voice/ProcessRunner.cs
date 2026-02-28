@@ -75,32 +75,4 @@ internal static class ProcessRunner
 
         return (output, process.ExitCode, error, process.ExitCode == 0);
     }
-
-    public static string? FindOnPath(string command)
-    {
-        var path = Environment.GetEnvironmentVariable("PATH");
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return null;
-        }
-
-        var segments = path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        var extensions = OperatingSystem.IsWindows()
-            ? new[] { ".exe", ".cmd", ".bat", string.Empty }
-            : new[] { string.Empty };
-
-        foreach (var segment in segments)
-        {
-            foreach (var extension in extensions)
-            {
-                var candidate = Path.Combine(segment, command + extension);
-                if (File.Exists(candidate))
-                {
-                    return candidate;
-                }
-            }
-        }
-
-        return null;
-    }
 }
