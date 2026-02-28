@@ -106,19 +106,24 @@ public sealed class SdlPcmPlayer : IAudioPlayer, IDisposable
             throw new InvalidOperationException("Invalid SDL audio callback userdata.");
         }
 
+        Span<byte> streamSpan = new(streamPtr.ToPointer(), len);
         int numOfRead = 0;
         if (!data.IsCompleted)
         {
-            var buffer = new byte[len];
-            while (numOfRead < len)
-            {
-                var t = data.PcmStream.Read(buffer, numOfRead, len - numOfRead);
-                numOfRead += t;
-                if (t == 0)
-                    break;
-            }
             if (data.SdlVolume < 128)
             {
+                // Read PCM data into a temporary buffer
+                var buffer = new byte[len];
+                while (numOfRead < len)
+                {
+                    var t = data.PcmStream.Read(buffer, numOfRead, len - numOfRead);
+                    numOfRead += t;
+                    if (t == 0)
+                        break;
+                }
+                // Fill the stream buffer with silence before mixing to avoid noise
+                streamSpan[..numOfRead].Fill(SdlFormatIsUnsigned(data.SdlFormat) ? (byte)128 : (byte)0);
+                // Mix the PCM data with volume control into the stream buffer
                 fixed (byte* srcPtr = buffer)
                 {
                     SDL.MixAudioFormat((byte*)streamPtr, srcPtr, data.SdlFormat, (uint)numOfRead, data.SdlVolume);
@@ -126,19 +131,21 @@ public sealed class SdlPcmPlayer : IAudioPlayer, IDisposable
             }
             else
             {
-                Marshal.Copy(buffer, 0, streamPtr, numOfRead);
+                // Read PCM data directly into the stream buffer without volume control
+                while (numOfRead < len)
+                {
+                    var t = data.PcmStream.Read(streamSpan[numOfRead..]);
+                    numOfRead += t;
+                    if (t == 0)
+                        break;
+                }
             }
         }
 
         if (numOfRead < len)
         {
-            var remaining = len - numOfRead;
-            var silence = new byte[remaining];
-            if (SdlFormatIsUnsigned(data.SdlFormat))
-            {
-                Array.Fill(silence, (byte)128);
-            }
-            Marshal.Copy(silence, 0, streamPtr + numOfRead, remaining);
+            // Fill the remaining stream buffer with silence to avoid noise
+            streamSpan[numOfRead..].Fill(SdlFormatIsUnsigned(data.SdlFormat) ? (byte)128 : (byte)0);
             data.IsCompleted = true;
             data.Tcs.TrySetResult();
         }
