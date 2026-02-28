@@ -37,7 +37,13 @@
         <ComboBox Grid.Row="2" Grid.Column="1" IsEditable="True" ItemsSource="{Binding FrequencyOptions}" Text="{Binding Frequency, Mode=TwoWay}" />
 
         <TextBlock Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Text="输出格式" />
-        <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding EncoderOptions}" SelectedItem="{Binding SelectedEncoder, Mode=TwoWay}" />
+        <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding EncoderOptions}" SelectedItem="{Binding SelectedEncoder, Mode=TwoWay}">
+          <ComboBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding Info.Name}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
 
         <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Text="字幕模式" />
         <ComboBox Grid.Row="4" Grid.Column="1" ItemsSource="{Binding LyricModeOptions}" SelectedItem="{Binding LyricMode, Mode=TwoWay}" />

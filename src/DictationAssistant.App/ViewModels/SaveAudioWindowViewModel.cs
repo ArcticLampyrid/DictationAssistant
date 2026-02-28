@@ -33,10 +33,10 @@ public partial class SaveAudioWindowViewModel : ObservableObject
 
     public IReadOnlyList<string> LyricModeOptions { get; } = ["Dismiss", "Lrc File"];
 
-    public IReadOnlyList<AudioEncoderInfo> EncoderOptions { get; }
+    public IReadOnlyList<IAudioEncoderFactory> EncoderOptions { get; }
 
     [ObservableProperty]
-    private AudioEncoderInfo _selectedEncoder;
+    private IAudioEncoderFactory _selectedEncoder;
 
     [ObservableProperty]
     private string _channel = "Stereo";
@@ -51,7 +51,7 @@ public partial class SaveAudioWindowViewModel : ObservableObject
     private string _lyricMode = "Lrc File";
 
     [ObservableProperty]
-    private string _targetPath = "dictation.wav";
+    private string _targetPath = "";
 
     [ObservableProperty]
     private bool _isExporting;
@@ -63,13 +63,7 @@ public partial class SaveAudioWindowViewModel : ObservableObject
 
     public SaveAudioWindowViewModel()
     {
-        var encoders = new List<AudioEncoderInfo> { WaveEncoder.EncoderInfo };
-
-        if (FFmpegAudioEncoder.IsFFmpegAvailableAsync().Result)
-        {
-            encoders.Add(new FFmpegAudioEncoderInfo("mp3"));
-            encoders.Add(new FFmpegAudioEncoderInfo("opus"));
-        }
+        var encoders = AudioEncoderProviders.GetAvailable();
 
         EncoderOptions = encoders;
         _selectedEncoder = encoders[0];
@@ -101,8 +95,18 @@ public partial class SaveAudioWindowViewModel : ObservableObject
         var timesPerWord = _dictationPlayer.TimesPerWord;
         var rate = _dictationPlayer.Rate;
         var sampleRate = int.TryParse(Frequency, out var sr) ? sr : 44100;
-        var channels = Channel == "Mono" ? 1 : 2;
-        var sampleFormat = SampleFormat == "Unsigned 8bit" ? PcmSampleFormat.U8 : PcmSampleFormat.S16LE;
+        var channels = Channel switch
+        {
+            "Mono" => 1,
+            "Stereo" => 2,
+            _ => throw new InvalidOperationException("Invalid channel option")
+        };
+        var sampleFormat = SampleFormat switch
+        {
+            "Unsigned 8bit" => PcmSampleFormat.U8,
+            "Signed 16bit" => PcmSampleFormat.S16LE,
+            _ => throw new InvalidOperationException("Invalid sample format option")
+        };
         var targetFormat = new PcmFormatInfo(sampleRate, channels, sampleFormat);
         var selectedEncoder = SelectedEncoder;
         var targetPath = TargetPath;
@@ -119,29 +123,33 @@ public partial class SaveAudioWindowViewModel : ObservableObject
         {
             await Task.Run(async () =>
             {
-                var encoderAudio = selectedEncoder.CreateEncoder(targetFormat, targetPath);
                 ILyricWriter? lyricWriter = null;
-
                 if (lyricMode == "Lrc File")
                 {
-                    var lrcPath = Path.ChangeExtension(targetPath, "lrc");
-                    lyricWriter = new LyricWriter(lrcPath);
+                    lyricWriter = new LyricWriter();
                 }
 
-                using (encoderAudio)
+                var encoder = selectedEncoder.CreateEncoder(targetFormat, targetPath);
+                try
                 {
-                    using var pcmWriter = new PcmWriter(targetFormat, encoderAudio.Data, leaveOpen: true);
+                    using var pcmWriter = new PcmWriter(encoder.RawAudio, leaveOpen: true);
 
                     var exporter = new AudioExporter(voice, words, waitingTimeCalculator);
                     await exporter.ExportAsync(
                         pcmWriter, lyricWriter,
                         timesPerWord, rate,
                         progress, ct).ConfigureAwait(false);
+                }
+                finally
+                {
+                    await encoder.FinalizeAsync().ConfigureAwait(false);
+                }
 
-                    if (encoderAudio.Data is FFmpegAudioEncoderStream ffmpegStream)
-                    {
-                        await ffmpegStream.FinishAsync(ct).ConfigureAwait(false);
-                    }
+                if (lyricWriter is not null)
+                {
+                    var lrcPath = Path.ChangeExtension(targetPath, "lrc");
+                    using var lyricFileStream = File.Open(lrcPath, FileMode.Create);
+                    lyricWriter.SaveTo(lyricFileStream);
                 }
             }, ct).ConfigureAwait(false);
 
@@ -173,25 +181,11 @@ public partial class SaveAudioWindowViewModel : ObservableObject
         _exportCts?.Cancel();
     }
 
-    partial void OnSelectedEncoderChanged(AudioEncoderInfo value)
+    partial void OnSelectedEncoderChanged(IAudioEncoderFactory value)
     {
-        if (string.IsNullOrWhiteSpace(TargetPath))
+        if (!string.IsNullOrWhiteSpace(TargetPath))
         {
-            TargetPath = $"dictation.{value.Extension}";
-            return;
+            TargetPath = Path.ChangeExtension(TargetPath, value.Info.Extension) ?? TargetPath;
         }
-
-        TargetPath = Path.ChangeExtension(TargetPath, value.Extension) ?? TargetPath;
-    }
-
-    public ILyricWriter? CreateLyricWriter()
-    {
-        if (LyricMode != "Lrc File" || string.IsNullOrWhiteSpace(TargetPath))
-        {
-            return null;
-        }
-
-        var lrcPath = Path.ChangeExtension(TargetPath, "lrc");
-        return new LyricWriter(lrcPath);
     }
 }

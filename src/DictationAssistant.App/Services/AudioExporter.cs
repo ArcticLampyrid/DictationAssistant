@@ -98,7 +98,6 @@ public sealed class AudioExporter
         // Footer marker, matching v3.x
         lyricWriter?.WriteTimestamp(pcmWriter.BytesToMilliseconds(byteOffset), "本文件由 自动默写 程序自动生成");
 
-        lyricWriter?.Flush();
         progress?.Report(1.0);
     }
 

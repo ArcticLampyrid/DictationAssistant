@@ -1,72 +1,95 @@
-using System;
-using System.IO;
-using DictationAssistant.App.Audio;
-
 namespace DictationAssistant.App.Audio.Encoder;
 
-public class WaveEncoder : Stream
+public class WaveEncoder : IAudioEncoder
 {
-    private sealed class WaveEncoderInfoImpl : AudioEncoderInfo
+    private class WaveEncodeStream : Stream
     {
-        public WaveEncoderInfoImpl() : base("Waveform Audio", "wav")
+        private readonly Stream _baseStream;
+        private PcmFormatInfo _format;
+        private int _headerSize;
+
+        public WaveEncodeStream(Stream baseStream, PcmFormatInfo format)
         {
+            _baseStream = baseStream;
+            _format = format;
+            if (!_baseStream.CanWrite)
+                throw new ArgumentException("Base stream must be writable", nameof(baseStream));
+            if (!_baseStream.CanSeek)
+                throw new ArgumentException("Base stream must be seekable", nameof(baseStream));
+            WriteWaveHeader(_baseStream, format, 0);
+            _headerSize = (int)_baseStream.Position;
         }
 
-        public override PcmAudio CreateEncoder(PcmFormatInfo format, string path, object? encodeSettings)
+        public override bool CanRead => false;
+        public override bool CanSeek => false;
+        public override bool CanWrite => true;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+
+        public override void Flush()
         {
-            return new PcmAudio
-            {
-                Data = new WaveEncoder(format, path),
-                Format = format
-            };
-        }
-    }
-
-    public static AudioEncoderInfo EncoderInfo { get; } = new WaveEncoderInfoImpl();
-
-    private readonly Stream _baseStream;
-    private readonly long _headerSize;
-    private readonly PcmFormatInfo _pcmFormatInfo;
-
-    public WaveEncoder(PcmFormatInfo pcmFormatInfo, string path)
-    {
-        _pcmFormatInfo = pcmFormatInfo;
-        _baseStream = File.Open(path, FileMode.Create);
-        WriteWaveHeader(_baseStream, _pcmFormatInfo, 0);
-        _headerSize = _baseStream.Length;
-    }
-
-    public override bool CanRead => false;
-    public override bool CanSeek => false;
-    public override bool CanWrite => true;
-    public override long Length => throw new NotSupportedException();
-    public override long Position
-    {
-        get => throw new NotSupportedException();
-        set => throw new NotSupportedException();
-    }
-
-    public override void Flush() => _baseStream.Flush();
-
-    public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
-
-    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
-
-    public override void SetLength(long value) => throw new NotSupportedException();
-
-    public override void Write(byte[] buffer, int offset, int count) => _baseStream.Write(buffer, offset, count);
-
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
+            var originalPosition = _baseStream.Position;
+            var dataLength = _baseStream.Length - _headerSize;
             _baseStream.Position = 0;
-            WriteWaveHeader(_baseStream, _pcmFormatInfo, _baseStream.Length - _headerSize);
-            _baseStream.Dispose();
+            WriteWaveHeader(_baseStream, _format, dataLength);
+            _baseStream.Position = originalPosition;
+            _baseStream.Flush();
+        }
+
+        public override Task FlushAsync(CancellationToken cancellationToken)
+        {
+            var originalPosition = _baseStream.Position;
+            var dataLength = _baseStream.Length - _headerSize;
+            _baseStream.Position = 0;
+            WriteWaveHeader(_baseStream, _format, dataLength);
+            _baseStream.Position = originalPosition;
+            return _baseStream.FlushAsync(cancellationToken);
+        }
+
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            _baseStream.Write(buffer, offset, count);
+        }
+
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            return _baseStream.WriteAsync(buffer, offset, count, cancellationToken);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Flush();
+                _baseStream.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 
-    private static void WriteWaveHeader(Stream output, PcmFormatInfo format, long dataLength)
+    public PcmAudio RawAudio { get; }
+
+    public WaveEncoder(PcmFormatInfo format, string path)
+    {
+        RawAudio = new PcmAudio()
+        {
+            Data = new WaveEncodeStream(File.Create(path), format),
+            Format = format
+        };
+    }
+
+    public async Task FinalizeAsync()
+    {
+        await RawAudio.Data.DisposeAsync();
+    }
+
+    public static void WriteWaveHeader(Stream output, PcmFormatInfo format, long dataLength)
     {
         if (format.SampleFormat != PcmSampleFormat.U8 && format.SampleFormat != PcmSampleFormat.S16LE)
             throw new NotSupportedException("Only U8 and S16LE formats are supported");
@@ -79,7 +102,7 @@ public class WaveEncoder : Stream
         using var writer = new BinaryWriter(output, System.Text.Encoding.UTF8, leaveOpen: true);
 
         writer.Write("RIFF"u8.ToArray());
-        writer.Write(36 + dataLength);
+        writer.Write((uint)(36 + dataLength));
         writer.Write("WAVE"u8.ToArray());
 
         writer.Write("fmt "u8.ToArray());

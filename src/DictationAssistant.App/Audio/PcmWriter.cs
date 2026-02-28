@@ -16,20 +16,18 @@ public class PcmWriter : IDisposable
         Array.Fill(Byte80_1M, (byte)0x80);
     }
 
-    private readonly Stream _outputStream;
-    private readonly PcmFormatInfo _formatInfo;
+    private readonly PcmAudio _dest;
     private readonly bool _leaveOpen;
 
-    public PcmWriter(PcmFormatInfo formatInfo, Stream outputStream, bool leaveOpen = false)
+    public PcmWriter(PcmAudio dest, bool leaveOpen = false)
     {
-        _formatInfo = formatInfo;
-        _outputStream = outputStream;
+        this._dest = dest;
         _leaveOpen = leaveOpen;
     }
 
     public long MillisecondsToSamples(long ms)
     {
-        return ((ms / 1000) * _formatInfo.SampleRate) + (((ms % 1000) * _formatInfo.SampleRate) / 1000);
+        return ((ms / 1000) * _dest.Format.SampleRate) + (((ms % 1000) * _dest.Format.SampleRate) / 1000);
     }
 
     public long MillisecondsToBytes(long ms)
@@ -41,13 +39,13 @@ public class PcmWriter : IDisposable
     {
         var blockAlign = GetBlockAlign();
         var samples = byteOffset / blockAlign;
-        return (samples / _formatInfo.SampleRate) * 1000 + ((samples % _formatInfo.SampleRate) * 1000) / _formatInfo.SampleRate;
+        return (samples / _dest.Format.SampleRate) * 1000 + ((samples % _dest.Format.SampleRate) * 1000) / _dest.Format.SampleRate;
     }
 
     private int GetBlockAlign()
     {
-        var bytesPerSample = _formatInfo.SampleFormat == PcmSampleFormat.U8 ? 1 : 2;
-        return _formatInfo.Channels * bytesPerSample;
+        var bytesPerSample = _dest.Format.SampleFormat == PcmSampleFormat.U8 ? 1 : 2;
+        return _dest.Format.Channels * bytesPerSample;
     }
 
     public long WriteDelay(long ms)
@@ -55,12 +53,12 @@ public class PcmWriter : IDisposable
         var len = MillisecondsToBytes(ms);
         var remainingBytes = (int)len;
 
-        var emptyData = _formatInfo.SampleFormat == PcmSampleFormat.U8 ? Byte80_1M : Byte00_1M;
+        var emptyData = _dest.Format.SampleFormat == PcmSampleFormat.U8 ? Byte80_1M : Byte00_1M;
 
         while (remainingBytes > 0)
         {
             var bytesToWrite = Math.Min(remainingBytes, emptyData.Length);
-            _outputStream.Write(emptyData, 0, bytesToWrite);
+            _dest.Data.Write(emptyData, 0, bytesToWrite);
             remainingBytes -= bytesToWrite;
         }
 
@@ -70,12 +68,14 @@ public class PcmWriter : IDisposable
     public unsafe long Write(PcmAudio input)
     {
         var srcFormat = GetSdlFormat(input.Format.SampleFormat);
-        var dstFormat = GetSdlFormat(_formatInfo.SampleFormat);
-        var srcChannels = input.Format.Channels;
+        var dstFormat = GetSdlFormat(_dest.Format.SampleFormat);
+        var srcChannels = (byte)input.Format.Channels;
         var srcSampleRate = input.Format.SampleRate;
+        var dstChannels = (byte)_dest.Format.Channels;
+        var dstSampleRate = _dest.Format.SampleRate;
 
         SDLAudioCVT cvt = new SDLAudioCVT();
-        SDL.BuildAudioCVT(ref cvt, srcFormat, (byte)srcChannels, srcSampleRate, dstFormat, (byte)_formatInfo.Channels, _formatInfo.SampleRate);
+        SDL.BuildAudioCVT(ref cvt, srcFormat, srcChannels, srcSampleRate, dstFormat, dstChannels, dstSampleRate);
 
         var bytesPerSample = input.Format.SampleFormat == PcmSampleFormat.U8 ? 1 : 2;
         var srcBlockAlign = srcChannels * bytesPerSample;
@@ -84,7 +84,6 @@ public class PcmWriter : IDisposable
         GCHandle p = GCHandle.Alloc(buf, GCHandleType.Pinned);
         cvt.Buf = (byte*)p.AddrOfPinnedObject();
 
-        input.Data.Position = 0;
         long totalBytes = 0;
         do
         {
@@ -101,7 +100,7 @@ public class PcmWriter : IDisposable
                 break;
             cvt.Len = numOfRead;
             SDL.ConvertAudio(ref cvt);
-            _outputStream.Write(buf, 0, cvt.LenCvt);
+            _dest.Data.Write(buf, 0, cvt.LenCvt);
             totalBytes += cvt.LenCvt;
         }
         while (true);
@@ -112,7 +111,7 @@ public class PcmWriter : IDisposable
         {
             int lenAlign = (int)(dstBlockAlign - (totalBytes % dstBlockAlign));
             byte[] bufAlign = new byte[lenAlign];
-            _outputStream.Write(bufAlign, 0, lenAlign);
+            _dest.Data.Write(bufAlign, 0, lenAlign);
             totalBytes += lenAlign;
         }
 
@@ -135,11 +134,11 @@ public class PcmWriter : IDisposable
         {
             if (!_leaveOpen)
             {
-                _outputStream.Close();
+                _dest.Data.Close();
             }
             else
             {
-                _outputStream.Flush();
+                _dest.Data.Flush();
             }
         }
     }

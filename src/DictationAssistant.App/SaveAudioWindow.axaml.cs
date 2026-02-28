@@ -83,16 +83,18 @@ public partial class SaveAudioWindow : Window
             return;
         }
 
+        var extension = ViewModel.SelectedEncoder.Info.Extension.TrimStart('.');
+
         var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = "选择目标文件",
             SuggestedFileName = Path.GetFileName(ViewModel.TargetPath),
-            DefaultExtension = ViewModel.SelectedEncoder.Extension,
+            DefaultExtension = extension,
             FileTypeChoices =
             [
-                new FilePickerFileType($"{ViewModel.SelectedEncoder.Extension} 文件")
+                new FilePickerFileType($"{ViewModel.SelectedEncoder.Info.Name} 文件")
                 {
-                    Patterns = [$"*.{ViewModel.SelectedEncoder.Extension}"]
+                    Patterns = [$"*.{extension}"]
                 }
             ]
         });

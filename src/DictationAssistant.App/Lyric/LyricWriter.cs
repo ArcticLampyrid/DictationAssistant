@@ -1,20 +1,14 @@
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
-using DictationAssistant.App.Abstractions;
 
 namespace DictationAssistant.App.Lyric;
 
 public class LyricWriter : ILyricWriter
 {
-    private readonly Dictionary<string, Dictionary<long, object>> _lyric = new();
-    private readonly Dictionary<string, string> _idTag = new();
-    private readonly string _fileName;
-    private bool _disposed;
+    private readonly Dictionary<string, SortedSet<long>> _lyric = [];
+    private readonly Dictionary<string, string> _idTag = [];
 
-    public LyricWriter(string fileName)
+    public LyricWriter()
     {
-        _fileName = fileName;
     }
 
     public void WriteMetadata(string title, string artist)
@@ -26,44 +20,24 @@ public class LyricWriter : ILyricWriter
     public void WriteTimestamp(long ms, string text)
     {
         if (!_lyric.ContainsKey(text))
-            _lyric.Add(text, new Dictionary<long, object>());
-        _lyric[text].Add(ms, new object());
+            _lyric.Add(text, []);
+        _lyric[text].Add(ms);
     }
 
-    public void WriteAllTimestamp(IReadOnlyList<string> words, long startTime, IWaitingTimeCalculator waitingTimeCalculator)
+    public void SaveTo(Stream stream)
     {
-        long currentTime = startTime;
-        foreach (var word in words)
-        {
-            WriteTimestamp(currentTime, word);
-            var waitingTime = waitingTimeCalculator.CalculateWaitingTime(word);
-            currentTime += waitingTime * 1000;
-        }
-    }
-
-    public void Flush()
-    {
-        using var writer = new StreamWriter(File.Open(_fileName, FileMode.Create), Encoding.Default);
+        using var writer = new StreamWriter(stream, Encoding.Default, 1024, true);
         foreach (var pair in _idTag)
             writer.WriteLine($"[{pair.Key}:{pair.Value}]");
         foreach (var pair in _lyric)
         {
-            foreach (var offset in pair.Value.Keys)
+            foreach (var offset in pair.Value)
             {
                 var min = offset / 60000;
                 var sec = (offset % 60000) / (double)1000;
                 writer.Write($"[{min:D2}:{sec:00.00}]");
             }
             writer.WriteLine(pair.Key);
-        }
-    }
-
-    public void Dispose()
-    {
-        if (!_disposed)
-        {
-            Flush();
-            _disposed = true;
         }
     }
 }
