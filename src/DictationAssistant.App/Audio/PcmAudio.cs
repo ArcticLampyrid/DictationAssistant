@@ -11,24 +11,6 @@ public sealed class PcmAudio : IDisposable
 
     public required PcmFormatInfo Format { get; init; }
 
-    public byte[] ToArray()
-    {
-        if (Data is MemoryStream ms)
-        {
-            return ms.ToArray();
-        }
-
-        if (Data is null || Data.Length == 0)
-        {
-            return [];
-        }
-
-        var buffer = new byte[Data.Length];
-        Data.Position = 0;
-        Data.ReadExactly(buffer);
-        return buffer;
-    }
-
     public void Dispose()
     {
         Data?.Dispose();
