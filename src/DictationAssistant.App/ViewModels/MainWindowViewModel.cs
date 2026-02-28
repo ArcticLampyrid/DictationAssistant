@@ -74,7 +74,6 @@ public partial class MainWindowViewModel : ObservableObject
         };
 
         LoadSettings();
-        ApplySettingsToCore();
         _ = LoadVoiceOptionsAsync();
         OnPropertyChanged(nameof(SpeakStateText));
     }
@@ -243,7 +242,6 @@ public partial class MainWindowViewModel : ObservableObject
             AlertRequested?.Invoke("已经是第1个了！");
             return;
         }
-        ApplySettingsToCore();
         _dictationPlayer.SpeakPrevious();
     }
 
@@ -255,7 +253,6 @@ public partial class MainWindowViewModel : ObservableObject
             AlertRequested?.Invoke("还没报过或已移除报过的词语！");
             return;
         }
-        ApplySettingsToCore();
         _dictationPlayer.SpeakAgain();
     }
 
@@ -272,14 +269,12 @@ public partial class MainWindowViewModel : ObservableObject
             AlertRequested?.Invoke("已经播完了。");
             return;
         }
-        ApplySettingsToCore();
         _dictationPlayer.SpeakNext();
     }
 
     [RelayCommand]
     private void StartAuto()
     {
-        ApplySettingsToCore();
         _dictationPlayer.StartAuto(0);
     }
 
@@ -303,21 +298,12 @@ public partial class MainWindowViewModel : ObservableObject
 
     public void SpeakLine(int index)
     {
-        ApplySettingsToCore();
         _dictationPlayer.SpeakAt(index);
     }
 
     public void StartAutoFromLine(int index)
     {
-        ApplySettingsToCore();
         _dictationPlayer.StartAuto(index);
-    }
-
-    private void ApplySettingsToCore()
-    {
-        _dictationPlayer.TimesPerWord = TimesPerWord;
-        _dictationPlayer.Volume = Volume;
-        _dictationPlayer.Rate = Rate;
     }
 
     private async Task LoadVoiceOptionsAsync()
@@ -495,6 +481,7 @@ public partial class MainWindowViewModel : ObservableObject
     partial void OnTimesPerWordChanged(int value)
     {
         _appSettings.Dictation.TimesPerWord = value;
+        _dictationPlayer.TimesPerWord = _appSettings.Dictation.TimesPerWord;
         ScheduleSave();
     }
 
@@ -513,12 +500,14 @@ public partial class MainWindowViewModel : ObservableObject
     partial void OnVolumeChanged(int value)
     {
         _appSettings.Dictation.Volume = value;
+        _dictationPlayer.Volume = _appSettings.Dictation.Volume;
         ScheduleSave();
     }
 
     partial void OnRateChanged(int value)
     {
         _appSettings.Dictation.Rate = value;
+        _dictationPlayer.Rate = _appSettings.Dictation.Rate;
         ScheduleSave();
     }
 

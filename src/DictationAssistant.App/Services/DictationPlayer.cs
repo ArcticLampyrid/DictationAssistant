@@ -18,7 +18,7 @@ public sealed class DictationPlayer : IDictationPlayer
     private int _elapsedTimes;
 
     public int TimesPerWord { get; set; } = 2;
-    public int Volume { get; set; } = 100;
+    public int Volume { get => _audioPlayer.Volume; set => _audioPlayer.Volume = value; }
     public int Rate { get; set; } = 0;
 
     public DictationPlayer(IVoice voice, IWordListSource wordListSource, IAudioPlayer audioPlayer, DictationSettings? settings = null)
@@ -423,7 +423,7 @@ public sealed class DictationPlayer : IDictationPlayer
             }, CancellationToken.None);
         }
 
-        await _audioPlayer.PlayAsync(pcmAudio, Volume, ct).ConfigureAwait(false);
+        await _audioPlayer.PlayAsync(pcmAudio, ct).ConfigureAwait(false);
     }
 
     private void UpdateProgress(Func<DictationProgress, DictationProgress> mutate)

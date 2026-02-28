@@ -16,6 +16,21 @@ public sealed class SdlPcmPlayer : IAudioPlayer, IDisposable
     private static int s_instanceCount;
     private bool _disposed;
 
+    private int _sdlVolume = 128; // Default volume is 100%
+
+    public int Volume
+    {
+        get => (int)Math.Round(_sdlVolume / 128.0 * 100);
+        set
+        {
+            if (value < 0 || value > 100)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), "Volume must be between 0 and 100.");
+            }
+            _sdlVolume = (int)Math.Round(value / 100.0 * 128);
+        }
+    }
+
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate void SDL_AudioCallback(IntPtr userdata, IntPtr stream, int len);
 
@@ -36,7 +51,7 @@ public sealed class SdlPcmPlayer : IAudioPlayer, IDisposable
         }
     }
 
-    public async Task PlayAsync(PcmAudio audio, int volume, CancellationToken ct)
+    public async Task PlayAsync(PcmAudio audio, CancellationToken ct)
     {
         ThrowIfDisposed();
 
@@ -51,7 +66,6 @@ public sealed class SdlPcmPlayer : IAudioPlayer, IDisposable
         var userdata = new AudioCallbackData
         {
             PcmStream = audio.Data,
-            SdlVolume = (byte)(volume * 128 / 100),
             SdlFormat = sdlFormat,
             Tcs = tcs
         };
@@ -93,7 +107,7 @@ public sealed class SdlPcmPlayer : IAudioPlayer, IDisposable
         }
     }
 
-    private static unsafe void AudioCallback(IntPtr udata, IntPtr streamPtr, int len)
+    private unsafe void AudioCallback(IntPtr udata, IntPtr streamPtr, int len)
     {
         if (streamPtr == IntPtr.Zero || len == 0)
         {
@@ -110,7 +124,7 @@ public sealed class SdlPcmPlayer : IAudioPlayer, IDisposable
         int numOfRead = 0;
         if (!data.IsCompleted)
         {
-            if (data.SdlVolume < 128)
+            if (_sdlVolume < 128)
             {
                 // Read PCM data into a temporary buffer
                 var buffer = new byte[len];
@@ -126,7 +140,7 @@ public sealed class SdlPcmPlayer : IAudioPlayer, IDisposable
                 // Mix the PCM data with volume control into the stream buffer
                 fixed (byte* srcPtr = buffer)
                 {
-                    SDL.MixAudioFormat((byte*)streamPtr, srcPtr, data.SdlFormat, (uint)numOfRead, data.SdlVolume);
+                    SDL.MixAudioFormat((byte*)streamPtr, srcPtr, data.SdlFormat, (uint)numOfRead, (byte)_sdlVolume);
                 }
             }
             else
@@ -210,7 +224,6 @@ public sealed class SdlPcmPlayer : IAudioPlayer, IDisposable
     private class AudioCallbackData
     {
         public required Stream PcmStream { get; set; }
-        public byte SdlVolume { get; set; }
         public ushort SdlFormat { get; set; }
         public bool IsCompleted { get; set; }
         public required TaskCompletionSource Tcs { get; set; }

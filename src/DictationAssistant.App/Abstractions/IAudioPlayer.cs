@@ -4,5 +4,7 @@ namespace DictationAssistant.App.Abstractions;
 
 public interface IAudioPlayer
 {
-    Task PlayAsync(PcmAudio audio, int volume, CancellationToken ct);
+    // Volume level from 0 to 100. Default is 100.
+    int Volume { get; set; }
+    Task PlayAsync(PcmAudio audio, CancellationToken ct);
 }
