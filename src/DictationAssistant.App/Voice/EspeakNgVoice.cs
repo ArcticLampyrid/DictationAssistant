@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Text;
 using DictationAssistant.App.Abstractions;
 using DictationAssistant.App.Audio;
 using DictationAssistant.App.Models;
@@ -34,40 +36,67 @@ public sealed class EspeakNgVoice : IVoice
 
     private async Task<byte[]?> SynthesizeWavAsync(string text, VoiceSynthesisOptions options, CancellationToken cancellationToken)
     {
-        var tempFile = Path.Combine(Path.GetTempPath(), $"dictationassistant-espeak-{Guid.NewGuid():N}.wav");
-        try
+        var startInfo = new ProcessStartInfo
         {
-            var args = new List<string>();
-            if (!string.IsNullOrWhiteSpace(_voiceName))
-            {
-                args.Add("-v");
-                args.Add(_voiceName);
-            }
-
-            if (options.Rate is int rate)
-            {
-                args.Add("-s");
-                args.Add((160 + Math.Clamp(rate, -10, 10) * 15).ToString());
-            }
-
-            args.Add("-w");
-            args.Add(tempFile);
-            args.Add(text);
-
-            await ProcessRunner.RunAsync("espeak-ng", args, null, cancellationToken).ConfigureAwait(false);
-            return await File.ReadAllBytesAsync(tempFile, cancellationToken).ConfigureAwait(false);
-        }
-        catch
+            FileName = "espeak-ng",
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            StandardInputEncoding = System.Text.Encoding.UTF8,
+        };
+        if (!string.IsNullOrWhiteSpace(_voiceName))
         {
-            return null;
+            startInfo.ArgumentList.Add("-v");
+            startInfo.ArgumentList.Add(_voiceName);
         }
-        finally
+        if (options.Rate is int rate)
         {
-            if (File.Exists(tempFile))
-            {
-                File.Delete(tempFile);
-            }
+            startInfo.ArgumentList.Add("-s");
+            startInfo.ArgumentList.Add((175 + Math.Clamp(rate, -10, 10) * 15).ToString());
         }
+        startInfo.ArgumentList.Add("-b"); // Input encoding
+        startInfo.ArgumentList.Add("1"); // UTF-8 input
+        startInfo.ArgumentList.Add("--stdin"); // Input text from stdin
+        startInfo.ArgumentList.Add("--stdout"); // Output WAV data to stdout
+        using var process = Process.Start(startInfo);
+        if (process == null) return null;
+        process.Start();
+        await process.StandardInput.WriteLineAsync(text).ConfigureAwait(false);
+        await process.StandardInput.FlushAsync().ConfigureAwait(false);
+        process.StandardInput.Close();
+
+        var outputTask = ReadAllBytesAsync(process.StandardOutput.BaseStream, cancellationToken);
+        var errorTask = ReadAllBytesAsync(process.StandardError.BaseStream, cancellationToken);
+        await Task.WhenAll(outputTask, errorTask).ConfigureAwait(false);
+        process.StandardOutput.BaseStream.Close();
+        process.StandardError.BaseStream.Close();
+
+        if (cancellationToken.IsCancellationRequested)
+        {
+            process.Kill();
+            cancellationToken.ThrowIfCancellationRequested();
+        }
+        await process.WaitForExitAsync(cancellationToken);
+        if (process.ExitCode != 0)
+        {
+            var utf8 = new UTF8Encoding
+            {
+                DecoderFallback = DecoderFallback.ReplacementFallback
+            };
+            var errorOutput = utf8.GetString(errorTask.Result);
+            throw new Exception($"eSpeak NG exited with code {process.ExitCode}. Error output: {errorOutput}");
+        }
+
+        return outputTask.Result;
+    }
+
+    private static async Task<byte[]> ReadAllBytesAsync(Stream stream, CancellationToken cancellationToken)
+    {
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms, cancellationToken).ConfigureAwait(false);
+        return ms.ToArray();
     }
 }
 
