@@ -26,11 +26,6 @@ public partial class PreferenceWindow : Window
         ResultSettings = settings;
     }
 
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
-
     private void CancelButton_Click(object? sender, RoutedEventArgs e)
     {
         _ = sender;

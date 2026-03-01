@@ -36,11 +36,6 @@ public partial class SaveAudioWindow : Window
         }
     }
 
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
-
     private void CancelButton_Click(object? sender, RoutedEventArgs e)
     {
         _ = sender;

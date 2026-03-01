@@ -34,7 +34,7 @@ public partial class App : Application
 
             var initialVoice = NullVoice.Instance;
 
-            desktop.MainWindow = new MainWindow(settingsStore.Value)
+            desktop.MainWindow = new MainWindow()
             {
                 DataContext = new MainWindowViewModel(wordListSource, audioPlayer, aggregator, initialVoice, settingsStore)
             };

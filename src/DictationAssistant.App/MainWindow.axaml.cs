@@ -26,19 +26,11 @@ namespace DictationAssistant.App;
 
 public partial class MainWindow : Window
 {
-    private readonly AppSettings _appSettings;
-    private TextEditor? _wordlistEditor;
     private IStorageFile? _currentFile;
     private HighlightedLineBackgroundRenderer? _highlightedLineRenderer;
 
     public MainWindow()
-        : this(new AppSettings())
     {
-    }
-
-    public MainWindow(AppSettings appSettings)
-    {
-        _appSettings = appSettings;
         InitializeComponent();
 
         Opened += (_, _) =>
@@ -73,58 +65,52 @@ public partial class MainWindow : Window
         };
     }
 
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
-        _wordlistEditor = this.FindControl<TextEditor>("WordlistEditor");
-    }
-
     private void HookEditor(MainWindowViewModel vm)
     {
-        if (_wordlistEditor is null)
+        if (WordlistEditor is null)
         {
             return;
         }
 
-        vm.WordListSource.AttachDocument(_wordlistEditor.Document);
+        vm.WordListSource.AttachDocument(WordlistEditor.Document);
 
         var highlightingAssembly = Assembly.GetExecutingAssembly();
         using var highlightingStream = highlightingAssembly.GetManifestResourceStream("DictationAssistant.App.Resources.WordlistHighlighting.xshd");
         if (highlightingStream != null)
         {
             using var reader = XmlReader.Create(highlightingStream);
-            _wordlistEditor.SyntaxHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
+            WordlistEditor.SyntaxHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
         }
 
-        _highlightedLineRenderer = new HighlightedLineBackgroundRenderer(_wordlistEditor.TextArea.TextView)
+        _highlightedLineRenderer = new HighlightedLineBackgroundRenderer(WordlistEditor.TextArea.TextView)
         {
             Background = new SolidColorBrush(Colors.LightGreen)
         };
-        _wordlistEditor.TextArea.TextView.BackgroundRenderers.Add(_highlightedLineRenderer);
+        WordlistEditor.TextArea.TextView.BackgroundRenderers.Add(_highlightedLineRenderer);
     }
 
     private void MoveEditorToCurrentLine(MainWindowViewModel vm)
     {
-        if (_wordlistEditor is null)
+        if (WordlistEditor is null)
         {
             return;
         }
 
         var index = vm.CurrentLineIndex;
-        if (index < 0 || index >= _wordlistEditor.Document.LineCount)
+        if (index < 0 || index >= WordlistEditor.Document.LineCount)
         {
             _highlightedLineRenderer?.LineNumber = 0;
             return;
         }
 
         var lineNumber = index + 1;
-        var line = _wordlistEditor.Document.GetLineByNumber(lineNumber);
+        var line = WordlistEditor.Document.GetLineByNumber(lineNumber);
 
         if (vm.AutoScrollCurrentLine)
         {
-            _wordlistEditor.ScrollToLine(lineNumber);
+            WordlistEditor.ScrollToLine(lineNumber);
         }
-         _highlightedLineRenderer?.LineNumber = vm.HighlightCurrentLine ? lineNumber : 0;
+        _highlightedLineRenderer?.LineNumber = vm.HighlightCurrentLine ? lineNumber : 0;
     }
 
     private MainWindowViewModel? GetViewModel() => DataContext as MainWindowViewModel;
@@ -133,7 +119,7 @@ public partial class MainWindow : Window
     {
         _ = sender;
         _ = e;
-        if (_wordlistEditor is null)
+        if (WordlistEditor is null)
         {
             return;
         }
@@ -152,7 +138,7 @@ public partial class MainWindow : Window
 
         await using var stream = await file.OpenReadAsync();
         using var reader = new StreamReader(stream);
-        _wordlistEditor.Text = await reader.ReadToEndAsync();
+        WordlistEditor.Text = await reader.ReadToEndAsync();
         _currentFile = file;
     }
 
@@ -160,15 +146,19 @@ public partial class MainWindow : Window
     {
         _ = sender;
         _ = e;
-        if (_wordlistEditor is null)
+        if (WordlistEditor is null)
         {
             return;
         }
-
+        var suggestedStartLocation = _currentFile != null
+            ? await _currentFile.GetParentAsync()
+            : null;
+        var suggestedFileName = _currentFile?.Name ?? "wordlist.txt";
         var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = "保存词语列表",
-            SuggestedFileName = _currentFile?.Name ?? "wordlist.txt",
+            SuggestedStartLocation = suggestedStartLocation,
+            SuggestedFileName = suggestedFileName,
             DefaultExtension = "txt"
         });
 
@@ -180,7 +170,7 @@ public partial class MainWindow : Window
         await using var stream = await file.OpenWriteAsync();
         stream.SetLength(0);
         await using var writer = new StreamWriter(stream);
-        await writer.WriteAsync(_wordlistEditor.Text);
+        await writer.WriteAsync(WordlistEditor.Text);
         await writer.FlushAsync();
 
         _currentFile = file;
@@ -194,12 +184,12 @@ public partial class MainWindow : Window
     {
         _ = sender;
         _ = e;
-        if (_wordlistEditor is null)
+        if (WordlistEditor is null)
         {
             return;
         }
 
-        _wordlistEditor.Text = string.Empty;
+        WordlistEditor.Text = string.Empty;
         _currentFile = null;
     }
 
@@ -256,35 +246,35 @@ public partial class MainWindow : Window
     {
         _ = sender;
         _ = e;
-        _wordlistEditor?.Cut();
+        WordlistEditor?.Cut();
     }
 
     private void Copy_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         _ = sender;
         _ = e;
-        _wordlistEditor?.Copy();
+        WordlistEditor?.Copy();
     }
 
     private void Paste_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         _ = sender;
         _ = e;
-        _wordlistEditor?.Paste();
+        WordlistEditor?.Paste();
     }
 
     private void Delete_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         _ = sender;
         _ = e;
-        if (_wordlistEditor is null)
+        if (WordlistEditor is null)
         {
             return;
         }
 
-        if (_wordlistEditor.SelectionLength > 0)
+        if (WordlistEditor.SelectionLength > 0)
         {
-            _wordlistEditor.SelectedText = string.Empty;
+            WordlistEditor.SelectedText = string.Empty;
         }
     }
 
@@ -292,33 +282,33 @@ public partial class MainWindow : Window
     {
         _ = sender;
         _ = e;
-        _wordlistEditor?.Undo();
+        WordlistEditor?.Undo();
     }
 
     private void Redo_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         _ = sender;
         _ = e;
-        _wordlistEditor?.Redo();
+        WordlistEditor?.Redo();
     }
 
     private void SelectAll_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         _ = sender;
         _ = e;
-        _wordlistEditor?.SelectAll();
+        WordlistEditor?.SelectAll();
     }
 
     private async void Count_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         _ = sender;
         _ = e;
-        if (_wordlistEditor is null || GetViewModel() is not { } vm)
+        if (WordlistEditor is null || GetViewModel() is not { } vm)
         {
             return;
         }
 
-        var count = _wordlistEditor.Document.LineCount;
+        var count = WordlistEditor.Document.LineCount;
         var box = MessageBoxManager.GetMessageBoxStandard("自动默写", $"词语数量：{count}", ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Info);
         await box.ShowWindowDialogAsync(this);
     }
@@ -327,12 +317,12 @@ public partial class MainWindow : Window
     {
         _ = sender;
         _ = e;
-        if (_wordlistEditor is null || GetViewModel() is not { } vm)
+        if (WordlistEditor is null || GetViewModel() is not { } vm)
         {
             return;
         }
 
-        var index = Math.Max(_wordlistEditor.TextArea.Caret.Line - 1, 0);
+        var index = Math.Max(WordlistEditor.TextArea.Caret.Line - 1, 0);
         vm.SpeakLine(index);
     }
 
@@ -340,14 +330,14 @@ public partial class MainWindow : Window
     {
         _ = sender;
         _ = e;
-        if (_wordlistEditor is null)
+        if (WordlistEditor is null)
         {
             return;
         }
 
-        var text = string.IsNullOrWhiteSpace(_wordlistEditor.SelectedText)
-            ? ReadCaretLineText(_wordlistEditor)
-            : _wordlistEditor.SelectedText;
+        var text = string.IsNullOrWhiteSpace(WordlistEditor.SelectedText)
+            ? ReadCaretLineText(WordlistEditor)
+            : WordlistEditor.SelectedText;
 
         if (string.IsNullOrWhiteSpace(text))
         {
@@ -365,7 +355,7 @@ public partial class MainWindow : Window
             if (GetViewModel() is { } vm)
             {
                 var box = MessageBoxManager.GetMessageBoxStandard("自动默写", "无法打开浏览器", ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error);
-                    await box.ShowWindowDialogAsync(this);
+                await box.ShowWindowDialogAsync(this);
             }
         }
     }
@@ -374,12 +364,12 @@ public partial class MainWindow : Window
     {
         _ = sender;
         _ = e;
-        if (_wordlistEditor is null || GetViewModel() is not { } vm)
+        if (WordlistEditor is null || GetViewModel() is not { } vm)
         {
             return;
         }
 
-        var index = Math.Max(_wordlistEditor.TextArea.Caret.Line - 1, 0);
+        var index = Math.Max(WordlistEditor.TextArea.Caret.Line - 1, 0);
         vm.StartAutoFromLine(index);
     }
 
@@ -410,7 +400,7 @@ public partial class MainWindow : Window
     }
     private async void OnDrop(object? sender, DragEventArgs e)
     {
-        if (_wordlistEditor is null)
+        if (WordlistEditor is null)
         {
             return;
         }
@@ -433,21 +423,21 @@ public partial class MainWindow : Window
         try
         {
             var text = await File.ReadAllTextAsync(localPath);
-            _wordlistEditor.Text = text;
+            WordlistEditor.Text = text;
         }
         catch (Exception ex)
         {
             if (GetViewModel() is { } vm)
             {
                 var errBox2 = MessageBoxManager.GetMessageBoxStandard("自动默写", $"无法打开文件：{ex.Message}", ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error);
-                    await errBox2.ShowWindowDialogAsync(this);
+                await errBox2.ShowWindowDialogAsync(this);
             }
         }
     }
 
     public async Task LoadFileByPathAsync(string filePath)
     {
-        if (_wordlistEditor is null)
+        if (WordlistEditor is null)
         {
             return;
         }
@@ -455,12 +445,12 @@ public partial class MainWindow : Window
         try
         {
             var text = await File.ReadAllTextAsync(filePath);
-            _wordlistEditor.Text = text;
+            WordlistEditor.Text = text;
         }
         catch (Exception ex)
         {
             var errBox = MessageBoxManager.GetMessageBoxStandard("自动默写", $"无法打开文件：{ex.Message}", ButtonEnum.Ok, MsBox.Avalonia.Enums.Icon.Error);
-                await errBox.ShowWindowDialogAsync(this);
+            await errBox.ShowWindowDialogAsync(this);
         }
     }
 

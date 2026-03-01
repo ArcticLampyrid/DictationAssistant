@@ -13,11 +13,6 @@ public partial class AboutWindow : Window
         DataContext = new AboutWindowViewModel();
     }
 
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
-
     private void OkButton_Click(object? sender, RoutedEventArgs e)
     {
         _ = sender;
