@@ -154,12 +154,6 @@ public partial class MainWindow : Window
         using var reader = new StreamReader(stream);
         _wordlistEditor.Text = await reader.ReadToEndAsync();
         _currentFile = file;
-
-        if (GetViewModel() is { } vm)
-        {
-            var path = file.TryGetLocalPath() ?? file.Name;
-            vm.CurrentLineIndex = 0;
-        }
     }
 
     private async void SaveFile_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -207,11 +201,6 @@ public partial class MainWindow : Window
 
         _wordlistEditor.Text = string.Empty;
         _currentFile = null;
-
-        if (GetViewModel() is { } vm)
-        {
-                vm.CurrentLineIndex = 0;
-        }
     }
 
     private void Exit_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -445,11 +434,6 @@ public partial class MainWindow : Window
         {
             var text = await File.ReadAllTextAsync(localPath);
             _wordlistEditor.Text = text;
-
-            if (GetViewModel() is { } vm)
-            {
-                vm.CurrentLineIndex = 0;
-            }
         }
         catch (Exception ex)
         {
