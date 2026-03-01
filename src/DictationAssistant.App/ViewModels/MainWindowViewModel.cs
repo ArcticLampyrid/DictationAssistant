@@ -95,6 +95,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         _disposables.Add(_settingsStore.Observe(s => s.Preference.ImprovedResourcePath, _ =>
         {
             OnPropertyChanged(nameof(ImprovedResourcePath));
+            UpdateEffectiveVoice();
         }));
         _disposables.Add(_settingsStore.Observe(s => s.Preference.DefaultChineseVoiceId, _ =>
         {
@@ -431,19 +432,22 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         {
             _settingsStore.Update(s => s with { Dictation = s.Dictation with { LastSelectedVoiceId = value.Info.Id } });
 
-            var newVoice = value.Create();
+            _currentVoice = value.Create();
+            UpdateEffectiveVoice();
+        }
+    }
 
-            if (!string.IsNullOrWhiteSpace(ImprovedResourcePath))
-            {
-                newVoice = new ImprovedVoice(newVoice, ImprovedResourcePath);
-            }
+    private void UpdateEffectiveVoice()
+    {
+        IVoice effective = _currentVoice;
+        if (!string.IsNullOrWhiteSpace(ImprovedResourcePath))
+        {
+            effective = new ImprovedVoice(effective, ImprovedResourcePath);
+        }
 
-            _currentVoice = newVoice;
-
-            if (_dictationPlayer is DictationPlayer player)
-            {
-                player.Voice = _currentVoice;
-            }
+        if (_dictationPlayer is DictationPlayer player)
+        {
+            player.Voice = effective;
         }
     }
 
