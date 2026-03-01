@@ -1,85 +1,84 @@
-using DictationAssistant.App.Audio;
 using ManagedBass;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace DictationAssistant.App.Audio;
 
 public sealed class BassDecodeStream : Stream
 {
+    private const int ScratchBufferSize = 4096;
+
+    private static readonly FileProcedures CustomStreamProcedures = new()
+    {
+        Close = OnCustomStreamClose,
+        Length = OnCustomStreamLength,
+        Read = OnCustomStreamRead,
+        Seek = OnCustomStreamSeek
+    };
+
     private int _channel;
-    private int _position;
-    private int _bufferStart;
-    private int _bufferLength;
-    private readonly byte[] _buffer = new byte[512];
+    private long _position;
+    private int _scratchStart;
+    private int _scratchLength;
+    private readonly byte[] _scratchBuffer = new byte[ScratchBufferSize];
     private bool _disposed;
+
+    private readonly GCHandle _customStreamStateHandle;
 
     public PcmFormatInfo Format { get; }
 
-    public BassDecodeStream(int channel)
+    public BassDecodeStream(Stream baseStream, bool leaveOpen = false)
     {
-        _channel = channel;
-        var channelInfo = Bass.ChannelGetInfo(channel);
-        Format = new PcmFormatInfo(
-            channelInfo.Frequency,
-            channelInfo.Channels,
-            PcmSampleFormat.S16LE
-        );
-    }
+        ArgumentNullException.ThrowIfNull(baseStream);
 
-    public static BassDecodeStream CreateFromFile(string filePath)
-    {
-        BassInitialization.EnsureInitialized();
-        
-        var stream = Bass.CreateStream(filePath, Flags: BassFlags.Decode | BassFlags.Unicode);
-        if (stream == 0)
-        {
-            throw new InvalidOperationException($"Failed to create BASS stream for {filePath}: {Bass.LastError}");
-        }
-        return new BassDecodeStream(stream);
-    }
-
-    public static BassDecodeStream CreateFromStream(Stream inputStream)
-    {
         BassInitialization.EnsureInitialized();
 
-        var fileProcs = new FileProcedures
+        var customStreamState = new CustomStreamState(baseStream, leaveOpen);
+        var customStreamStateHandle = GCHandle.Alloc(customStreamState, GCHandleType.Normal);
+
+        try
         {
-            Close = _ => { },
-            Length = _ => inputStream.Length,
-            Read = (buffer, length, _) =>
+            var channel = Bass.CreateStream(
+                StreamSystem.NoBuffer,
+                BassFlags.Decode,
+                CustomStreamProcedures,
+                GCHandle.ToIntPtr(customStreamStateHandle));
+
+            if (channel == 0)
             {
-                var bytes = new byte[length];
-                var bytesRead = inputStream.Read(bytes, 0, length);
-                if (bytesRead > 0)
-                {
-                    System.Runtime.InteropServices.Marshal.Copy(bytes, 0, buffer, bytesRead);
-                }
-                return bytesRead;
-            },
-            Seek = (offset, _) =>
-            {
-                try
-                {
-                    inputStream.Seek(offset, SeekOrigin.Begin);
-                    return true;
-                }
-                catch
-                {
-                    return false;
-                }
+                throw new InvalidOperationException($"Failed to create BASS stream from input stream: {Bass.LastError}");
             }
-        };
 
-        var stream = Bass.CreateStream(StreamSystem.NoBuffer, BassFlags.Decode | BassFlags.Unicode, fileProcs);
-        if (stream == 0)
-        {
-            throw new InvalidOperationException($"Failed to create BASS stream from input stream: {Bass.LastError}");
+            _channel = channel;
+            _customStreamStateHandle = customStreamStateHandle;
+
+            var channelInfo = Bass.ChannelGetInfo(channel);
+            Format = new PcmFormatInfo(
+                channelInfo.Frequency,
+                channelInfo.Channels,
+                channelInfo.Resolution switch
+                {
+                    Resolution.Byte => PcmSampleFormat.U8,
+                    _ => PcmSampleFormat.S16LE
+                });
         }
+        catch
+        {
+            if (customStreamStateHandle.IsAllocated)
+            {
+                customStreamStateHandle.Free();
+            }
 
-        return new BassDecodeStream(stream);
+            if (!leaveOpen)
+            {
+                baseStream.Dispose();
+            }
+
+            throw;
+        }
     }
 
-    public override bool CanRead => true;
+    public override bool CanRead => !_disposed;
     public override bool CanWrite => false;
     public override bool CanSeek => false;
 
@@ -95,100 +94,237 @@ public sealed class BassDecodeStream : Stream
 
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
-    public override void Flush() { }
+    public override void Flush()
+    {
+    }
 
     public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
 
     public override int Read(byte[] buffer, int offset, int count)
     {
-        if (_channel == 0 || _disposed)
-            return 0;
+        return Read(buffer.AsSpan(offset, count));
+    }
 
-        int outputLength = 0;
-        int numOfNeed = count;
-
-        while (numOfNeed > 0)
+    public override int Read(Span<byte> destination)
+    {
+        if (_channel == 0 || _disposed || destination.IsEmpty)
         {
-            int bufferUnread = _bufferLength - _bufferStart;
-            if (bufferUnread > 0)
-            {
-                if (bufferUnread > numOfNeed)
-                {
-                    Array.Copy(_buffer, _bufferStart, buffer, offset + outputLength, numOfNeed);
-                    _position += numOfNeed;
-                    _bufferStart += numOfNeed;
-                    outputLength += numOfNeed;
-                    numOfNeed = 0;
-                }
-                else
-                {
-                    Array.Copy(_buffer, _bufferStart, buffer, offset + outputLength, bufferUnread);
-                    _position += bufferUnread;
-                    _bufferStart = 0;
-                    _bufferLength = 0;
-                    outputLength += bufferUnread;
-                    numOfNeed -= bufferUnread;
-                }
-            }
-            else if (numOfNeed > _buffer.Length)
-            {
-                var handle = System.Runtime.InteropServices.GCHandle.Alloc(buffer, System.Runtime.InteropServices.GCHandleType.Pinned);
-                try
-                {
-                    var numOfOutput = Bass.ChannelGetData(
-                        _channel,
-                        (IntPtr)(handle.AddrOfPinnedObject().ToInt64() + offset + outputLength),
-                        numOfNeed
-                    );
+            return 0;
+        }
 
-                    if (numOfOutput > 0)
-                    {
-                        _position += numOfOutput;
-                        outputLength += numOfOutput;
-                        numOfNeed -= numOfOutput;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-                finally
-                {
-                    handle.Free();
-                }
-            }
-            else
+        var totalRead = 0;
+
+        while (totalRead < destination.Length)
+        {
+            var remaining = destination[totalRead..];
+            var scratchUnread = _scratchLength - _scratchStart;
+
+            if (scratchUnread > 0)
             {
-                _bufferStart = 0;
-                _bufferLength = Bass.ChannelGetData(_channel, _buffer, _buffer.Length);
-                if (_bufferLength < 0)
+                var copyLength = Math.Min(scratchUnread, remaining.Length);
+                _scratchBuffer.AsSpan(_scratchStart, copyLength).CopyTo(remaining);
+
+                _scratchStart += copyLength;
+                if (_scratchStart >= _scratchLength)
                 {
-                    _bufferLength = 0;
+                    _scratchStart = 0;
+                    _scratchLength = 0;
+                }
+
+                totalRead += copyLength;
+                _position += copyLength;
+                continue;
+            }
+
+            if (remaining.Length >= _scratchBuffer.Length)
+            {
+                var decoded = ReadFromBass(remaining);
+                if (decoded <= 0)
+                {
                     break;
                 }
+
+                totalRead += decoded;
+                _position += decoded;
+                continue;
+            }
+
+            _scratchLength = ReadFromBass(_scratchBuffer);
+            _scratchStart = 0;
+            if (_scratchLength <= 0)
+            {
+                _scratchLength = 0;
+                break;
             }
         }
 
-        return outputLength;
+        return totalRead;
+    }
+
+    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return ValueTask.FromCanceled<int>(cancellationToken);
+        }
+
+        try
+        {
+            return ValueTask.FromResult(Read(buffer.Span));
+        }
+        catch (Exception ex)
+        {
+            return ValueTask.FromException<int>(ex);
+        }
     }
 
     protected override void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing && _channel != 0)
+            base.Dispose(disposing);
+            return;
+        }
+
+        _disposed = true;
+
+        try
+        {
+            if (_channel != 0)
             {
                 Bass.StreamFree(_channel);
                 _channel = 0;
             }
-            _disposed = true;
         }
-        base.Dispose(disposing);
+        finally
+        {
+            ReleaseCustomStreamState();
+            base.Dispose(disposing);
+        }
     }
 
-    public override void Close()
+    private unsafe int ReadFromBass(Span<byte> destination)
     {
-        Dispose(true);
-        base.Close();
+        if (destination.IsEmpty || _channel == 0)
+        {
+            return 0;
+        }
+
+        fixed (byte* ptr = destination)
+        {
+            var read = Bass.ChannelGetData(_channel, (IntPtr)ptr, destination.Length);
+            return read > 0 ? read : 0;
+        }
+    }
+
+    private void ReleaseCustomStreamState()
+    {
+        if (!_customStreamStateHandle.IsAllocated)
+        {
+            return;
+        }
+
+        try
+        {
+            if (_customStreamStateHandle.Target is CustomStreamState customStreamState && !customStreamState.LeaveOpen)
+            {
+                customStreamState.Stream.Dispose();
+            }
+        }
+        finally
+        {
+            _customStreamStateHandle.Free();
+        }
+    }
+
+    private static CustomStreamState? GetCustomStreamState(IntPtr user)
+    {
+        if (user == IntPtr.Zero)
+        {
+            return null;
+        }
+
+        var handle = GCHandle.FromIntPtr(user);
+        return handle.Target as CustomStreamState;
+    }
+
+    private static void OnCustomStreamClose(IntPtr user)
+    {
+        // Stream lifetime is controlled by BassDecodeStream.Dispose.
+    }
+
+    private static long OnCustomStreamLength(IntPtr user)
+    {
+        var customStreamState = GetCustomStreamState(user);
+        if (customStreamState is null || !customStreamState.Stream.CanSeek)
+        {
+            return 0;
+        }
+
+        try
+        {
+            return customStreamState.Stream.Length;
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
+    private static unsafe int OnCustomStreamRead(IntPtr buffer, int length, IntPtr user)
+    {
+        if (length <= 0 || buffer == IntPtr.Zero)
+        {
+            return 0;
+        }
+
+        var customStreamState = GetCustomStreamState(user);
+        if (customStreamState is null)
+        {
+            return 0;
+        }
+
+        try
+        {
+            var destination = new Span<byte>(buffer.ToPointer(), length);
+            var read = customStreamState.Stream.Read(destination);
+            return read == 0 ? -1 : read;
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
+    private static bool OnCustomStreamSeek(long offset, IntPtr user)
+    {
+        var customStreamState = GetCustomStreamState(user);
+        if (customStreamState is null || !customStreamState.Stream.CanSeek)
+        {
+            return false;
+        }
+
+        try
+        {
+            customStreamState.Stream.Seek(offset, SeekOrigin.Begin);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private sealed class CustomStreamState
+    {
+        public CustomStreamState(Stream stream, bool leaveOpen)
+        {
+            Stream = stream;
+            LeaveOpen = leaveOpen;
+        }
+
+        public Stream Stream { get; }
+
+        public bool LeaveOpen { get; }
     }
 }

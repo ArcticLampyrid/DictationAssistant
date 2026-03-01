@@ -25,12 +25,7 @@ public sealed class ImprovedVoice : IVoice
         {
             try
             {
-                using var decodeStream = BassDecodeStream.CreateFromFile(filePath);
-                return new PcmAudio
-                {
-                    Data = decodeStream,
-                    Format = decodeStream.Format
-                };
+                return BassDecoder.FromFile(filePath);
             }
             catch (Exception ex)
             {

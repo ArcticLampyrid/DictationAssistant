@@ -20,16 +20,7 @@ public sealed class MacSayVoice : IVoice
         {
             return PcmAudio.Empty;
         }
-        var pcmStream = BassDecodeStream.CreateFromStream(new MemoryStream(aiffBytes));
-        if (pcmStream is null)
-        {
-            return PcmAudio.Empty;
-        }
-        return new PcmAudio()
-        {
-            Data = pcmStream,
-            Format = pcmStream.Format
-        };
+        return BassDecoder.FromStream(new MemoryStream(aiffBytes));
     }
 
     private async Task<byte[]?> SynthesizeAiffAsync(string text, VoiceSynthesisOptions options, CancellationToken cancellationToken)
