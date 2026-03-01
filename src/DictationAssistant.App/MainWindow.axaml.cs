@@ -235,7 +235,6 @@ public partial class MainWindow : Window
         if (result == true)
         {
             vm.ApplyPreferenceSettings(dialog.ResultSettings);
-            vm.SaveSettings();
         }
     }
 

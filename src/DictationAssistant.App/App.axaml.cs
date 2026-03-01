@@ -23,7 +23,6 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var settingsStore = new AppSettingsStore();
-            var appSettings = settingsStore.Load();
             var wordListSource = new EditorDocumentWordListSource();
             var audioPlayer = new SdlPcmPlayer();
             var aggregator = new VoiceAggregator([
@@ -35,21 +34,10 @@ public partial class App : Application
 
             var initialVoice = NullVoice.Instance;
 
-            if (WaitingTimeParser.TryParse(appSettings.Dictation.IntervalExpression, out var calc))
+            desktop.MainWindow = new MainWindow(settingsStore.Value)
             {
-            }
-
-            desktop.MainWindow = new MainWindow(appSettings)
-            {
-                DataContext = new MainWindowViewModel(wordListSource, audioPlayer, aggregator, initialVoice, appSettings, settingsStore)
+                DataContext = new MainWindowViewModel(wordListSource, audioPlayer, aggregator, initialVoice, settingsStore)
             };
-
-            if (WaitingTimeParser.TryParse(appSettings.Dictation.IntervalExpression, out var calculator))
-            {
-                ((MainWindowViewModel)desktop.MainWindow.DataContext!).DictationPlayer.WaitingTimeCalculator = calculator;
-            }
-
-            desktop.MainWindow.Closing += (_, _) => settingsStore.Save(appSettings);
 
             // Command-line file argument support (v3.x compat)
             if (desktop.Args is { Length: > 0 } cliArgs)
@@ -66,7 +54,7 @@ public partial class App : Application
 
             desktop.Exit += (_, _) =>
             {
-                settingsStore.Save(appSettings);
+                (desktop.MainWindow?.DataContext as IDisposable)?.Dispose();
                 audioPlayer.Dispose();
             };
         }

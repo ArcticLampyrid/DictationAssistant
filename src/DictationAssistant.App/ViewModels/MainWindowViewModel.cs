@@ -7,25 +7,19 @@ using DictationAssistant.App.Services;
 using DictationAssistant.App.Settings;
 using DictationAssistant.App.Voice;
 using DictationAssistant.App.Abstractions;
-using DictationAssistant.App.Models;
 
 namespace DictationAssistant.App.ViewModels;
 
-public partial class MainWindowViewModel : ObservableObject
+public partial class MainWindowViewModel : ObservableObject, IDisposable
 {
     private readonly EditorDocumentWordListSource _wordListSource;
     private readonly IDictationPlayer _dictationPlayer;
-    private readonly AppSettings _appSettings;
     private readonly AppSettingsStore _settingsStore;
     private readonly VoiceAggregator _aggregator;
+    private readonly List<IDisposable> _disposables = [];
     private IVoice _currentVoice;
     private DispatcherTimer? _countdownTimer;
-    private CancellationTokenSource? _saveCts;
 
-    /// <summary>
-    /// Raised when a user-facing alert message should be shown.
-    /// The View subscribes to this and shows a MessageBox.
-    /// </summary>
     public event Action<string>? AlertRequested;
 
     public IDictationPlayer DictationPlayer => _dictationPlayer;
@@ -35,26 +29,14 @@ public partial class MainWindowViewModel : ObservableObject
         IAudioPlayer audioPlayer,
         VoiceAggregator aggregator,
         IVoice initialVoice,
-        AppSettings appSettings,
         AppSettingsStore settingsStore)
     {
         _wordListSource = wordListSource;
-        _appSettings = appSettings;
         _settingsStore = settingsStore;
         _aggregator = aggregator;
         _currentVoice = initialVoice;
-        _appSettings.EnsureDefaults();
 
-        var dictationSettings = new DictationSettings
-        {
-            IntervalExpression = appSettings.Dictation.IntervalExpression,
-            HighlightCurrentLine = appSettings.Dictation.HighlightCurrentLine,
-            AutoScrollToCurrentLine = appSettings.Dictation.AutoScrollToCurrentLine,
-            DefaultChineseVoiceId = appSettings.Preference.DefaultChineseVoiceId,
-            DefaultEnglishVoiceId = appSettings.Preference.DefaultEnglishVoiceId
-        };
-
-        _dictationPlayer = new DictationPlayer(_currentVoice, wordListSource, audioPlayer, dictationSettings);
+        _dictationPlayer = new DictationPlayer(_currentVoice, wordListSource, audioPlayer);
         _dictationPlayer.ProgressChanged += (_, progress) =>
         {
             Dispatcher.UIThread.Post(() =>
@@ -73,12 +55,105 @@ public partial class MainWindowViewModel : ObservableObject
             });
         };
 
-        LoadSettings();
+        _disposables.Add(_settingsStore.Observe(s => s.Dictation.IntervalExpression, v =>
+        {
+            OnPropertyChanged(nameof(IntervalExpression));
+            ValidateAndApplyWaitingTime(v);
+        }));
+        _disposables.Add(_settingsStore.Observe(s => s.Dictation.TimesPerWord, v =>
+        {
+            OnPropertyChanged(nameof(TimesPerWord));
+            _dictationPlayer.TimesPerWord = v;
+        }));
+        _disposables.Add(_settingsStore.Observe(s => s.Dictation.HighlightCurrentLine, _ =>
+        {
+            OnPropertyChanged(nameof(HighlightCurrentLine));
+        }));
+        _disposables.Add(_settingsStore.Observe(s => s.Dictation.AutoScrollToCurrentLine, _ =>
+        {
+            OnPropertyChanged(nameof(AutoScrollCurrentLine));
+        }));
+        _disposables.Add(_settingsStore.Observe(s => s.Dictation.Volume, v =>
+        {
+            OnPropertyChanged(nameof(Volume));
+            _dictationPlayer.Volume = v;
+        }));
+        _disposables.Add(_settingsStore.Observe(s => s.Dictation.Rate, v =>
+        {
+            OnPropertyChanged(nameof(Rate));
+            _dictationPlayer.Rate = v;
+        }));
+
+        _disposables.Add(_settingsStore.Observe(s => s.Preference.EditorFontFamily, _ =>
+        {
+            OnPropertyChanged(nameof(EditorFontFamily));
+        }));
+        _disposables.Add(_settingsStore.Observe(s => s.Preference.EditorFontSize, _ =>
+        {
+            OnPropertyChanged(nameof(EditorFontSize));
+        }));
+        _disposables.Add(_settingsStore.Observe(s => s.Preference.ImprovedResourcePath, _ =>
+        {
+            OnPropertyChanged(nameof(ImprovedResourcePath));
+        }));
+        _disposables.Add(_settingsStore.Observe(s => s.Preference.DefaultChineseVoiceId, _ =>
+        {
+            OnPropertyChanged(nameof(DefaultChineseVoiceId));
+        }));
+        _disposables.Add(_settingsStore.Observe(s => s.Preference.DefaultEnglishVoiceId, _ =>
+        {
+            OnPropertyChanged(nameof(DefaultEnglishVoiceId));
+        }));
+
+        ValidateAndApplyWaitingTime(_settingsStore.Value.Dictation.IntervalExpression);
+        _dictationPlayer.TimesPerWord = _settingsStore.Value.Dictation.TimesPerWord;
+        _dictationPlayer.Volume = _settingsStore.Value.Dictation.Volume;
+        _dictationPlayer.Rate = _settingsStore.Value.Dictation.Rate;
+
         _ = LoadVoiceOptionsAsync();
         OnPropertyChanged(nameof(SpeakStateText));
     }
 
     public EditorDocumentWordListSource WordListSource => _wordListSource;
+
+    public void Dispose()
+    {
+        if (_disposables is not null)
+        {
+            foreach (var d in _disposables)
+            {
+                d?.Dispose();
+            }
+            _disposables.Clear();
+        }
+    }
+
+    public string IntervalExpression
+    {
+        get => _settingsStore.Value.Dictation.IntervalExpression;
+        set => _settingsStore.Update(s => s with { Dictation = s.Dictation with { IntervalExpression = value } });
+    }
+
+    [ObservableProperty]
+    private string _intervalValidationHint = string.Empty;
+
+    public int TimesPerWord
+    {
+        get => _settingsStore.Value.Dictation.TimesPerWord;
+        set => _settingsStore.Update(s => s with { Dictation = s.Dictation with { TimesPerWord = value } });
+    }
+
+    public bool HighlightCurrentLine
+    {
+        get => _settingsStore.Value.Dictation.HighlightCurrentLine;
+        set => _settingsStore.Update(s => s with { Dictation = s.Dictation with { HighlightCurrentLine = value } });
+    }
+
+    public bool AutoScrollCurrentLine
+    {
+        get => _settingsStore.Value.Dictation.AutoScrollToCurrentLine;
+        set => _settingsStore.Update(s => s with { Dictation = s.Dictation with { AutoScrollToCurrentLine = value } });
+    }
 
     [ObservableProperty]
     private int _currentLineIndex = -1;
@@ -87,31 +162,22 @@ public partial class MainWindowViewModel : ObservableObject
     private int _currentRepeat;
 
     [ObservableProperty]
-    private string _intervalExpression = "3";
-
-    [ObservableProperty]
-    private string _intervalValidationHint = string.Empty;
-
-    [ObservableProperty]
-    private int _timesPerWord = 2;
-
-    [ObservableProperty]
-    private bool _highlightCurrentLine = true;
-
-    [ObservableProperty]
-    private bool _autoScrollCurrentLine = true;
-
-    [ObservableProperty]
     private string _progressText = "0 / 0";
 
     [ObservableProperty]
     private bool _wordListVisible = true;
 
-    [ObservableProperty]
-    private int _volume = 100;
+    public int Volume
+    {
+        get => _settingsStore.Value.Dictation.Volume;
+        set => _settingsStore.Update(s => s with { Dictation = s.Dictation with { Volume = value } });
+    }
 
-    [ObservableProperty]
-    private int _rate;
+    public int Rate
+    {
+        get => _settingsStore.Value.Dictation.Rate;
+        set => _settingsStore.Update(s => s with { Dictation = s.Dictation with { Rate = value } });
+    }
 
     [ObservableProperty]
     private double _mainWindowWidth = 980;
@@ -119,20 +185,35 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private double _mainWindowHeight = 680;
 
-    [ObservableProperty]
-    private string _editorFontFamily = "Noto Sans CJK SC";
+    public string EditorFontFamily
+    {
+        get => _settingsStore.Value.Preference.EditorFontFamily;
+        set => _settingsStore.Update(s => s with { Preference = s.Preference with { EditorFontFamily = value } });
+    }
 
-    [ObservableProperty]
-    private double _editorFontSize = 28;
+    public double EditorFontSize
+    {
+        get => _settingsStore.Value.Preference.EditorFontSize;
+        set => _settingsStore.Update(s => s with { Preference = s.Preference with { EditorFontSize = value } });
+    }
 
-    [ObservableProperty]
-    private string _improvedResourcePath = string.Empty;
+    public string ImprovedResourcePath
+    {
+        get => _settingsStore.Value.Preference.ImprovedResourcePath;
+        set => _settingsStore.Update(s => s with { Preference = s.Preference with { ImprovedResourcePath = value } });
+    }
 
-    [ObservableProperty]
-    private string _defaultChineseVoiceId = string.Empty;
+    public string DefaultChineseVoiceId
+    {
+        get => _settingsStore.Value.Preference.DefaultChineseVoiceId;
+        set => _settingsStore.Update(s => s with { Preference = s.Preference with { DefaultChineseVoiceId = value } });
+    }
 
-    [ObservableProperty]
-    private string _defaultEnglishVoiceId = string.Empty;
+    public string DefaultEnglishVoiceId
+    {
+        get => _settingsStore.Value.Preference.DefaultEnglishVoiceId;
+        set => _settingsStore.Update(s => s with { Preference = s.Preference with { DefaultEnglishVoiceId = value } });
+    }
 
     [ObservableProperty]
     private ObservableCollection<IVoiceFactory> _voiceOptions = [];
@@ -320,7 +401,7 @@ public partial class MainWindowViewModel : ObservableObject
                     VoiceOptions.Add(factory);
                 }
 
-                var targetVoiceId = _appSettings.Dictation.LastSelectedVoiceId;
+                var targetVoiceId = _settingsStore.Value.Dictation.LastSelectedVoiceId;
                 if (string.IsNullOrWhiteSpace(targetVoiceId))
                 {
                     targetVoiceId = DefaultChineseVoiceId ?? DefaultEnglishVoiceId;
@@ -348,8 +429,7 @@ public partial class MainWindowViewModel : ObservableObject
     {
         if (value is not null)
         {
-            _appSettings.Dictation.LastSelectedVoiceId = value.Info.Id;
-            ScheduleSave();
+            _settingsStore.Update(s => s with { Dictation = s.Dictation with { LastSelectedVoiceId = value.Info.Id } });
 
             var newVoice = value.Create();
 
@@ -397,70 +477,14 @@ public partial class MainWindowViewModel : ObservableObject
         }
     }
 
-    public PreferenceSettings CreatePreferenceSnapshot()
-    {
-        return new PreferenceSettings
-        {
-            EditorFontFamily = EditorFontFamily,
-            EditorFontSize = EditorFontSize,
-            ImprovedResourcePath = ImprovedResourcePath,
-            DefaultChineseVoiceId = DefaultChineseVoiceId,
-            DefaultEnglishVoiceId = DefaultEnglishVoiceId
-        };
-    }
+    public PreferenceSettings CreatePreferenceSnapshot() => _settingsStore.Value.Preference;
 
     public void ApplyPreferenceSettings(PreferenceSettings settings)
-    {
-        EditorFontFamily = settings.EditorFontFamily;
-        EditorFontSize = settings.EditorFontSize;
-        ImprovedResourcePath = settings.ImprovedResourcePath;
-        DefaultChineseVoiceId = settings.DefaultChineseVoiceId;
-        DefaultEnglishVoiceId = settings.DefaultEnglishVoiceId;
-    }
-
-    public void SaveSettings()
-    {
-        _settingsStore.Save(_appSettings);
-    }
-
-    private void LoadSettings()
-    {
-        IntervalExpression = _appSettings.Dictation.IntervalExpression;
-        TimesPerWord = _appSettings.Dictation.TimesPerWord;
-        HighlightCurrentLine = _appSettings.Dictation.HighlightCurrentLine;
-        AutoScrollCurrentLine = _appSettings.Dictation.AutoScrollToCurrentLine;
-        Volume = _appSettings.Dictation.Volume;
-        Rate = _appSettings.Dictation.Rate;
-
-        EditorFontFamily = _appSettings.Preference.EditorFontFamily;
-        EditorFontSize = _appSettings.Preference.EditorFontSize;
-        ImprovedResourcePath = _appSettings.Preference.ImprovedResourcePath;
-        DefaultChineseVoiceId = _appSettings.Preference.DefaultChineseVoiceId;
-        DefaultEnglishVoiceId = _appSettings.Preference.DefaultEnglishVoiceId;
-    }
+        => _settingsStore.Update(s => s with { Preference = settings });
 
     partial void OnWordListVisibleChanged(bool value)
     {
         OnPropertyChanged(nameof(ShowOrHideWordListText));
-    }
-
-    private void ScheduleSave()
-    {
-        _saveCts?.Cancel();
-        _saveCts = new CancellationTokenSource();
-        var ct = _saveCts.Token;
-        Task.Delay(500, ct).ContinueWith(_ =>
-        {
-            if (!ct.IsCancellationRequested)
-                _settingsStore.Save(_appSettings);
-        }, TaskScheduler.Default);
-    }
-
-    partial void OnIntervalExpressionChanged(string value)
-    {
-        _appSettings.Dictation.IntervalExpression = value;
-        ValidateAndApplyWaitingTime(value);
-        ScheduleSave();
     }
 
     private void ValidateAndApplyWaitingTime(string expression)
@@ -478,68 +502,5 @@ public partial class MainWindowViewModel : ObservableObject
         {
             IntervalValidationHint = result.ErrorMessage;
         }
-    }
-
-    partial void OnTimesPerWordChanged(int value)
-    {
-        _appSettings.Dictation.TimesPerWord = value;
-        _dictationPlayer.TimesPerWord = _appSettings.Dictation.TimesPerWord;
-        ScheduleSave();
-    }
-
-    partial void OnHighlightCurrentLineChanged(bool value)
-    {
-        _appSettings.Dictation.HighlightCurrentLine = value;
-        ScheduleSave();
-    }
-
-    partial void OnAutoScrollCurrentLineChanged(bool value)
-    {
-        _appSettings.Dictation.AutoScrollToCurrentLine = value;
-        ScheduleSave();
-    }
-
-    partial void OnVolumeChanged(int value)
-    {
-        _appSettings.Dictation.Volume = value;
-        _dictationPlayer.Volume = _appSettings.Dictation.Volume;
-        ScheduleSave();
-    }
-
-    partial void OnRateChanged(int value)
-    {
-        _appSettings.Dictation.Rate = value;
-        _dictationPlayer.Rate = _appSettings.Dictation.Rate;
-        ScheduleSave();
-    }
-
-    partial void OnEditorFontFamilyChanged(string value)
-    {
-        _appSettings.Preference.EditorFontFamily = value;
-        ScheduleSave();
-    }
-
-    partial void OnEditorFontSizeChanged(double value)
-    {
-        _appSettings.Preference.EditorFontSize = value;
-        ScheduleSave();
-    }
-
-    partial void OnImprovedResourcePathChanged(string value)
-    {
-        _appSettings.Preference.ImprovedResourcePath = value;
-        ScheduleSave();
-    }
-
-    partial void OnDefaultChineseVoiceIdChanged(string value)
-    {
-        _appSettings.Preference.DefaultChineseVoiceId = value;
-        ScheduleSave();
-    }
-
-    partial void OnDefaultEnglishVoiceIdChanged(string value)
-    {
-        _appSettings.Preference.DefaultEnglishVoiceId = value;
-        ScheduleSave();
     }
 }

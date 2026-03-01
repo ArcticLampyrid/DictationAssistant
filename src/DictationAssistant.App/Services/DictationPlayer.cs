@@ -22,7 +22,7 @@ public sealed class DictationPlayer : IDictationPlayer
     public int Volume { get => _audioPlayer.Volume; set => _audioPlayer.Volume = value; }
     public int Rate { get; set; } = 0;
 
-    public DictationPlayer(IVoice voice, IWordListSource wordListSource, IAudioPlayer audioPlayer, DictationSettings? settings = null)
+    public DictationPlayer(IVoice voice, IWordListSource wordListSource, IAudioPlayer audioPlayer)
     {
         _voice = voice;
         _audioPlayer = audioPlayer;
