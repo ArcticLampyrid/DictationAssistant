@@ -5,7 +5,7 @@ using DictationAssistant.App.Models;
 
 namespace DictationAssistant.App.Voice;
 
-public sealed class ImprovedVoice : IVoice
+public sealed class ImprovedVoice : IVoice, IPreloadableVoice
 {
     private static readonly string[] AudioFileExtensions = ["wav", "flac", "ape", "m4a", "opus", "aac", "mp3", "mp2", "mp1", "ogg", "wma", "aif", "mp4"];
 
@@ -16,6 +16,18 @@ public sealed class ImprovedVoice : IVoice
     {
         _inner = inner;
         _resourceDirectory = resourceDirectory;
+    }
+
+    public Task PreloadAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
+    {
+        if (_inner is IPreloadableVoice preloadableInner)
+        {
+            if (FindFile(text) is null)
+            {
+                return preloadableInner.PreloadAsync(text, options, ct);
+            }
+        }
+        return Task.CompletedTask;
     }
 
     public async Task<PcmAudio> SynthesizePcmAsync(string text, VoiceSynthesisOptions options, CancellationToken ct)
