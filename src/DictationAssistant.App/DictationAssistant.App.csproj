@@ -29,4 +29,13 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Content Include="BassRuntimeAssets/**/*">
+      <Visible>False</Visible>
+      <PublishState>Included</PublishState>
+      <TargetPath>runtimes/%(RecursiveDir)/%(Filename)%(Extension)</TargetPath>
+      <CopyToOutputDirectory>IfDifferent</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
