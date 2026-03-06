@@ -1,8 +1,10 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Avalonia.Media;
 using Avalonia.Threading;
 using System.Diagnostics;
+using ALampy.XamlFontPicker.Avalonia;
 using DictationAssistant.App.Services;
 using DictationAssistant.App.Settings;
 using DictationAssistant.App.Voice;
@@ -84,13 +86,9 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             _dictationPlayer.Rate = v;
         }));
 
-        _disposables.Add(_settingsStore.Observe(s => s.Preference.EditorFontFamily, _ =>
+        _disposables.Add(_settingsStore.Observe(s => s.Preference.EditorFont, _ =>
         {
-            OnPropertyChanged(nameof(EditorFontFamily));
-        }));
-        _disposables.Add(_settingsStore.Observe(s => s.Preference.EditorFontSize, _ =>
-        {
-            OnPropertyChanged(nameof(EditorFontSize));
+            OnPropertyChanged(nameof(EditorFontInfo));
         }));
         _disposables.Add(_settingsStore.Observe(s => s.Preference.ImprovedResourcePath, _ =>
         {
@@ -186,16 +184,10 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private double _mainWindowHeight = 680;
 
-    public string EditorFontFamily
+    public PickedFontInfo EditorFontInfo
     {
-        get => _settingsStore.Value.Preference.EditorFontFamily;
-        set => _settingsStore.Update(s => s with { Preference = s.Preference with { EditorFontFamily = value } });
-    }
-
-    public double EditorFontSize
-    {
-        get => _settingsStore.Value.Preference.EditorFontSize;
-        set => _settingsStore.Update(s => s with { Preference = s.Preference with { EditorFontSize = value } });
+        get => _settingsStore.Value.Preference.EditorFont;
+        set => _settingsStore.Update(s => s with { Preference = s.Preference with { EditorFont = value ?? new PickedFontInfo() } });
     }
 
     public string ImprovedResourcePath

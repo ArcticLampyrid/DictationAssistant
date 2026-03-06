@@ -4,6 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:DictationAssistant.App.ViewModels"
         xmlns:controls="using:DictationAssistant.App.Controls"
+        xmlns:fp="using:ALampy.XamlFontPicker.Avalonia"
         x:Class="DictationAssistant.App.PreferenceWindow"
         x:DataType="vm:PreferenceWindowViewModel"
         Title="偏好设置"
@@ -22,11 +23,10 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
       <StackPanel Spacing="10">
         <controls:GroupBox Header="编辑器">
-          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
-            <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="字体" />
-            <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,8" Text="{Binding EditorFontFamily, Mode=TwoWay}" Watermark="字体名称（占位）" />
-            <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Center" Text="字号" />
-            <NumericUpDown Grid.Row="1" Grid.Column="1" Minimum="8" Maximum="72" Increment="1" Value="{Binding EditorFontSize, Mode=TwoWay}" />
+          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto">
+            <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Center" Text="字体" />
+            <fp:FontPicker Grid.Row="0" Grid.Column="1"
+                           SelectedFontInfo="{Binding EditorFontInfo, Mode=TwoWay}" />
           </Grid>
         </controls:GroupBox>
 

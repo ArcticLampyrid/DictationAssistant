@@ -1,3 +1,6 @@
+using Avalonia.Media;
+using ALampy.XamlFontPicker.Avalonia;
+
 namespace DictationAssistant.App.Settings;
 
 public sealed record AppSettings
@@ -26,9 +29,8 @@ public sealed record DictationSettings
 
 public sealed record PreferenceSettings
 {
-    public string EditorFontFamily { get; init; } = "Noto Sans CJK SC";
-
-    public double EditorFontSize { get; init; } = 28;
+    public PickedFontInfo EditorFont { get; init; } =
+        new(FontFamily.Default, FontStretch.Normal, FontStyle.Normal, FontWeight.Normal, 28);
 
     public string ImprovedResourcePath { get; init; } = string.Empty;
 

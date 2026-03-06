@@ -158,8 +158,10 @@
           </StackPanel>
 
           <avaloniaEdit:TextEditor x:Name="WordlistEditor"
-                                   FontFamily="{Binding EditorFontFamily, Mode=TwoWay}"
-                                   FontSize="{Binding EditorFontSize, Mode=TwoWay}"
+                                   FontFamily="{Binding EditorFontInfo.Family}"
+                                   FontSize="{Binding EditorFontInfo.Size}"
+                                   FontStyle="{Binding EditorFontInfo.Style}"
+                                   FontWeight="{Binding EditorFontInfo.Weight}"
                                    ShowLineNumbers="True"
                                    HorizontalScrollBarVisibility="Auto"
                                    VerticalScrollBarVisibility="Auto">
