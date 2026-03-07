@@ -1,4 +1,6 @@
 using System.Reflection;
+using System.Text;
+using Avalonia.Platform;
 
 namespace DictationAssistant.App.ViewModels;
 
@@ -8,16 +10,20 @@ public class AboutWindowViewModel
 
     public string Version { get; } = ResolveVersion();
 
-    public string CopyrightNotice { get; } =
-        "自动默写 v4（Avalonia）\n" +
-        "\n" +
-        "本版本为跨平台重构版本，目标是在 Linux/macOS/Windows 上提供一致的使用体验。\n" +
-        "\n" +
-        "Copyright (c) DictationAssistant Contributors";
+    public string EulaText { get; } = LoadEulaText();
 
     private static string ResolveVersion()
     {
         var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
-        return assembly.GetName().Version?.ToString() ?? "0.0.0";
+        return assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+               ?? assembly.GetName().Version?.ToString()
+               ?? "0.0.0";
+    }
+
+    private static string LoadEulaText()
+    {
+        using var stream = AssetLoader.Open(new Uri("avares://DictationAssistant.App/Resources/EULA.txt"));
+        using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+        return reader.ReadToEnd();
     }
 }

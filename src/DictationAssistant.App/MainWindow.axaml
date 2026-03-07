@@ -12,6 +12,7 @@
         MinWidth="860"
         MinHeight="560"
         Title="自动默写"
+        Icon="/Assets/DictationAssistant.ico"
         mc:Ignorable="d"
         DragDrop.AllowDrop="True">
   <DockPanel>
